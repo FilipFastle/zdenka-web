@@ -1,0 +1,14 @@
+/* Property Plugin - Frontend 2026 */
+
+.property-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 24px;
+    margin: 30px 0;
+}
+
+@media (max-width: 768px) {
+    .property-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "Mgr. Zdenka Cibuľová — Realitná maklérka",
+  "short_name": "Mgr. Zdenka Cibuľová",
+  "description": "Profesionálna realitná maklérka v Banskej Bystrici a okolí",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FBF7EE",
+  "theme_color": "#B8A47A",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/wp-content/themes/zdenka-theme/assets/images/zc-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

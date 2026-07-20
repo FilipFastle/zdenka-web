@@ -1,0 +1,41 @@
+/* Admin styles */
+.property-meta-section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.property-meta-section:last-child {
+    border-bottom: none;
+}
+
+.property-meta-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.property-meta-field label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #333;
+    font-size: 13px;
+}
+
+.property-meta-field input,
+.property-meta-field select,
+.property-meta-field textarea {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.property-meta-field input:focus,
+.property-meta-field select:focus,
+.property-meta-field textarea:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
