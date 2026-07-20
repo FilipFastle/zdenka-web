@@ -91,7 +91,7 @@ function zc_get_favorites_handler() {
             $html .= '<div class="zc-prop-title"><a href="'.get_permalink().'">'.get_the_title().'</a></div>';
             if ($local) $html .= '<div class="zc-prop-location"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'.esc_html($local).'</div>';
             if ($plocha) $html .= '<div class="zc-prop-specs"><span>📐 '.esc_html($plocha).' m²</span></div>';
-            if ($cena) $html .= '<div class="zc-prop-price">'.esc_html($cena).'</div>';
+            $html .= '<div class="zc-prop-price'.($cena ? '' : ' zc-prop-price--nego').'">'.esc_html($cena ?: 'Cena dohodou').'</div>';
             $html .= '<a href="'.get_permalink().'" class="zc-prop-btn">Zobraziť ponuku →</a>';
             $html .= '</div></div>';
         }

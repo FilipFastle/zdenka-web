@@ -693,3 +693,6 @@ html { scroll-behavior: smooth; }
     .zc-card, .zc-testimonial, .zc-prop-card, .zc-btn, .odhad-info-box { transition: none !important; }
     .zc-btn-primary::after { display: none; }
 }
+
+/* Ponuka bez ceny — decentné „Cena dohodou" namiesto prázdneho miesta */
+.zc-prop-price--nego { font-size: 15px; color: var(--muted); font-weight: 600; letter-spacing: .3px; }

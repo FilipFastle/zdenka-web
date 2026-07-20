@@ -283,9 +283,7 @@ function render_property_card() {
                 <?php if ($kupelne): ?><span>🚿 <?php echo esc_html($kupelne) ?></span><?php endif; ?>
             </div>
             <?php endif; ?>
-            <?php if ($cena): ?>
-            <div class="zc-prop-price"><?php echo esc_html($cena) ?></div>
-            <?php endif; ?>
+            <div class="zc-prop-price<?php echo $cena ? '' : ' zc-prop-price--nego' ?>"><?php echo esc_html($cena ?: 'Cena dohodou') ?></div>
             <a href="<?php the_permalink() ?>" class="zc-prop-btn">Zobraziť ponuku →</a>
         </div>
     </div>

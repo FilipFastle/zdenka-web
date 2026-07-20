@@ -393,7 +393,7 @@ function panel_list() {
             </div>
             <div class="prop-item-body">
                 <div class="prop-item-title"><?php echo esc_html($p->post_title) ?></div>
-                <div class="prop-item-price"><?php echo esc_html($cena) ?></div>
+                <div class="prop-item-price"<?php if(!$cena) echo ' style="color:var(--muted);font-size:13px;font-weight:600"'; ?>><?php echo esc_html($cena ?: 'Cena dohodou') ?></div>
                 <div class="prop-item-actions">
                     <a href="?action=edit&id=<?php echo $p->ID ?>" class="btn btn-primary">Upraviť</a>
                     <a href="<?php echo get_permalink($p->ID) ?>" target="_blank" class="btn btn-ghost">Zobraziť</a>
@@ -439,8 +439,8 @@ function panel_form($pid) {
         <div id="pftab_basic" class="pf-panel active">
             <div class="ff"><label>Názov nehnuteľnosti *</label><input type="text" name="title" value="<?php echo esc_attr($post ? $post->post_title : '') ?>" required></div>
             <div class="ff-row">
-                <div class="ff"><label>Typ ponuky *</label>
-                    <select name="typ" required>
+                <div class="ff"><label>Typ ponuky</label>
+                    <select name="typ">
                         <option value="">Vyber...</option>
                         <option value="predaj" <?php selected($f('typ'),'predaj') ?>>Na predaj</option>
                         <option value="prenajom" <?php selected($f('typ'),'prenajom') ?>>Na prenájom</option>

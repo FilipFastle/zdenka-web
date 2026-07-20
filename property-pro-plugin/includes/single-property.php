@@ -78,6 +78,8 @@ $all_amenities = get_property_amenities();
     /* Pull up behind the header */
     margin-top: calc(-1 * var(--hh, 72px));
 }
+/* Bez fotiek stačí nižší hero — žiadna prázdna plocha na celú obrazovku */
+.pp-hero--nophoto { height:62vh; min-height:420px; }
 .pp-hero-track { display:flex; height:100%; transition:transform .6s cubic-bezier(.4,0,.2,1); will-change:transform; }
 /* Each slide: absolute-positioned img fills 100% regardless of source size */
 .pp-hero-slide { min-width:100%; height:100%; flex-shrink:0; position:relative; overflow:hidden; background:#111; }
@@ -343,7 +345,7 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
 </script>
 
 <!-- ═══ HERO ═══ -->
-<div class="pp-hero" id="ppHero">
+<div class="pp-hero<?php echo $all_images ? '' : ' pp-hero--nophoto' ?>" id="ppHero">
     <?php if ($all_images): ?>
     <div class="pp-hero-track" id="ppTrack">
         <?php foreach ($all_images as $img_id): ?>
@@ -353,20 +355,23 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
         <?php endforeach; ?>
     </div>
     <?php else: ?>
-    <div style="height:100%;background:linear-gradient(135deg,#1C1A18,#2e2b27);display:flex;align-items:center;justify-content:center;color:#555;font-size:18px;">🏠</div>
+    <!-- Bez fotky: nižší zlatý hero namiesto tmavej 100vh plochy -->
+    <div style="height:100%;background:linear-gradient(135deg,#B8A47A,#8F7B55);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55);font-size:72px;">🏠</div>
     <?php endif; ?>
     <div class="pp-hero-overlay"></div>
     <button class="zc-fav-btn pp-hero-fav" data-id="<?php echo $id ?>" title="Pridať do obľúbených" onclick="zcToggleFav(this,<?php echo $id ?>)" aria-label="Pridať do obľúbených">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
     </button>
     <div class="pp-hero-info">
-        <div class="pp-hero-badge"><?php echo $typ_label ?></div>
+        <?php if ($typ): ?><div class="pp-hero-badge"><?php echo $typ_label ?></div><?php endif; ?>
         <h1 class="pp-hero-title"><?php the_title() ?></h1>
+        <?php if ($lokalita || $plocha || $spalne): ?>
         <div class="pp-hero-meta">
             <?php if ($lokalita): ?><span>📍 <?php echo esc_html($lokalita) ?></span><?php endif; ?>
             <?php if ($plocha): ?><span>📐 <?php echo esc_html($plocha) ?> m²</span><?php endif; ?>
             <?php if ($spalne): ?><span>🚪 <?php echo esc_html($spalne) ?> izby</span><?php endif; ?>
         </div>
+        <?php endif; ?>
     </div>
     <?php if ($total_images > 1): ?>
     <button class="pp-hero-btn pp-hero-prev" onclick="ppPrev()" aria-label="Predošlá">&#8249;</button>
@@ -488,16 +493,16 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     <div class="pp-price-card">
         <div class="pp-price-top">
             <div class="pp-price-lbl">Cena</div>
-            <div class="pp-price-val"><?php
-                // Format price with space as thousands separator
-                $cena_num = preg_replace('/[^0-9]/', '', $cena);
-                if ($cena_num && is_numeric($cena_num)) {
-                    $cena_fmt = number_format(intval($cena_num), 0, ',', ' ') . ' €';
-                } else {
-                    $cena_fmt = $cena;
-                }
-                echo esc_html($cena_fmt);
-            ?></div>
+            <?php
+            // Format price with space as thousands separator
+            $cena_num = preg_replace('/[^0-9]/', '', $cena);
+            if ($cena_num && is_numeric($cena_num)) {
+                $cena_fmt = number_format(intval($cena_num), 0, ',', ' ') . ' €';
+            } else {
+                $cena_fmt = $cena;
+            }
+            ?>
+            <div class="pp-price-val"<?php if (!$cena_fmt) echo ' style="font-size:20px;letter-spacing:0"'; ?>><?php echo esc_html($cena_fmt ?: 'Cena dohodou'); ?></div>
         </div>
         <div class="pp-price-body">
             <a href="tel:<?php echo preg_replace('/[^0-9+]/','',$agent_phone) ?>" class="pp-btn pp-btn-call">
