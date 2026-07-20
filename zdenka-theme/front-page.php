@@ -24,7 +24,7 @@ $title=zc_agent('title','Realitná maklérka');
 .zc-hero-name-card-role{font-size:10px;color:var(--accent,#B8A47A);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;font-family:var(--sans,sans-serif)}
 .zc-hero-scroll{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:rgba(255,255,255,.4);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-family:var(--sans,sans-serif);z-index:5;animation:heroScroll 2s ease-in-out infinite}
 @keyframes heroScroll{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(7px)}}
-@media(max-width:768px){.zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 48px}.zc-hero-overlay{background:rgba(20,18,15,.8)}}
+@media(max-width:768px){.zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 48px}.zc-hero-overlay{background:rgba(20,18,15,.8)}.zc-hero-bg{background-position:73% 28%}}
 </style>
 
 <script>
