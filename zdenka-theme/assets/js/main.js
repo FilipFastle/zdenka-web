@@ -314,7 +314,7 @@ if ('IntersectionObserver' in window) {
             badge.id = 'zcFavBadge';
             badge.href = '/oblubene/';
             badge.className = 'zc-fav-badge';
-            badge.style.cssText = 'position:fixed;bottom:80px;right:28px;background:#1C1A18;color:#fff;padding:11px 18px;border-radius:50px;font-size:13px;font-weight:600;text-decoration:none;z-index:90;box-shadow:0 4px 16px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px;transition:transform .2s';
+            badge.style.cssText = 'position:fixed;bottom:80px;right:28px;background:#fff;color:#1C1A18;border:1.5px solid #B8A47A;padding:11px 18px;border-radius:50px;font-size:13px;font-weight:600;text-decoration:none;z-index:90;box-shadow:0 4px 16px rgba(184,164,122,.35);display:flex;align-items:center;gap:8px;transition:transform .2s';
             badge.onmouseenter = function(){ this.style.transform='translateY(-3px)'; };
             badge.onmouseleave = function(){ this.style.transform='none'; };
             document.body.appendChild(badge);

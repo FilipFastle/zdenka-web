@@ -19,8 +19,8 @@ $logo   = get_stylesheet_directory_uri() . '/assets/images/zc-logo.svg';
 *{margin:0;padding:0;box-sizing:border-box}
 body{
     font-family:'DM Sans',sans-serif;
-    background:#1C1A18;
-    color:#fff;
+    background:linear-gradient(135deg,#F5EEDF 0%,#EBDCC0 100%);
+    color:#1C1A18;
     min-height:100vh;
     display:flex;flex-direction:column;
     align-items:center;justify-content:center;
@@ -31,7 +31,7 @@ body{
 body::before{
     content:'';position:absolute;inset:0;
     background:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
-    opacity:.4;pointer-events:none;z-index:0;
+    opacity:.5;pointer-events:none;z-index:0;
 }
 .wrap{position:relative;z-index:1;text-align:center;max-width:560px;width:100%}
 
@@ -40,7 +40,7 @@ body::before{
     width:110px;height:110px;margin:0 auto 32px;
     animation:logoPulse 3s ease-in-out infinite;
 }
-.logo-wrap img{width:100%;height:100%;object-fit:contain;filter:brightness(0) invert(1);}
+.logo-wrap img{width:100%;height:100%;object-fit:contain;filter:brightness(0);}
 @keyframes logoPulse{
     0%,100%{transform:scale(1);opacity:1}
     50%{transform:scale(1.05);opacity:.85}
@@ -56,17 +56,17 @@ body::before{
 h1{
     font-family:'Playfair Display',Georgia,serif;
     font-size:clamp(28px,5vw,44px);font-weight:700;
-    color:#fff;margin-bottom:12px;line-height:1.2;
+    color:#1C1A18;margin-bottom:12px;line-height:1.2;
 }
-h1 em{font-style:italic;color:#B8A47A}
+h1 em{font-style:italic;color:#7C5E33}
 
 .subtitle{
     font-size:11px;letter-spacing:2.5px;text-transform:uppercase;
-    color:#B8A47A;margin-bottom:20px;font-weight:600;
+    color:#7C5E33;margin-bottom:20px;font-weight:600;
 }
 
 .message{
-    font-size:15px;color:rgba(255,255,255,.65);
+    font-size:15px;color:#7A7068;
     line-height:1.8;margin-bottom:36px;
     max-width:400px;margin-left:auto;margin-right:auto;
 }
@@ -83,33 +83,33 @@ h1 em{font-style:italic;color:#B8A47A}
 .contact-btn.phone:hover{background:#9A8660;transform:translateY(-2px)}
 .contact-btn.wa{background:#22c55e;color:#fff}
 .contact-btn.wa:hover{background:#16a34a;transform:translateY(-2px)}
-.contact-btn.mail{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)}
-.contact-btn.mail:hover{background:rgba(255,255,255,.18);transform:translateY(-2px)}
+.contact-btn.mail{background:#fff;color:#1C1A18;border:1px solid #E0D8CE}
+.contact-btn.mail:hover{background:#F5F1EA;transform:translateY(-2px)}
 
 /* Login link */
 .login-wrap{
     padding-top:28px;
-    border-top:1px solid rgba(255,255,255,.1);
-    font-size:13px;color:rgba(255,255,255,.35);
+    border-top:1px solid #E0D8CE;
+    font-size:13px;color:#A79B8A;
 }
-.login-wrap a{color:rgba(255,255,255,.45);text-decoration:none;transition:color .2s}
-.login-wrap a:hover{color:rgba(255,255,255,.75)}
+.login-wrap a{color:#8B7D66;text-decoration:none;transition:color .2s}
+.login-wrap a:hover{color:#1C1A18}
 
 /* Agent card */
 .agent{
     display:inline-flex;align-items:center;gap:12px;
-    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+    background:#fff;border:1px solid #E0D8CE;
     border-radius:12px;padding:12px 18px;margin-bottom:24px;
 }
 .agent-avatar{
     width:40px;height:40px;border-radius:50%;
-    background:rgba(255,255,255,.12);
+    background:#F5F1EA;
     display:flex;align-items:center;justify-content:center;
     font-size:18px;flex-shrink:0;
-    border:1.5px solid rgba(184,164,122,.5);
+    border:1.5px solid #B8A47A;
 }
-.agent-name{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#fff;text-align:left}
-.agent-role{font-size:10px;color:#B8A47A;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;text-align:left}
+.agent-name{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#1C1A18;text-align:left}
+.agent-role{font-size:10px;color:#7C5E33;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;text-align:left}
 </style>
 </head>
 <body>

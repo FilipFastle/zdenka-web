@@ -314,9 +314,9 @@ add_shortcode('property_carousel', function($atts) {
         $lokalita = get_post_meta($id,'_property_lokalita',true);
         $typ      = get_post_meta($id,'_property_typ',true);
         $typ_labels = ['predaj'=>'Na predaj','prenajom'=>'Na prenájom','pozemok'=>'Pozemok'];
-        $typ_colors = ['predaj'=>'#B8A47A','prenajom'=>'#1C1A18','pozemok'=>'#6a9e77'];
+        $typ_colors = ['predaj'=>'#B8A47A','prenajom'=>'#FFFFFF','pozemok'=>'#6a9e77'];
         $img = $cover_id ? wp_get_attachment_image($cover_id,'large',false,['style'=>'position:absolute;inset:0;width:100%;height:100%;object-fit:cover']) : (has_post_thumbnail() ? get_the_post_thumbnail(null,'large',['style'=>'position:absolute;inset:0;width:100%;height:100%;object-fit:cover']) : '');
-        $slides[] = ['img'=>$img,'title'=>get_the_title(),'cena'=>$cena,'lokalita'=>$lokalita,'typ'=>$typ_labels[$typ]??'','typ_color'=>$typ_colors[$typ]??'#B8A47A','typ_text'=>$typ==='prenajom'?'#fff':'#1C1A18','url'=>get_permalink()];
+        $slides[] = ['img'=>$img,'title'=>get_the_title(),'cena'=>$cena,'lokalita'=>$lokalita,'typ'=>$typ_labels[$typ]??'','typ_color'=>$typ_colors[$typ]??'#B8A47A','typ_text'=>$typ==='pozemok'?'#fff':'#1C1A18','url'=>get_permalink()];
     }
     wp_reset_postdata();
     $total = count($slides);

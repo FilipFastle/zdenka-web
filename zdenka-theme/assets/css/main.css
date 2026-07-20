@@ -296,7 +296,7 @@ ul { list-style: none; }
     text-transform: uppercase; padding: 5px 12px; border-radius: 50px;
     font-family: var(--sans);
 }
-.zc-prop-badge.prenajom  { background: var(--dark); color: #fff; }
+.zc-prop-badge.prenajom  { background: var(--white); color: var(--dark); border: 1px solid var(--border); }
 .zc-prop-badge.pozemok   { background: #5A8F6A; color: #fff; }
 .zc-prop-badge.rezervovane { background: var(--muted); color: #fff; }
 .zc-fav-btn {
@@ -615,15 +615,81 @@ html { scroll-behavior: smooth; }
 /* ── FAVORITES HEART ── */
 .zc-fav-badge {
     position: fixed; bottom: 80px; right: 28px;
-    background: var(--dark); color: #fff;
+    background: var(--white); color: var(--dark);
+    border: 1.5px solid var(--accent);
     padding: 10px 16px; border-radius: 50px;
     font-size: 13px; font-weight: 600;
-    box-shadow: 0 4px 20px rgba(0,0,0,.25);
+    box-shadow: 0 4px 20px rgba(184,164,122,.35);
     display: flex; align-items: center; gap: 8px;
     transform: translateY(80px); opacity: 0;
     transition: all .35s cubic-bezier(.34,1.56,.64,1);
     text-decoration: none; z-index: 997;
 }
 .zc-fav-badge.visible { transform: translateY(0); opacity: 1; }
-.zc-fav-badge:hover { background: #2e2b27; color: #fff; transform: translateY(-2px); }
+.zc-fav-badge:hover { background: var(--accent-lt); color: var(--dark); transform: translateY(-2px); }
 @media(max-width:768px) { .zc-fav-badge { bottom: 70px; right: 16px; } }
+
+/* ══════════════════════════════════════════
+   LUXE POLISH v2.3 — jemné hover efekty
+══════════════════════════════════════════ */
+
+/* Karty hodnôt a služieb — zlatá linka + rozžiarenie ikony */
+.zc-card { position: relative; overflow: hidden; }
+.zc-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    transform: scaleX(0); transition: transform .4s var(--ease);
+}
+.zc-card:hover::before { transform: scaleX(1); }
+.zc-card:hover { border-color: var(--accent-lt); }
+.zc-card:hover .zc-card-icon { background: var(--accent-lt); transform: scale(1.06) rotate(-3deg); }
+.zc-card-icon { transition: background .3s var(--ease), transform .3s var(--ease); }
+
+/* Recenzie — zlatý rám pri hoveri */
+.zc-testimonial:hover { border-color: var(--accent); }
+
+/* Property karty — zlatý rám + cena do zlata */
+.zc-prop-card:hover { border-color: var(--accent-lt); }
+.zc-prop-card:hover .zc-prop-price { color: var(--accent-txt); }
+.zc-prop-price { transition: color .25s var(--ease); }
+
+/* Primárne tlačidlo — svetelný pás pri hoveri */
+.zc-btn-primary { position: relative; overflow: hidden; }
+.zc-btn-primary::after {
+    content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,.45), transparent);
+    transform: skewX(-20deg); transition: left .55s var(--ease);
+}
+.zc-btn-primary:hover::after { left: 130%; }
+
+/* CTA kontakty na úvode — ikonka ožije */
+.zc-cta-contact:hover { color: var(--dark); }
+.zc-cta-contact:hover .zc-cta-contact-icon {
+    background: var(--accent-lt) !important; border-color: var(--accent) !important;
+    transform: translateY(-2px);
+}
+
+/* CTA inputy — zlatý focus */
+.zc-cta-input:focus {
+    outline: none; border-color: var(--accent) !important;
+    background: var(--white) !important;
+    box-shadow: 0 0 0 3px rgba(184,164,122,.14);
+}
+
+/* Kontakt — dlaždice liniek */
+.ko-link:hover .ko-link-icon { background: var(--accent-lt); }
+.ko-link-icon { transition: background .25s var(--ease); }
+
+/* Odhad — info boxy */
+.odhad-info-box { transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s; }
+.odhad-info-box:hover { transform: translateY(-4px); box-shadow: var(--sh); border-color: var(--accent-lt); }
+
+/* Fotka v O mne — jemný zoom */
+.zc-omne-hero img { transition: transform .6s var(--ease), box-shadow .6s var(--ease); }
+.zc-omne-hero img:hover { transform: scale(1.015); box-shadow: 0 24px 72px rgba(40,32,20,.2); }
+
+/* Menší pohyb pre citlivých na animácie */
+@media (prefers-reduced-motion: reduce) {
+    .zc-card, .zc-testimonial, .zc-prop-card, .zc-btn, .odhad-info-box { transition: none !important; }
+    .zc-btn-primary::after { display: none; }
+}

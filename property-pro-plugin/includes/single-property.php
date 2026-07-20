@@ -45,9 +45,9 @@ $agent_title = get_user_meta($agent_id, 'property_title', true) ?: 'Realitná ma
 
 $types     = ['predaj' => 'Na predaj', 'prenajom' => 'Na prenájom', 'pozemok' => 'Pozemok'];
 $typ_label = $types[$typ] ?? 'Ponuka';
-$typ_colors = ['predaj' => '#B8A47A', 'prenajom' => '#1C1A18', 'pozemok' => '#6a9e77'];
+$typ_colors = ['predaj' => '#B8A47A', 'prenajom' => '#FFFFFF', 'pozemok' => '#6a9e77'];
 $typ_color  = $typ_colors[$typ] ?? '#B8A47A';
-$typ_text_color = $typ === 'prenajom' ? '#fff' : '#1C1A18';
+$typ_text_color = $typ === 'pozemok' ? '#fff' : '#1C1A18';
 
 // Robustne — žiadne prázdne/nulové/duplicitné obrázky
 $raw_ids    = array_merge($cover_id ? [$cover_id] : [], is_array($gallery_ids) ? $gallery_ids : []);
@@ -213,19 +213,20 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
 
 /* CTA form */
 .pp-cta {
-    background:linear-gradient(135deg,#1C1A18,#2e2b27);
-    border-radius:14px; padding:28px; margin-bottom:22px; color:#fff;
+    background:#fff; border:1px solid #E2DACE;
+    border-radius:14px; padding:28px; margin-bottom:22px; color:#2C2C2C;
+    box-shadow:0 4px 20px rgba(60,50,30,.09);
 }
-.pp-cta-title { font-size:17px; font-weight:700; margin-bottom:6px; font-family:var(--serif,serif); }
-.pp-cta-sub { font-size:13px; opacity:.7; margin-bottom:20px; }
+.pp-cta-title { font-size:17px; font-weight:700; margin-bottom:6px; font-family:var(--serif,serif); color:#1C1A18; }
+.pp-cta-sub { font-size:13px; color:#6B6560; margin-bottom:20px; }
 .pp-cta-form { display:flex; flex-direction:column; gap:10px; }
 .pp-cta-input {
     padding:11px 14px; border-radius:9px;
-    border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.08);
-    color:#fff; font-size:14px; font-family:var(--sans,sans-serif); transition:border .2s;
+    border:1.5px solid #E2DACE; background:#FCFBF8;
+    color:#2C2C2C; font-size:14px; font-family:var(--sans,sans-serif); transition:border .2s, box-shadow .2s;
 }
-.pp-cta-input::placeholder { color:rgba(255,255,255,.45); }
-.pp-cta-input:focus { outline:none; border-color:rgba(255,255,255,.4); background:rgba(255,255,255,.12); }
+.pp-cta-input::placeholder { color:#B0A898; }
+.pp-cta-input:focus { outline:none; border-color:#B8A47A; background:#fff; box-shadow:0 0 0 3px rgba(184,164,122,.12); }
 .pp-cta-btn {
     padding:13px; border-radius:9px; background:#B8A47A; color:#1C1A18;
     border:none; font-size:14px; font-weight:700; cursor:pointer; transition:all .2s;
@@ -256,11 +257,11 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
 }
 .pp-price-top {
     padding:22px 24px 18px;
-    background:linear-gradient(135deg,#1C1A18,#2e2b27); color:#fff;
+    background:#F5F1EA; border-bottom:2px solid #B8A47A; color:#1C1A18;
 }
-.pp-price-lbl { font-size:10px; text-transform:uppercase; letter-spacing:1px; opacity:.6; margin-bottom:5px; font-family:var(--sans,sans-serif); }
+.pp-price-lbl { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#6B6560; margin-bottom:5px; font-family:var(--sans,sans-serif); }
 .pp-price-val {
-    font-size:30px; font-weight:900; color:#B8A47A; line-height:1;
+    font-size:30px; font-weight:900; color:#7C5E33; line-height:1;
     letter-spacing:-1px; font-family:var(--serif,serif);
 }
 .pp-price-body { padding:16px 18px 18px; display:flex; flex-direction:column; gap:10px; }
@@ -273,8 +274,8 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     font-family:var(--sans,sans-serif);
 }
 .pp-btn:hover { transform:translateY(-2px); }
-.pp-btn-call  { background:#1C1A18; color:#fff; }
-.pp-btn-call:hover  { background:#2e2b27; box-shadow:0 6px 18px rgba(0,0,0,.25); }
+.pp-btn-call  { background:#B8A47A; color:#1C1A18; }
+.pp-btn-call:hover  { background:#9A8660; box-shadow:0 6px 18px rgba(184,164,122,.4); }
 .pp-btn-wa    { background:#22c55e; color:#fff; }
 .pp-btn-wa:hover    { background:#16a34a; box-shadow:0 6px 18px rgba(34,197,94,.3); }
 .pp-btn-email { background:#F5F1EA; color:#2C2C2C; border:1.5px solid #E2DACE; }
@@ -432,7 +433,7 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
         <div class="pp-cta-title">📩 Mám záujem o túto nehnuteľnosť</div>
         <div class="pp-cta-sub">Zanechajte kontakt a ozveme sa vám čo najskôr</div>
         <?php if (isset($_POST['cta_send']) && wp_verify_nonce($_POST['cta_nonce']??'','cta_form')): ?>
-            <div style="background:rgba(34,197,94,.2);border:1px solid rgba(34,197,94,.4);padding:14px;border-radius:10px;text-align:center;color:#fff">✅ Správa odoslaná!</div>
+            <div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:14px;border-radius:10px;text-align:center;color:#15803d">✅ Správa odoslaná!</div>
             <?php wp_mail($agent_email,'Záujem o: '.get_the_title(),"Meno: ".sanitize_text_field($_POST['cta_name']??'')."\nTel: ".sanitize_text_field($_POST['cta_phone']??'')."\n\n".sanitize_textarea_field($_POST['cta_msg']??'')."\n\n".get_permalink()); ?>
         <?php else: ?>
         <form method="post" class="pp-cta-form">
@@ -441,11 +442,11 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
             <input name="cta_phone" class="pp-cta-input" placeholder="Telefónne číslo">
             <textarea name="cta_msg" class="pp-cta-input" rows="3" placeholder="Správa"></textarea>
             <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
-                <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;color:rgba(255,255,255,.65);cursor:pointer;line-height:1.6">
+                <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;color:#6B6560;cursor:pointer;line-height:1.6">
                     <input type="checkbox" name="gdpr" required style="margin-top:2px;accent-color:#B8A47A;flex-shrink:0">
-                    <span>Súhlasím so <a href="/ochrana-osobnych-udajov/" style="color:#B8A47A">spracovaním OÚ</a>. *</span>
+                    <span>Súhlasím so <a href="/ochrana-osobnych-udajov/" style="color:#7C5E33">spracovaním OÚ</a>. *</span>
                 </label>
-                <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;color:rgba(255,255,255,.65);cursor:pointer;line-height:1.6">
+                <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;color:#6B6560;cursor:pointer;line-height:1.6">
                     <input type="checkbox" name="newsletter" style="margin-top:2px;accent-color:#B8A47A;flex-shrink:0">
                     <span>Chcem dostávať novinky a nové ponuky na e-mail.</span>
                 </label>

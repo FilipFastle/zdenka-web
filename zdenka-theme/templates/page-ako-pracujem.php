@@ -58,9 +58,9 @@ $embed = zc_embed_url($video);
 .ap-video-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;
     border-radius:16px;box-shadow:var(--sh-lg)}
 .ap-video-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
-.ap-video-placeholder{aspect-ratio:16/9;background:var(--dark);border-radius:16px;
+.ap-video-placeholder{aspect-ratio:16/9;background:var(--section);border:2px dashed var(--border);border-radius:16px;
     display:flex;align-items:center;justify-content:center;flex-direction:column;
-    gap:12px;color:rgba(255,255,255,.5)}
+    gap:12px;color:var(--muted)}
 
 /* ── Process steps ── */
 .ap-step{display:flex;gap:20px;align-items:flex-start;padding:20px 0;
@@ -71,7 +71,7 @@ $embed = zc_embed_url($video);
     display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
 
 /* ── CTA ── */
-.ap-cta{background:var(--dark);padding:80px 0;text-align:center}
+.ap-cta{background:var(--section);border-top:1px solid var(--border);padding:80px 0;text-align:center}
 
 @media(max-width:768px){
     .ap-2col,.ap-2col.reverse{grid-template-columns:1fr;gap:28px;direction:ltr}
@@ -164,10 +164,10 @@ $embed = zc_embed_url($video);
 <!-- CTA -->
 <section class="ap-cta">
 <div class="zc-container" style="max-width:600px;text-align:center">
-    <div class="zc-eyebrow" style="justify-content:center;color:rgba(184,164,122,.7)">Nezáväzná konzultácia</div>
-    <h2 style="font-family:var(--serif);color:#fff;margin-bottom:16px">Začnime <em style="color:var(--accent)">spolupracovať</em></h2>
-    <p style="color:rgba(255,255,255,.65);font-size:16px;line-height:1.8;margin-bottom:32px">
-        Prvá konzultácia je bezplatná a nezáväzná. Rád sa s vami stretnem a preberieme vaše možnosti.
+    <div class="zc-eyebrow" style="justify-content:center">Nezáväzná konzultácia</div>
+    <h2 style="font-family:var(--serif);margin-bottom:16px">Začnime <em>spolupracovať</em></h2>
+    <p style="color:var(--muted);font-size:16px;line-height:1.8;margin-bottom:32px">
+        Prvá konzultácia je bezplatná a nezáväzná. Rada sa s vami stretnem a preberieme vaše možnosti.
     </p>
     <a href="<?php echo home_url('/kontakt/'); ?>" class="zc-btn zc-btn-primary">Kontaktovať →</a>
 </div>
