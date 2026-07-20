@@ -34,9 +34,11 @@ function zc_format_price($raw) {
 }
 $cena = zc_format_price($cena_raw);
 
-// Agent name: always the WordPress user's own display name (Users → Profile)
-// so it stays correct even if the panel is used by more than one agent.
-$agent_name  = get_the_author_meta('display_name', $agent_id) ?: (function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : 'Zdenka Cibuľová');
+// Meno maklérky: prednostne z Customizera témy (jednomaklérsky web) — WP
+// display name býva napr. „Administrátor Webstránky", čo na webe pôsobí zle.
+$agent_name  = (function_exists('zc_agent') ? zc_agent('name', '') : '')
+    ?: get_the_author_meta('display_name', $agent_id)
+    ?: 'Zdenka Cibuľová';
 $agent_phone = get_user_meta($agent_id, 'property_phone', true) ?: '+421 907 579 742';
 $agent_wa    = get_user_meta($agent_id, 'property_whatsapp', true) ?: '421907579742';
 $agent_email = get_user_meta($agent_id, 'property_email', true) ?: get_the_author_meta('user_email', $agent_id);
@@ -83,7 +85,7 @@ $all_amenities = get_property_amenities();
 .pp-hero-track { display:flex; height:100%; transition:transform .6s cubic-bezier(.4,0,.2,1); will-change:transform; }
 /* Each slide: absolute-positioned img fills 100% regardless of source size */
 .pp-hero-slide { min-width:100%; height:100%; flex-shrink:0; position:relative; overflow:hidden; background:#111; }
-.pp-hero-slide img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; }
+.pp-hero-slide img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; transform-origin:center 40%; will-change:transform; }
 .pp-hero-overlay {
     position:absolute; inset:0;
     background:linear-gradient(to bottom,rgba(0,0,0,.25) 0%,rgba(0,0,0,.0) 30%,rgba(0,0,0,.55) 72%,rgba(0,0,0,.82) 100%);
@@ -289,10 +291,11 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
 .pp-agent-name { font-size:15px; font-weight:700; color:#1C1A18; margin-bottom:3px; font-family:var(--serif,serif); }
 .pp-agent-role { font-size:11px; color:#6B6560; text-transform:uppercase; letter-spacing:.5px; }
 
-/* Lightbox */
-.pp-lb { display:none; position:fixed; inset:0; background:rgba(5,5,10,.96); z-index:99999; align-items:center; justify-content:center; }
-.pp-lb.open { display:flex; }
-.pp-lb-img { max-width:92vw; max-height:88vh; border-radius:10px; object-fit:contain; box-shadow:0 20px 60px rgba(0,0,0,.5); }
+/* Lightbox — plynulé otvorenie namiesto skokového display:none */
+.pp-lb { display:flex; visibility:hidden; opacity:0; position:fixed; inset:0; background:rgba(5,5,10,.96); z-index:99999; align-items:center; justify-content:center; transition:opacity .28s ease, visibility 0s .28s; }
+.pp-lb.open { visibility:visible; opacity:1; transition:opacity .28s ease; }
+.pp-lb-img { max-width:92vw; max-height:88vh; border-radius:10px; object-fit:contain; box-shadow:0 20px 60px rgba(0,0,0,.5); transform:scale(.96); transition:transform .3s cubic-bezier(.22,.9,.36,1); }
+.pp-lb.open .pp-lb-img { transform:scale(1); }
 .pp-lb-close { position:absolute; top:14px; right:14px; width:42px; height:42px; background:rgba(255,255,255,.1); backdrop-filter:blur(8px); color:#fff; border:none; border-radius:50%; font-size:20px; cursor:pointer; }
 .pp-lb-side { position:absolute; top:50%; transform:translateY(-50%); width:48px; height:48px; background:rgba(255,255,255,.1); backdrop-filter:blur(8px); color:#fff; border:none; border-radius:50%; font-size:22px; cursor:pointer; }
 .pp-lb-side:hover { background:rgba(255,255,255,.2); }
@@ -488,7 +491,8 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
 
 </main>
 
-<aside style="align-self:start;min-width:0;">
+<!-- aside sa musí natiahnuť na výšku riadku gridu, inak sticky sidebar nemá kade cestovať -->
+<aside style="align-self:stretch;min-width:0;">
 <div class="pp-sidebar">
     <div class="pp-price-card">
         <div class="pp-price-top">
@@ -577,6 +581,21 @@ if(hero&&total>1){
         if(Math.abs(dx)>50){dx>0?ppNext():ppPrev()}
     });
     setInterval(function(){ppNext()},7000);
+}
+
+/* Zoom hero fotky pri scrolle (ako na úvodnej stránke) */
+if(hero && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    var zoomImgs=hero.querySelectorAll('.pp-hero-slide img');
+    var zTick=false;
+    function ppZoom(){
+        var h=hero.offsetHeight||1;
+        var p=Math.min(Math.max(window.scrollY/h,0),1);
+        var s='scale('+(1+p*0.18).toFixed(4)+')';
+        zoomImgs.forEach(function(im){im.style.transform=s});
+        zTick=false;
+    }
+    window.addEventListener('scroll',function(){if(!zTick){requestAnimationFrame(ppZoom);zTick=true}},{passive:true});
+    ppZoom();
 }
 
 /* LIGHTBOX */

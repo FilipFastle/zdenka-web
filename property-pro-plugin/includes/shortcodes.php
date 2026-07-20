@@ -206,6 +206,12 @@ add_shortcode('property_grid', function($atts) {
                 if (res.success) {
                     grid.innerHTML = res.data.cards;
                     count.textContent = res.data.count + ' ponúk';
+                    // Karty nabehnú postupne namiesto skokového preblknutia
+                    grid.querySelectorAll('.zc-prop-card').forEach(function(c, i){
+                        c.style.animation = 'zcCardIn .45s cubic-bezier(.22,.9,.36,1) both';
+                        c.style.animationDelay = (i * 45) + 'ms';
+                    });
+                    if (window.zcMarkFavs) window.zcMarkFavs();
                 }
                 grid.classList.remove('zc-grid-loading');
             })

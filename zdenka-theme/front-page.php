@@ -16,6 +16,16 @@ $title=zc_agent('title','Realitná maklérka');
 .zc-home-hero ~ footer.zc-footer{position:relative;z-index:2}
 .zc-hero-bg{position:absolute;inset:0;background-size:cover;background-position:67% center;background-repeat:no-repeat;will-change:transform;transform-origin:67% 35%}
 .zc-hero-text{will-change:transform,opacity}
+/* Postupné nabehnutie hero obsahu pri načítaní */
+@media (prefers-reduced-motion: no-preference){
+    @keyframes zcRise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+    .zc-hero-text>*{animation:zcRise .7s cubic-bezier(.22,.9,.36,1) both}
+    .zc-hero-text>*:nth-child(1){animation-delay:.12s}
+    .zc-hero-text>*:nth-child(2){animation-delay:.24s}
+    .zc-hero-text>*:nth-child(3){animation-delay:.36s}
+    .zc-hero-text>*:nth-child(4){animation-delay:.48s}
+    .zc-hero-text>*:nth-child(5){animation-delay:.60s}
+}
 .zc-hero-overlay{position:absolute;inset:0;background:linear-gradient(105deg,rgba(20,18,15,.88) 0%,rgba(20,18,15,.6) 55%,rgba(20,18,15,.15) 100%);z-index:1}
 .zc-hero-text{position:relative;z-index:2;padding:calc(var(--hh,72px) + 40px) 64px 60px;max-width:660px}
 .zc-hero-eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent,#B8A47A);margin-bottom:20px;font-family:var(--sans,sans-serif)}

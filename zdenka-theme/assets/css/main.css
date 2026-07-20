@@ -696,3 +696,8 @@ html { scroll-behavior: smooth; }
 
 /* Ponuka bez ceny — decentné „Cena dohodou" namiesto prázdneho miesta */
 .zc-prop-price--nego { font-size: 15px; color: var(--muted); font-weight: 600; letter-spacing: .3px; }
+
+/* ── PLYNULÉ ANIMÁCIE v2.5 ── */
+@keyframes zcCardIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.property-grid { transition: opacity .25s ease; }
+.zc-grid-loading { opacity: .45; }
