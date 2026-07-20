@@ -10,9 +10,12 @@ $title=zc_agent('title','Realitná maklérka');
 ?>
 <?php $zc_hero_portrait = function_exists('zc_photo') ? zc_photo('portrait') : ''; ?>
 <style>
-.zc-home-hero{height:100vh;min-height:560px;margin-top:calc(-1 * var(--hh,72px));position:relative;overflow:hidden;display:flex;align-items:center}
-/* -20%/-20% zvislý presah = priestor pre parallax posun */
-.zc-hero-bg{position:absolute;left:0;right:0;top:-20%;bottom:-20%;background-size:cover;background-position:67% center;background-repeat:no-repeat;will-change:transform}
+/* Sticky hero — zvyšok stránky sa naň pri scrolle nasunie ako opona */
+.zc-home-hero{height:100vh;min-height:560px;margin-top:calc(-1 * var(--hh,72px));position:sticky;top:0;z-index:0;overflow:hidden;display:flex;align-items:center}
+.zc-home-hero ~ section{position:relative;z-index:2}
+.zc-home-hero ~ footer.zc-footer{position:relative;z-index:2}
+.zc-hero-bg{position:absolute;inset:0;background-size:cover;background-position:67% center;background-repeat:no-repeat;will-change:transform;transform-origin:67% 35%}
+.zc-hero-text{will-change:transform,opacity}
 .zc-hero-overlay{position:absolute;inset:0;background:linear-gradient(105deg,rgba(20,18,15,.88) 0%,rgba(20,18,15,.6) 55%,rgba(20,18,15,.15) 100%);z-index:1}
 .zc-hero-text{position:relative;z-index:2;padding:calc(var(--hh,72px) + 40px) 64px 60px;max-width:660px}
 .zc-hero-eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent,#B8A47A);margin-bottom:20px;font-family:var(--sans,sans-serif)}
@@ -29,7 +32,7 @@ $title=zc_agent('title','Realitná maklérka');
 <?php if ($zc_hero_portrait): ?>
 /* Mobil: hero = vertikálny portrét — tvár je vycentrovaná z podstaty fotky */
 @media(max-width:768px){
-    .zc-hero-bg{background-image:url('<?php echo esc_url($zc_hero_portrait); ?>') !important;background-position:center 22% !important}
+    .zc-hero-bg{background-image:url('<?php echo esc_url($zc_hero_portrait); ?>') !important;background-position:center 22% !important;transform-origin:center 25%}
     .zc-home-hero{align-items:flex-end}
     .zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 88px}
     .zc-hero-overlay{background:linear-gradient(180deg,rgba(20,18,15,.28) 0%,rgba(20,18,15,.34) 34%,rgba(20,18,15,.86) 72%)}
@@ -44,7 +47,8 @@ $title=zc_agent('title','Realitná maklérka');
     var hdr=document.getElementById('zcHeader');
     if(!hdr)return;
     hdr.classList.add('transparent');
-    function u(){var h=document.getElementById('zcHomeHero');if(!h)return;hdr.classList.toggle('transparent',h.getBoundingClientRect().bottom>0);}
+    // Sticky hero má rect.bottom vždy = výška viewportu — meriame preto scrollY
+    function u(){var h=document.getElementById('zcHomeHero');if(!h)return;hdr.classList.toggle('transparent',window.scrollY < h.offsetHeight - 60);}
     window.addEventListener('scroll',u,{passive:true});
 })();
 </script>
@@ -84,19 +88,28 @@ $title=zc_agent('title','Realitná maklérka');
 </div>
 
 <script>
-/* Jemný parallax hero fotky (vypnutý pri prefers-reduced-motion) */
+/* Hero zoom pri scrolle: obsah stránky sa nasúva na prilepený hero
+   a fotka sa plynulo približuje; text jemne mizne. Vypnuté pri
+   prefers-reduced-motion. */
 (function(){
-    var bg = document.getElementById('zcHeroBg');
-    if (!bg || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var hero = document.getElementById('zcHomeHero');
+    var bg   = document.getElementById('zcHeroBg');
+    var txt  = document.querySelector('.zc-hero-text');
+    var hint = document.querySelector('.zc-hero-scroll');
+    if (!hero || !bg || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     var ticking = false;
     function update(){
-        var y = Math.min(window.scrollY, window.innerHeight);
-        bg.style.transform = 'translate3d(0,' + (y * 0.18).toFixed(1) + 'px,0)';
+        var h = hero.offsetHeight || 1;
+        var p = Math.min(Math.max(window.scrollY / h, 0), 1); // 0 → 1 kým hero zmizne
+        bg.style.transform = 'scale(' + (1 + p * 0.25).toFixed(4) + ')';
+        if (txt)  { txt.style.opacity = Math.max(1 - p * 1.15, 0).toFixed(3); txt.style.transform = 'translateY(' + (-p * 40).toFixed(1) + 'px)'; }
+        if (hint) { hint.style.opacity = Math.max(1 - p * 3, 0).toFixed(3); }
         ticking = false;
     }
     window.addEventListener('scroll', function(){
         if (!ticking) { requestAnimationFrame(update); ticking = true; }
     }, {passive:true});
+    window.addEventListener('resize', update, {passive:true});
     update();
 })();
 </script>

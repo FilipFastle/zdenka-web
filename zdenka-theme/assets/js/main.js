@@ -182,7 +182,8 @@ var hero = document.getElementById('zcHomeHero') || document.getElementById('ppH
 if (hero && hdr) {
     window.removeEventListener('scroll', window._zcTrans);
     window._zcTrans = function () {
-        hdr.classList.toggle('transparent', hero.getBoundingClientRect().bottom > 0);
+        // scrollY namiesto rect.bottom — sticky hero má bottom vždy = viewport
+        hdr.classList.toggle('transparent', window.scrollY < hero.offsetHeight - 60);
     };
     window.addEventListener('scroll', window._zcTrans, { passive: true });
     window._zcTrans();

@@ -17,9 +17,25 @@ add_shortcode('zc_reviews', function($atts) {
 
     ob_start(); ?>
     <style>
+    <?php if ($cols === 3): ?>
+    /* 3 stĺpce cez 6-stĺpcový grid — osirotené karty v poslednom riadku
+       sa roztiahnu (2 → 50/50, 1 → celá šírka), žiadne prázdne diery */
+    .zcr-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:22px}
+    .zcr-grid>*{grid-column:span 2}
+    .zcr-grid>*:nth-child(3n+1):nth-last-child(2),
+    .zcr-grid>*:nth-child(3n+2):nth-last-child(1){grid-column:span 3}
+    .zcr-grid>*:nth-child(3n+1):nth-last-child(1){grid-column:span 6}
+    @media(max-width:900px){
+        .zcr-grid{grid-template-columns:repeat(2,1fr)}
+        .zcr-grid>*{grid-column:auto !important}
+        .zcr-grid>*:nth-child(odd):nth-last-child(1){grid-column:1/-1 !important}
+    }
+    @media(max-width:560px){.zcr-grid{grid-template-columns:1fr}.zcr-grid>*{grid-column:auto !important}}
+    <?php else: ?>
     .zcr-grid{display:grid;grid-template-columns:repeat(<?php echo $cols ?>,1fr);gap:22px}
     @media(max-width:900px){.zcr-grid{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:560px){.zcr-grid{grid-template-columns:1fr}}
+    <?php endif; ?>
     </style>
     <div class="zcr-grid">
     <?php foreach ($rows as $r): echo zcr_card($r); endforeach; ?>

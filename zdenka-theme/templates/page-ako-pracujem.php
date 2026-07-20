@@ -27,9 +27,19 @@ $embed = zc_embed_url($video);
 
 /* ── Services grid ── */
 .ap-services{padding:80px 0;background:var(--white)}
-.ap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-@media(max-width:900px){.ap-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:560px){.ap-grid{grid-template-columns:1fr}}
+/* 6-stĺpcový grid, karta = span 2 (t.j. 3 na riadok). Osirotené karty v
+   poslednom riadku sa roztiahnu: 2 zvyšné → 50/50, 1 zvyšná → celá šírka. */
+.ap-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:24px}
+.ap-grid>.ap-card{grid-column:span 2}
+.ap-grid>.ap-card:nth-child(3n+1):nth-last-child(2),
+.ap-grid>.ap-card:nth-child(3n+2):nth-last-child(1){grid-column:span 3}
+.ap-grid>.ap-card:nth-child(3n+1):nth-last-child(1){grid-column:span 6}
+@media(max-width:900px){
+    .ap-grid{grid-template-columns:repeat(2,1fr)}
+    .ap-grid>.ap-card{grid-column:auto !important}
+    .ap-grid>.ap-card:nth-child(odd):nth-last-child(1){grid-column:1/-1 !important}
+}
+@media(max-width:560px){.ap-grid{grid-template-columns:1fr}.ap-grid>.ap-card{grid-column:auto !important}}
 
 .ap-card{background:var(--white);border:1px solid var(--border);border-radius:16px;
     padding:28px 24px;transition:transform .25s,box-shadow .25s;display:flex;flex-direction:column;gap:14px}

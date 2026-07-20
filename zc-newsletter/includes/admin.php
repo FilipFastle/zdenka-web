@@ -189,6 +189,7 @@ function zcn_admin_page() {
             <label style="display:block;font-size:11px;font-weight:700;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Predmet *</label>
             <input type="text" id="zcnSubject" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px" placeholder="Nová ponuka — 3-izbový byt Banská Bystrica">
         </div>
+        <?php zcn_render_tpl_toolbar('zcnBody', 'zcnSubject'); ?>
         <div style="margin-bottom:16px">
             <label style="display:block;font-size:11px;font-weight:700;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Obsah *</label>
             <?php wp_editor('', 'zcnBody', [

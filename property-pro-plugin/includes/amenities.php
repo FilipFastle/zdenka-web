@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
 function get_property_amenities() {
-    return [
+    $amenities = [
         'interior' => [
             'label' => '🛋️ Interiér a dispozícia',
             'items' => [
@@ -22,6 +22,13 @@ function get_property_amenities() {
                 'rekuperacia' => 'Rekuperácia vzduchu',
                 'murivo_tehla' => 'Murivo: tehla',
                 'murivo_panel' => 'Murivo: panel',
+                'nova_kuchyna' => 'Nová kuchynská linka',
+                'spotrebice' => 'Spotrebiče v cene',
+                'vysoke_stropy' => 'Vysoké stropy',
+                'mezonet' => 'Mezonet',
+                'pracovna' => 'Pracovňa / Home office',
+                'po_rekonstrukcii' => 'Po kompletnej rekonštrukcii',
+                'orientacia_juh' => 'Orientácia na juh',
             ]
         ],
         'exterior' => [
@@ -41,6 +48,10 @@ function get_property_amenities() {
                 'jazierko' => 'Jazierko / Vodný prvok',
                 'oploteny_pozemok' => 'Oplotený pozemok',
                 'zavlaha' => 'Zavlažovací systém',
+                'vonkajsie_sedenie' => 'Vonkajšie sedenie',
+                'sklenik' => 'Skleník',
+                'ovocne_stromy' => 'Ovocné stromy',
+                'hospodarska_budova' => 'Hospodárska budova / Sklad',
             ]
         ],
         'building' => [
@@ -54,6 +65,10 @@ function get_property_amenities() {
                 'kotolna' => 'Vlastná kotolňa',
                 'uzavrety_dvor' => 'Uzavretý dvor / Vnútroblok',
                 'spolovna' => 'Spoločná terasa / strecha',
+                'nizky_pocet_bytov' => 'Nízky počet bytov na poschodí',
+                'spravca' => 'Správcovská spoločnosť',
+                'fond_oprav' => 'Zdravý fond opráv',
+                'nova_strecha' => 'Nová strecha',
             ]
         ],
         'parking' => [
@@ -65,6 +80,19 @@ function get_property_amenities() {
                 'hosťovske_parkovanie' => 'Hosťovské parkovanie',
                 'wallbox' => 'Nabíjanie elektromobilov (Wallbox)',
                 'dvojgaraz' => 'Dvojgaráž',
+                'kryte_statie' => 'Kryté státie / Prístrešok',
+            ]
+        ],
+        'energy' => [
+            'label' => '🔥 Kúrenie a energie',
+            'items' => [
+                'plyn_kotol' => 'Plynový kotol',
+                'czt' => 'Centrálne zásobovanie teplom',
+                'elektro_kurenie' => 'Elektrické kúrenie',
+                'tuhe_palivo' => 'Kotol na tuhé palivo',
+                'nizkoenerg' => 'Nízkoenergetická stavba',
+                'cert_ab' => 'Energetický certifikát A/B',
+                'vlastne_merace' => 'Vlastné merače energií',
             ]
         ],
         'tech' => [
@@ -79,6 +107,7 @@ function get_property_amenities() {
                 'fotovoltika' => 'Solárne / Fotovoltické panely',
                 'tepelne_cerpadlo' => 'Tepelné čerpadlo',
                 'dobijanie_auto' => 'Dobíjacia stanica pre auto',
+                'smart_zamok' => 'Smart zámok',
             ]
         ],
         'location' => [
@@ -97,7 +126,45 @@ function get_property_amenities() {
                 'obchody_blizko' => 'Obchody v blízkosti',
                 'restauracie' => 'Reštaurácie / Kaviarne',
                 'nemocnica_blizko' => 'Nemocnica / Zdravotné stredisko',
+                'centrum' => 'Priamo v centre',
+                'novostavba_stvrt' => 'Nová rezidenčná štvrť',
             ]
         ],
     ];
+
+    // Vlastné položky pridané v Realitnom paneli
+    $custom = get_option('pp_custom_amenities', []);
+    if (is_array($custom) && $custom) {
+        $amenities['custom'] = ['label' => '⭐ Vlastné vybavenie', 'items' => $custom];
+    }
+
+    return $amenities;
 }
+
+// ── Vlastné vybavenie — pridanie / mazanie (Realitný panel) ─────────────
+add_action('wp_ajax_pp_amenity_add', function() {
+    check_ajax_referer('pp_amenity', 'nonce');
+    if (!current_user_can('edit_posts')) wp_send_json_error(['message' => 'Nedostatočné oprávnenie.']);
+    $label = trim(sanitize_text_field($_POST['label'] ?? ''));
+    if (!$label || mb_strlen($label) > 60) {
+        wp_send_json_error(['message' => 'Zadajte názov (max. 60 znakov).']);
+    }
+    $key = 'custom_' . sanitize_title($label);
+    if (!$key || $key === 'custom_') wp_send_json_error(['message' => 'Neplatný názov.']);
+    $custom = get_option('pp_custom_amenities', []);
+    if (isset($custom[$key])) wp_send_json_error(['message' => 'Táto položka už existuje.']);
+    $custom[$key] = $label;
+    update_option('pp_custom_amenities', $custom);
+    wp_send_json_success(['key' => $key, 'label' => $label]);
+});
+
+add_action('wp_ajax_pp_amenity_del', function() {
+    check_ajax_referer('pp_amenity', 'nonce');
+    if (!current_user_can('edit_posts')) wp_send_json_error(['message' => 'Nedostatočné oprávnenie.']);
+    $key = sanitize_key($_POST['key'] ?? '');
+    $custom = get_option('pp_custom_amenities', []);
+    if (!isset($custom[$key])) wp_send_json_error(['message' => 'Položka neexistuje.']);
+    unset($custom[$key]);
+    update_option('pp_custom_amenities', $custom);
+    wp_send_json_success();
+});

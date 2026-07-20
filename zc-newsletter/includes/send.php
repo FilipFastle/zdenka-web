@@ -30,8 +30,10 @@ function zcn_handle_send() {
     ];
 
     if ($test) {
-        $html = zcn_build_newsletter_email($subject, $body_html, zcn_generate_token(), '');
-        $ok   = wp_mail($test, "[TEST] {$subject}", $html, $headers);
+        $t_subj = function_exists('zcn_apply_vars') ? zcn_apply_vars($subject, ['meno'=>'Test','email'=>$test]) : $subject;
+        $t_body = function_exists('zcn_apply_vars') ? zcn_apply_vars($body_html, ['meno'=>'Test','email'=>$test]) : $body_html;
+        $html = zcn_build_newsletter_email($t_subj, $t_body, zcn_generate_token(), '');
+        $ok   = wp_mail($test, "[TEST] {$t_subj}", $html, $headers);
         wp_send_json_success(['message' => $ok ? "✅ Testovací e-mail odoslaný na {$test}" : '❌ Odoslanie zlyhalo.']);
     }
 
@@ -43,8 +45,12 @@ function zcn_handle_send() {
 
     $sent = 0; $failed = 0;
     foreach ($subscribers as $sub) {
-        $html = zcn_build_newsletter_email($subject, $body_html, $sub->token, $sub->name);
-        wp_mail($sub->email, $subject, $html, $headers) ? $sent++ : $failed++;
+        // Premenné {meno}/{email} — dosadené pre každého odberateľa zvlášť
+        $vars   = ['meno' => $sub->name ?: '', 'email' => $sub->email];
+        $s_subj = function_exists('zcn_apply_vars') ? zcn_apply_vars($subject, $vars) : $subject;
+        $s_body = function_exists('zcn_apply_vars') ? zcn_apply_vars($body_html, $vars) : $body_html;
+        $html = zcn_build_newsletter_email($s_subj, $s_body, $sub->token, $sub->name);
+        wp_mail($sub->email, $s_subj, $html, $headers) ? $sent++ : $failed++;
         usleep(150000);
     }
 

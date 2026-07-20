@@ -273,8 +273,13 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <div class="pc">
-    <?php if(isset($_GET['saved'])): ?>
-    <div style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;padding:12px 16px;border-radius:var(--r-sm);margin-bottom:20px;font-size:14px">✅ Nehnuteľnosť uložená!</div>
+    <?php if(isset($_GET['saved'])): $saved_pid = intval($_GET['pid'] ?? 0); ?>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;padding:12px 16px;border-radius:var(--r-sm);margin-bottom:20px;font-size:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <span>✅ Nehnuteľnosť uložená!</span>
+        <?php if ($saved_pid && function_exists('zcn_handle_property_blast')): ?>
+        <button class="btn btn-primary" onclick="pnlBlast(<?php echo $saved_pid ?>, this)">📧 Poslať odberateľom newslettera</button>
+        <?php endif; ?>
+    </div>
     <?php endif; ?>
     <?php
     if ($action==='add'||$action==='edit') panel_form($pid);
@@ -335,6 +340,21 @@ function rmGal(btn){
 function delProp(id, nonce){
     if(confirm('Naozaj vymazať túto nehnuteľnosť?'))window.location='?action=delete&id='+id+'&_wpnonce='+nonce;
 }
+<?php if (function_exists('zcn_handle_property_blast')): ?>
+function pnlBlast(id, btn){
+    if(!confirm('Poslať túto ponuku e-mailom všetkým odberateľom newslettera?'))return;
+    btn.disabled=true;var orig=btn.innerHTML;btn.innerHTML='Odosielam…';
+    var data=new FormData();
+    data.append('action','zcn_send_property');
+    data.append('nonce','<?php echo wp_create_nonce('zcn_send_nonce') ?>');
+    data.append('property_id',id);
+    fetch('<?php echo admin_url('admin-ajax.php') ?>',{method:'POST',body:data})
+    .then(function(r){return r.json()}).then(function(res){
+        btn.disabled=false;btn.innerHTML=res.success?'📧 ✓':orig;
+        toast((res.data&&res.data.message)||(res.success?'Odoslané':'Chyba'),res.success);
+    }).catch(function(){btn.disabled=false;btn.innerHTML=orig;toast('Chyba pripojenia',false)});
+}
+<?php endif; ?>
 </script>
 <?php
     return ob_get_clean();
@@ -377,6 +397,13 @@ function panel_list() {
                 <div class="prop-item-actions">
                     <a href="?action=edit&id=<?php echo $p->ID ?>" class="btn btn-primary">Upraviť</a>
                     <a href="<?php echo get_permalink($p->ID) ?>" target="_blank" class="btn btn-ghost">Zobraziť</a>
+                    <?php if (function_exists('zcn_handle_property_blast')):
+                        $blast_sent = get_post_meta($p->ID, '_zcn_blast_sent', true); ?>
+                    <button class="btn btn-success" onclick="pnlBlast(<?php echo $p->ID ?>, this)"
+                        title="<?php echo $blast_sent ? 'Odoslané '.esc_attr(date('d.m.Y H:i', strtotime($blast_sent))).' — kliknutím pošleš znova' : 'Poslať ponuku odberateľom newslettera' ?>">
+                        📧<?php echo $blast_sent ? ' ✓' : '' ?>
+                    </button>
+                    <?php endif; ?>
                     <button class="btn btn-danger" onclick="delProp(<?php echo $p->ID ?>, '<?php echo wp_create_nonce('panel_delete_'.$p->ID) ?>')">Zmazať</button>
                 </div>
             </div>
@@ -495,19 +522,79 @@ function panel_form($pid) {
         </div>
 
         <div id="pftab_amenities" class="pf-panel">
-            <?php foreach ($all_am as $cat): ?>
+            <?php foreach ($all_am as $catkey => $cat): ?>
             <div class="am-cat">
                 <div class="am-cat-hd"><?php echo $cat['label'] ?></div>
-                <div class="am-items">
+                <div class="am-items" <?php echo $catkey==='custom' ? 'id="ppCustomItems"' : '' ?>>
                     <?php foreach ($cat['items'] as $k => $lbl): ?>
-                    <label class="am-item">
-                        <input type="checkbox" name="amenities[]" value="<?php echo $k ?>" <?php checked(in_array($k,$ams_sel)) ?>>
+                    <label class="am-item" <?php echo $catkey==='custom' ? 'data-key="'.esc_attr($k).'"' : '' ?>>
+                        <input type="checkbox" name="amenities[]" value="<?php echo esc_attr($k) ?>" <?php checked(in_array($k,$ams_sel)) ?>>
                         <?php echo esc_html($lbl) ?>
+                        <?php if ($catkey==='custom'): ?>
+                        <button type="button" class="pp-am-del" onclick="ppDelAm('<?php echo esc_js($k) ?>',this)" title="Zmazať položku"
+                            style="margin-left:auto;width:20px;height:20px;border:none;border-radius:50%;background:#fef2f2;color:#dc2626;font-size:11px;cursor:pointer;line-height:1;flex-shrink:0">✕</button>
+                        <?php endif; ?>
                     </label>
                     <?php endforeach; ?>
                 </div>
             </div>
             <?php endforeach; ?>
+
+            <!-- Správa vlastného vybavenia -->
+            <div class="am-cat" style="background:var(--section);border-radius:var(--r-sm);padding:16px">
+                <div class="am-cat-hd" style="background:var(--white)">⭐ Pridať vlastné vybavenie</div>
+                <?php if (empty($all_am['custom'])): ?>
+                <div class="am-items" id="ppCustomItems" style="margin-bottom:10px"></div>
+                <?php endif; ?>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
+                    <input type="text" id="ppNewAm" placeholder="Napr. Vínna pivnica" maxlength="60"
+                        style="flex:1;min-width:200px;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:13px"
+                        onkeydown="if(event.key==='Enter'){event.preventDefault();ppAddAm();}">
+                    <button type="button" class="btn btn-primary" onclick="ppAddAm()">+ Pridať</button>
+                </div>
+                <p style="font-size:11px;color:var(--muted);margin:8px 0 0">Vlastné položky sa uložia natrvalo a budú dostupné pri všetkých nehnuteľnostiach. Mazať ich môžeš krížikom pri položke.</p>
+            </div>
+
+            <script>
+            var ppAmNonce = '<?php echo wp_create_nonce('pp_amenity') ?>';
+            function ppAddAm(){
+                var inp = document.getElementById('ppNewAm');
+                var label = inp.value.trim();
+                if (!label) { toast('Zadaj názov položky', false); return; }
+                var data = new FormData();
+                data.append('action','pp_amenity_add');
+                data.append('nonce', ppAmNonce);
+                data.append('label', label);
+                fetch('<?php echo admin_url('admin-ajax.php') ?>',{method:'POST',body:data})
+                .then(function(r){return r.json()}).then(function(res){
+                    if (!res.success) { toast((res.data&&res.data.message)||'Chyba', false); return; }
+                    var wrap = document.getElementById('ppCustomItems');
+                    var l = document.createElement('label');
+                    l.className = 'am-item';
+                    l.dataset.key = res.data.key;
+                    l.innerHTML = '<input type="checkbox" name="amenities[]" value="' + res.data.key + '" checked> ' +
+                        res.data.label.replace(/</g,'&lt;') +
+                        '<button type="button" class="pp-am-del" onclick="ppDelAm(\'' + res.data.key + '\',this)" title="Zmazať položku" style="margin-left:auto;width:20px;height:20px;border:none;border-radius:50%;background:#fef2f2;color:#dc2626;font-size:11px;cursor:pointer;line-height:1;flex-shrink:0">✕</button>';
+                    wrap.appendChild(l);
+                    inp.value = '';
+                    toast('Položka pridaná (označená pre túto ponuku)', true);
+                });
+            }
+            function ppDelAm(key, btn){
+                if (!confirm('Natrvalo zmazať túto položku vybavenia? Zmizne zo zoznamu pre všetky ponuky.')) return;
+                var data = new FormData();
+                data.append('action','pp_amenity_del');
+                data.append('nonce', ppAmNonce);
+                data.append('key', key);
+                fetch('<?php echo admin_url('admin-ajax.php') ?>',{method:'POST',body:data})
+                .then(function(r){return r.json()}).then(function(res){
+                    if (!res.success) { toast((res.data&&res.data.message)||'Chyba', false); return; }
+                    var item = btn.closest('.am-item');
+                    if (item) item.remove();
+                    toast('Položka zmazaná', true);
+                });
+            }
+            </script>
         </div>
 
         </div>
@@ -559,7 +646,7 @@ add_action('template_redirect', function() {
     update_post_meta($pid,'_property_video_url',esc_url_raw($_POST['video_url']??''));
     $ams=isset($_POST['amenities'])?array_map('sanitize_text_field',$_POST['amenities']):[];
     update_post_meta($pid,'_property_amenities',$ams);
-    wp_redirect(get_permalink(get_page_by_path('realitny-panel')).'?action=list&saved=1');exit;
+    wp_redirect(get_permalink(get_page_by_path('realitny-panel')).'?action=list&saved=1&pid='.$pid);exit;
 });
 
 // ── Newsletter Panel ───────────────────────────────────────────────────────
@@ -627,6 +714,7 @@ function panel_newsletter() {
                     style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px;color:var(--text);outline:none;transition:border .2s"
                     placeholder="Nová ponuka — 3-izbový byt Banská Bystrica">
             </div>
+            <?php if (function_exists('zcn_render_tpl_toolbar')) zcn_render_tpl_toolbar('pnlBody', 'pnlSubject'); ?>
             <div style="margin-bottom:14px">
                 <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Obsah *</label>
                 <?php wp_editor('', 'pnlBody', [
