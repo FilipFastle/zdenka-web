@@ -84,6 +84,20 @@ function pp_price_per_m2($cena_raw, $plocha_raw) {
     return '';
 }
 
+// AJAX: rýchle prepnutie stavu ponuky z listu v paneli
+add_action('wp_ajax_pp_quick_status', function() {
+    check_ajax_referer('pp_quick_status', 'nonce');
+    if (!current_user_can('edit_posts')) wp_send_json_error(['message' => 'Nedostatočné oprávnenie.']);
+    $pid = intval($_POST['id'] ?? 0);
+    $st  = sanitize_key($_POST['status'] ?? '');
+    if (!isset(pp_sale_states()[$st])) $st = '';
+    $post = get_post($pid);
+    if (!$post || $post->post_type !== 'property') wp_send_json_error(['message' => 'Neplatná ponuka.']);
+    if (!current_user_can('edit_post', $pid)) wp_send_json_error(['message' => 'Bez oprávnenia.']);
+    update_post_meta($pid, '_property_stav_predaja', $st);
+    wp_send_json_success(['status' => $st]);
+});
+
 // Počítadlo zobrazení — bezpečné zvýšenie (raz za reláciu prehliadača)
 function pp_bump_views($pid) {
     if (is_admin() || !is_singular('property')) return;

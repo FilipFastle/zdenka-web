@@ -3,8 +3,8 @@ defined('ABSPATH') || exit;
 
 add_action('wp_enqueue_scripts', function() {
     wp_enqueue_style('zdenka-fonts','https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,700&display=swap',[],null);
-    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'2.8');
-    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'2.8',true);
+    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'2.9');
+    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'2.9',true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.svg']);
 });
 
@@ -502,6 +502,14 @@ require_once get_stylesheet_directory() . '/inc/maintenance.php';
 require_once get_stylesheet_directory() . '/inc/email-template.php';
 require_once get_stylesheet_directory() . '/inc/privacy.php';
 require_once get_stylesheet_directory() . '/inc/seo.php';
+require_once get_stylesheet_directory() . '/inc/cookie-bar.php';
+
+// Preload hero fotky na úvode (rýchlejší LCP)
+add_action('wp_head', function() {
+    if (!is_front_page() || !function_exists('zc_photo')) return;
+    $hero = zc_photo('hero');
+    if ($hero) echo '<link rel="preload" as="image" href="' . esc_url($hero) . '" fetchpriority="high">' . "\n";
+}, 1);
 
 
 // ═══ SECURITY HARDENING ═══════════════════════════════════════

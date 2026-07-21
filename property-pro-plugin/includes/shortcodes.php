@@ -305,6 +305,24 @@ function render_property_card() {
 // Legacy shortcode – empty
 add_shortcode('property_filter', '__return_empty_string');
 
+// ── PREDANÉ NEHNUTEĽNOSTI ─────────────────────────────────────────────────
+add_shortcode('predane_nehnutelnosti', function($atts) {
+    $atts = shortcode_atts(['per_page' => '6'], $atts);
+    $q = new WP_Query([
+        'post_type'      => 'property',
+        'posts_per_page' => intval($atts['per_page']),
+        'post_status'    => 'publish',
+        'meta_query'     => [['key' => '_property_stav_predaja', 'value' => 'predane', 'compare' => '=']],
+        'orderby'        => 'modified', 'order' => 'DESC',
+    ]);
+    if (!$q->have_posts()) return '';
+    ob_start(); ?>
+    <div class="property-grid">
+        <?php while ($q->have_posts()): $q->the_post(); echo render_property_card(); endwhile; wp_reset_postdata(); ?>
+    </div>
+    <?php return ob_get_clean();
+});
+
 // ── CAROUSEL ─────────────────────────────────────────────────────────────
 add_shortcode('property_carousel', function($atts) {
     $atts  = shortcode_atts(['per_page'=>'6'], $atts);

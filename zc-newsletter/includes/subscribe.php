@@ -100,6 +100,30 @@ function zcn_send_confirmation($email, $name, $token) {
     ]);
 }
 
+// Uvítací e-mail po potvrdení / priamom prihlásení na odber
+function zcn_send_welcome($email, $name = '') {
+    if (!is_email($email)) return;
+    $site       = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : get_bloginfo('name');
+    $from_email = get_theme_mod('zc_email_from', '') ?: get_option('admin_email');
+    $greeting   = $name ? "Dobrý deň {$name}," : 'Dobrý deň,';
+    $subject    = "Vitajte v odbere noviniek — {$site}";
+    $body = zcn_email_wrap($subject, "
+        <p style='font-size:16px;color:#2C2825;margin:0 0 20px'>{$greeting}</p>
+        <p style='color:#555;line-height:1.75;margin:0 0 20px'>
+            ďakujeme za prihlásenie na odber noviniek. Odteraz vám budem posielať
+            <strong>nové ponuky nehnuteľností</strong> a tipy zo sveta realít ako prvým.
+        </p>
+        <p style='color:#555;line-height:1.75;margin:0 0 8px'>
+            Ak by ste čokoľvek potrebovali, pokojne mi napíšte alebo zavolajte.
+        </p>
+        <p style='color:#2C2825;margin:20px 0 0'>S pozdravom,<br><strong>{$site}</strong></p>
+    ");
+    wp_mail($email, $subject, $body, [
+        'Content-Type: text/html; charset=UTF-8',
+        "From: {$site} <{$from_email}>",
+    ]);
+}
+
 // Forced subscription - direct active (no confirmation email, used from form opt-in)
 function zcn_subscribe_forced($email, $name = '', $source = 'form') {
     if (!is_email($email)) return false;
@@ -125,6 +149,7 @@ function zcn_subscribe_forced($email, $name = '', $source = 'form') {
             'confirmed_at' => current_time('mysql'),
         ]);
     }
+    zcn_send_welcome($email, $name);
     return true;
 }
 

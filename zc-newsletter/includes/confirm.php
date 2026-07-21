@@ -22,6 +22,7 @@ add_action('init', function() {
             ['status' => 'active', 'confirmed_at' => current_time('mysql')],
             ['token'  => $token]
         );
+        if (function_exists('zcn_send_welcome')) zcn_send_welcome($row->email, $row->name);
         wp_die(zcn_page_response(
             'Prihlásenie potvrdené!',
             'Ste prihlásený na odber noviniek. Budeme vás informovať o nových ponukách.',

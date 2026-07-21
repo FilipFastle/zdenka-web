@@ -340,6 +340,18 @@ function rmGal(btn){
 function delProp(id, nonce){
     if(confirm('Naozaj vymazať túto nehnuteľnosť?'))window.location='?action=delete&id='+id+'&_wpnonce='+nonce;
 }
+function pnlStatus(id, sel){
+    var val=sel.value;
+    sel.style.background = val==='predane'?'#f1f5f9':(val==='rezervovane'?'#fffbeb':'#f0fdf4');
+    var data=new FormData();
+    data.append('action','pp_quick_status');
+    data.append('nonce','<?php echo wp_create_nonce('pp_quick_status') ?>');
+    data.append('id',id); data.append('status',val);
+    fetch('<?php echo admin_url('admin-ajax.php') ?>',{method:'POST',body:data})
+    .then(function(r){return r.json()}).then(function(res){
+        toast(res.success?'Stav ponuky uložený':(res.data&&res.data.message)||'Chyba',res.success);
+    }).catch(function(){toast('Chyba pripojenia',false)});
+}
 <?php if (function_exists('zcn_handle_property_blast')): ?>
 function pnlBlast(id, btn){
     if(!confirm('Poslať túto ponuku e-mailom všetkým odberateľom newslettera?'))return;
@@ -394,14 +406,22 @@ function panel_list() {
             <div class="prop-item-body">
                 <div class="prop-item-title"><?php echo esc_html($p->post_title) ?></div>
                 <div class="prop-item-price"<?php if(!$cena) echo ' style="color:var(--muted);font-size:13px;font-weight:600"'; ?>><?php echo esc_html($cena ?: 'Cena dohodou') ?></div>
+                <?php $sp = get_post_meta($p->ID,'_property_stav_predaja',true); ?>
+                <select class="pnl-status" onchange="pnlStatus(<?php echo $p->ID ?>,this)" title="Rýchlo zmeniť stav"
+                    style="margin-bottom:8px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--sans);background:<?php echo $sp==='predane'?'#f1f5f9':($sp==='rezervovane'?'#fffbeb':'#f0fdf4') ?>">
+                    <option value="" <?php selected($sp,'') ?>>● Aktívna</option>
+                    <option value="rezervovane" <?php selected($sp,'rezervovane') ?>>● Rezervované</option>
+                    <option value="predane" <?php selected($sp,'predane') ?>>● Predané</option>
+                </select>
                 <div class="prop-item-actions">
                     <a href="?action=edit&id=<?php echo $p->ID ?>" class="btn btn-primary">Upraviť</a>
                     <a href="<?php echo get_permalink($p->ID) ?>" target="_blank" class="btn btn-ghost">Zobraziť</a>
+                    <a href="?action=duplicate&id=<?php echo $p->ID ?>&_wpnonce=<?php echo wp_create_nonce('panel_dup_'.$p->ID) ?>" class="btn btn-ghost">Duplikovať</a>
                     <?php if (function_exists('zcn_handle_property_blast')):
                         $blast_sent = get_post_meta($p->ID, '_zcn_blast_sent', true); ?>
                     <button class="btn btn-success" onclick="pnlBlast(<?php echo $p->ID ?>, this)"
                         title="<?php echo $blast_sent ? 'Odoslané '.esc_attr(date('d.m.Y H:i', strtotime($blast_sent))).' – kliknutím pošleš znova' : 'Poslať ponuku odberateľom newslettera' ?>">
-                        <?php echo $blast_sent ? ' ✓' : '' ?>
+                        Newsletter<?php echo $blast_sent ? ' ✓' : '' ?>
                     </button>
                     <?php endif; ?>
                     <button class="btn btn-danger" onclick="delProp(<?php echo $p->ID ?>, '<?php echo wp_create_nonce('panel_delete_'.$p->ID) ?>')">Zmazať</button>
@@ -643,6 +663,28 @@ add_action('template_redirect', function() {
         wp_delete_post($del_id, true);
         wp_redirect(get_permalink(get_page_by_path('realitny-panel')).'?action=list');exit;
     }
+
+    // Duplikovať ponuku
+    if (($_GET['action']??'')==='duplicate' && isset($_GET['id'])) {
+        if (!wp_verify_nonce($_GET['_wpnonce']??'', 'panel_dup_'.intval($_GET['id']))) wp_die('Neplatný token.');
+        $src = get_post(intval($_GET['id']));
+        if (!$src || $src->post_type !== 'property') wp_die('Neplatná požiadavka.');
+        $new_id = wp_insert_post([
+            'post_title'  => $src->post_title . ' (kópia)',
+            'post_content'=> $src->post_content,
+            'post_type'   => 'property',
+            'post_status' => 'draft',
+        ]);
+        if ($new_id && !is_wp_error($new_id)) {
+            foreach (get_post_meta(intval($_GET['id'])) as $k => $v) {
+                if (strpos($k, '_property_') === 0) update_post_meta($new_id, $k, maybe_unserialize($v[0]));
+            }
+            update_post_meta($new_id, '_property_stav_predaja', '');
+            update_post_meta($new_id, '_property_views', 0);
+        }
+        wp_redirect(get_permalink(get_page_by_path('realitny-panel')).'?action=edit&id='.$new_id);exit;
+    }
+
     if (!isset($_POST['title'])||!wp_verify_nonce($_POST['_wpnonce']??'','panel_save')) return;
     $pid = intval($_GET['id']??0);
     $data = ['post_title'=>sanitize_text_field($_POST['title']),'post_content'=>wp_kses_post($_POST['content']??''),'post_type'=>'property','post_status'=>'publish'];
