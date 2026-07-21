@@ -43,7 +43,7 @@ function panel_login_page() {
     return '
     <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F5F1EA;padding:20px;font-family:-apple-system,BlinkMacSystemFont,\'DM Sans\',sans-serif">
         <div style="background:#fff;padding:48px 40px;border-radius:20px;max-width:400px;width:100%;box-shadow:0 12px 48px rgba(60,50,30,.12);border:1px solid #E2DACE;text-align:center">
-            <div style="width:64px;height:64px;background:#F5F1EA;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 24px"></div>
+            <div style="width:64px;height:64px;background:#F5F1EA;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;color:#B8A47A"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
             <h1 style="font-family:\'Playfair Display\',Georgia,serif;font-size:22px;margin-bottom:8px;color:#1C1A18">Realitný Panel</h1>
             <p style="color:#6B6560;font-size:14px;margin-bottom:32px">Správa nehnuteľností</p>
             <a href="'.esc_url($url).'" style="display:block;padding:14px;background:#B8A47A;color:#1C1A18;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:.8px;text-transform:uppercase;transition:all .2s">Prihlásiť sa</a>
@@ -259,12 +259,15 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
     <nav class="ph-nav">
         <a href="?action=list" class="<?php echo $action==='list'?'active':'' ?>">Ponuky</a>
         <a href="?action=add" class="<?php echo ($action==='add'||$action==='edit')?'active':'' ?>">+ Nová ponuka</a>
+        <?php $lead_cnt = (int) wp_count_posts('pp_lead')->publish; ?>
+        <a href="?action=leads" class="<?php echo $action==='leads'?'active':'' ?>">Dopyty<?php if ($lead_cnt): ?> <span style="background:var(--accent);color:var(--dark);border-radius:50px;padding:1px 7px;font-size:10px"><?php echo $lead_cnt ?></span><?php endif; ?></a>
         <?php if (function_exists('zcn_table')): ?>
         <a href="?action=newsletter" class="<?php echo $action==='newsletter'?'active':'' ?>">Newsletter</a>
         <?php endif; ?>
         <?php if (function_exists('zcr_table')): ?>
         <a href="?action=reviews" class="<?php echo $action==='reviews'?'active':'' ?>">Recenzie</a>
         <?php endif; ?>
+        <a href="?action=import" class="<?php echo $action==='import'?'active':'' ?>">Import/Export</a>
     </nav>
     <div class="ph-right">
         <span class="ph-user"><?php echo esc_html($user->display_name) ?></span>
@@ -283,6 +286,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
     <?php endif; ?>
     <?php
     if ($action==='add'||$action==='edit') panel_form($pid);
+    elseif ($action==='leads') echo panel_leads();
+    elseif ($action==='import') echo panel_import_export();
     elseif ($action==='newsletter' && function_exists('zcn_table')) panel_newsletter();
     elseif ($action==='reviews'    && function_exists('zcr_table'))  panel_reviews();
     else panel_list();
@@ -1012,8 +1017,36 @@ function panel_newsletter() {
 
     <?php elseif ($subtab === 'log'):
         $log = get_option('zcn_send_log', []);
+        $campaigns = function_exists('zcn_all_campaigns') ? zcn_all_campaigns() : [];
     ?>
+    <?php if ($campaigns): ?>
+    <div style="margin-bottom:26px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:12px">Otvorenia &amp; kliky</div>
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead><tr style="background:var(--section);border-bottom:1px solid var(--border)">
+                <th style="padding:10px 16px;text-align:left;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)">Predmet</th>
+                <th style="padding:10px 16px;text-align:right;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)">Odoslané</th>
+                <th style="padding:10px 16px;text-align:right;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)">Otvorenia</th>
+                <th style="padding:10px 16px;text-align:right;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)">Kliky</th>
+            </tr></thead>
+            <tbody>
+            <?php foreach ($campaigns as $cs): if (!$cs) continue; ?>
+            <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:11px 16px;color:var(--dark);font-weight:500"><?php echo esc_html($cs['subject']) ?><br><span style="color:var(--muted);font-size:11px;font-weight:400"><?php echo date('d.m.Y H:i', strtotime($cs['date'])) ?></span></td>
+                <td style="padding:11px 16px;text-align:right;color:var(--muted)"><?php echo (int)$cs['sent'] ?></td>
+                <td style="padding:11px 16px;text-align:right;font-weight:700;color:#15803d"><?php echo (int)$cs['opens'] ?> <span style="color:var(--muted);font-weight:400;font-size:11px">(<?php echo (int)$cs['open_rate'] ?>%)</span></td>
+                <td style="padding:11px 16px;text-align:right;font-weight:700;color:var(--accent-txt)"><?php echo (int)$cs['clicks'] ?> <span style="color:var(--muted);font-weight:400;font-size:11px">(<?php echo (int)$cs['click_rate'] ?>%)</span></td>
+            </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:8px">Otvorenia sa merajú neviditeľným obrázkom — reálne číslo býva vyššie (časť e-mailových klientov obrázky blokuje).</p>
+    </div>
+    <?php endif; ?>
     <?php if ($log): ?>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:12px">História odoslaní</div>
     <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
     <table style="width:100%;border-collapse:collapse;font-size:13px">
         <thead><tr style="background:var(--section);border-bottom:1px solid var(--border)">

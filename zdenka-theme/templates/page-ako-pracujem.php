@@ -179,7 +179,7 @@ $ap_vcount = count($ap_videos);
     </div>
     <?php elseif (current_user_can('manage_options')): ?>
     <div class="ap-video-placeholder">
-        <div style="font-size:40px"></div>
+        <div style="color:#B8A47A;margin-bottom:6px"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 9 15 12 10 15" fill="currentColor" stroke="none"/></svg></div>
         <div style="font-size:14px">Nastav videá: <strong>Vzhľad → Prispôsobiť → Ako pracujem → médiá</strong><br><small style="opacity:.7">Môžeš pridať 1 až 3 videá alebo YouTube Shorts.</small></div>
     </div>
     <?php endif; ?>

@@ -123,8 +123,12 @@ function render_gallery_meta($post) {
     .gal-preview{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:12px}
     .gal-thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:#f0f0f0}
     .gal-thumb img{width:100%;height:100%;object-fit:cover}
-    .gal-thumb .gal-rm{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:#e74c3c;color:#fff;border:none;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center}
+    .gal-thumb .gal-rm{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:#e74c3c;color:#fff;border:none;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;z-index:2}
     .gal-btn{padding:9px 18px;border-radius:8px;font-weight:600;font-size:13px;border:none;cursor:pointer;margin-right:8px}
+    #gallery-preview .gal-thumb{cursor:grab}
+    #gallery-preview .gal-thumb.gal-drag{opacity:.4}
+    #gallery-preview .gal-thumb.gal-over{outline:2px dashed #27ae60;outline-offset:2px}
+    #gallery-preview .gal-thumb::after{content:attr(data-pos);position:absolute;bottom:3px;left:3px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;font-weight:700;line-height:1;padding:2px 5px;border-radius:5px}
     </style>
     
     <p style="font-weight:600;margin-bottom:8px;color:#333">Cover foto <small style="color:#999">(hlavná fotka na karte)</small></p>
@@ -138,10 +142,10 @@ function render_gallery_meta($post) {
     
     <hr style="margin:20px 0;border:none;border-top:1px solid #f0f0f0">
     
-    <p style="font-weight:600;margin-bottom:8px;color:#333">Galéria <small style="color:#999">(masonry galéria na detail stránke)</small></p>
+    <p style="font-weight:600;margin-bottom:8px;color:#333">Galéria <small style="color:#999">(potiahnutím zmeníš poradie fotiek)</small></p>
     <div id="gallery-preview" class="gal-preview">
         <?php foreach ($gallery_ids as $gid): if ($img = wp_get_attachment_image_src($gid,'thumbnail')): ?>
-        <div class="gal-thumb" data-id="<?php echo $gid ?>"><img src="<?php echo $img[0] ?>"><button type="button" class="gal-rm" onclick="rmGal(this)">✕</button></div>
+        <div class="gal-thumb" draggable="true" data-id="<?php echo $gid ?>"><img src="<?php echo $img[0] ?>"><button type="button" class="gal-rm" onclick="rmGal(this)">✕</button></div>
         <?php endif; endforeach; ?>
     </div>
     <button type="button" class="gal-btn" style="background:#27ae60;color:#fff" onclick="selGal()">Pridaj fotky</button>
@@ -155,8 +159,19 @@ function render_gallery_meta($post) {
     <script>
     function selCover(){var f=wp.media({title:'Cover foto',button:{text:'Nastav'},multiple:false});f.on('select',function(){var a=f.state().get('selection').first().toJSON();document.getElementById('cover-id').value=a.id;var t=a.sizes.thumbnail||a.sizes.full;document.getElementById('cover-preview').innerHTML='<div class="gal-thumb"><img src="'+t.url+'"><button type="button" class="gal-rm" onclick="rmCover()">✕</button></div>';});f.open();}
     function rmCover(){document.getElementById('cover-id').value='';document.getElementById('cover-preview').innerHTML='';}
-    function selGal(){var f=wp.media({title:'Galéria',button:{text:'Pridaj'},multiple:true});f.on('select',function(){var g=JSON.parse(document.getElementById('gallery-ids').value||'[]');var p=document.getElementById('gallery-preview');f.state().get('selection').forEach(function(a){a=a.toJSON();if(!g.includes(a.id)){g.push(a.id);var t=a.sizes.thumbnail||a.sizes.full;p.innerHTML+='<div class="gal-thumb" data-id="'+a.id+'"><img src="'+t.url+'"><button type="button" class="gal-rm" onclick="rmGal(this)">✕</button></div>';}});document.getElementById('gallery-ids').value=JSON.stringify(g);});f.open();}
-    function rmGal(b){var id=b.parentElement.dataset.id;var g=JSON.parse(document.getElementById('gallery-ids').value);g=g.filter(x=>x!=id);document.getElementById('gallery-ids').value=JSON.stringify(g);b.parentElement.remove();}
+    function selGal(){var f=wp.media({title:'Galéria',button:{text:'Pridaj'},multiple:true});f.on('select',function(){var g=JSON.parse(document.getElementById('gallery-ids').value||'[]');var p=document.getElementById('gallery-preview');f.state().get('selection').forEach(function(a){a=a.toJSON();if(!g.includes(a.id)){g.push(a.id);var t=a.sizes.thumbnail||a.sizes.full;p.insertAdjacentHTML('beforeend','<div class="gal-thumb" draggable="true" data-id="'+a.id+'"><img src="'+t.url+'"><button type="button" class="gal-rm" onclick="rmGal(this)">✕</button></div>');}});galSync();galBind();});f.open();}
+    function rmGal(b){b.parentElement.remove();galSync();}
+    function galSync(){var ids=[].map.call(document.querySelectorAll('#gallery-preview .gal-thumb'),function(t,i){t.dataset.pos=(i+1);return parseInt(t.dataset.id);});document.getElementById('gallery-ids').value=JSON.stringify(ids);}
+    var galDragEl=null;
+    function galBind(){var thumbs=document.querySelectorAll('#gallery-preview .gal-thumb');thumbs.forEach(function(t){
+        t.ondragstart=function(e){galDragEl=t;t.classList.add('gal-drag');e.dataTransfer.effectAllowed='move';};
+        t.ondragend=function(){t.classList.remove('gal-drag');document.querySelectorAll('.gal-over').forEach(function(x){x.classList.remove('gal-over');});galSync();};
+        t.ondragover=function(e){e.preventDefault();e.dataTransfer.dropEffect='move';};
+        t.ondragenter=function(){if(t!==galDragEl)t.classList.add('gal-over');};
+        t.ondragleave=function(){t.classList.remove('gal-over');};
+        t.ondrop=function(e){e.preventDefault();t.classList.remove('gal-over');if(!galDragEl||galDragEl===t)return;var p=document.getElementById('gallery-preview');var kids=[].slice.call(p.children);if(kids.indexOf(galDragEl)<kids.indexOf(t)){p.insertBefore(galDragEl,t.nextSibling);}else{p.insertBefore(galDragEl,t);}galSync();};
+    });galSync();}
+    galBind();
     </script>
     <?php
 }

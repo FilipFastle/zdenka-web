@@ -373,7 +373,7 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     </div>
     <?php else: ?>
     <!-- Bez fotky: nižší zlatý hero namiesto tmavej 100vh plochy -->
-    <div style="height:100%;background:linear-gradient(135deg,#B8A47A,#8F7B55);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55);font-size:72px;"></div>
+    <div style="height:100%;background:linear-gradient(135deg,#B8A47A,#8F7B55);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55)"><svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
     <?php endif; ?>
     <div class="pp-hero-overlay"></div>
     <button class="zc-fav-btn pp-hero-fav" data-id="<?php echo $id ?>" title="Pridať do obľúbených" onclick="zcToggleFav(this,<?php echo $id ?>)" aria-label="Pridať do obľúbených">
@@ -477,14 +477,29 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     <div class="pp-cta">
         <div class="pp-cta-title">Mám záujem o túto nehnuteľnosť</div>
         <div class="pp-cta-sub">Zanechajte kontakt a ozveme sa vám čo najskôr</div>
-        <?php if (isset($_POST['cta_send']) && wp_verify_nonce($_POST['cta_nonce']??'','cta_form')): ?>
-            <div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:14px;border-radius:10px;text-align:center;color:#15803d">Správa odoslaná!</div>
-            <?php wp_mail($agent_email,'Záujem o: '.get_the_title(),"Meno: ".sanitize_text_field($_POST['cta_name']??'')."\nTel: ".sanitize_text_field($_POST['cta_phone']??'')."\n\n".sanitize_textarea_field($_POST['cta_msg']??'')."\n\n".get_permalink()); ?>
+        <?php if (isset($_POST['cta_send']) && wp_verify_nonce($_POST['cta_nonce']??'','cta_form') && empty($_POST['cta_web'])):
+            $cta_name  = sanitize_text_field($_POST['cta_name']  ?? '');
+            $cta_phone = sanitize_text_field($_POST['cta_phone'] ?? '');
+            $cta_email = sanitize_email($_POST['cta_email']      ?? '');
+            $cta_msg   = sanitize_textarea_field($_POST['cta_msg'] ?? '');
+            // Zaznamenať dopyt do CRM (ak je plugin aktívny)
+            if (function_exists('pp_capture_lead')) {
+                pp_capture_lead(['name'=>$cta_name,'email'=>$cta_email,'phone'=>$cta_phone,'message'=>$cta_msg,'property_id'=>get_the_ID(),'source'=>'detail']);
+            }
+            // Prihlásiť do newslettra ak zaškrtol
+            if (!empty($_POST['newsletter']) && $cta_email && function_exists('zcn_subscribe_forced')) {
+                zcn_subscribe_forced($cta_email, $cta_name, 'ponuka');
+            }
+            wp_mail($agent_email,'Záujem o: '.get_the_title(),"Meno: $cta_name\nTel: $cta_phone\nE-mail: $cta_email\n\n$cta_msg\n\n".get_permalink());
+        ?>
+            <div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:14px;border-radius:10px;text-align:center;color:#15803d">Správa odoslaná! Čoskoro sa vám ozveme.</div>
         <?php else: ?>
         <form method="post" class="pp-cta-form">
             <?php wp_nonce_field('cta_form','cta_nonce') ?>
+            <input type="text" name="cta_web" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px" aria-hidden="true">
             <input name="cta_name" class="pp-cta-input" placeholder="Vaše meno *" required>
             <input name="cta_phone" class="pp-cta-input" placeholder="Telefónne číslo">
+            <input type="email" name="cta_email" class="pp-cta-input" placeholder="E-mail">
             <textarea name="cta_msg" class="pp-cta-input" rows="3" placeholder="Správa"></textarea>
             <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
                 <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;color:#6B6560;cursor:pointer;line-height:1.6">

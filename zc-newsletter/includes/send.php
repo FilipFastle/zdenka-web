@@ -57,6 +57,7 @@ function zcn_handle_send() {
         wp_send_json_error(['message' => 'Žiadni aktívni odberatelia.']);
     }
 
+    $cid  = function_exists('zcn_new_campaign') ? zcn_new_campaign($subject, count($subscribers)) : '';
     $sent = 0; $failed = 0;
     foreach ($subscribers as $sub) {
         // Premenné {meno}/{email} – dosadené pre každého odberateľa zvlášť
@@ -64,9 +65,11 @@ function zcn_handle_send() {
         $s_subj = function_exists('zcn_apply_vars') ? zcn_apply_vars($subject, $vars) : $subject;
         $s_body = function_exists('zcn_apply_vars') ? zcn_apply_vars($body_html, $vars) : $body_html;
         $html = zcn_build_newsletter_email($s_subj, $s_body, $sub->token, $sub->name);
+        if ($cid && function_exists('zcn_apply_tracking')) $html = zcn_apply_tracking($html, $cid, $sub->email);
         wp_mail($sub->email, $s_subj, $html, $headers) ? $sent++ : $failed++;
         usleep(150000);
     }
+    if ($cid && function_exists('zcn_campaign_set_sent')) zcn_campaign_set_sent($cid, $sent);
 
     $log = get_option('zcn_send_log', []);
     array_unshift($log, [
@@ -96,15 +99,18 @@ add_action('zcn_do_scheduled', function($key) {
     $from_email = get_theme_mod('zc_email_from', '') ?: get_option('admin_email');
     $headers    = ['Content-Type: text/html; charset=UTF-8', "From: {$from_name} <{$from_email}>"];
 
+    $cid  = function_exists('zcn_new_campaign') ? zcn_new_campaign($item['subject'], count($subscribers)) : '';
     $sent = 0; $failed = 0;
     foreach ($subscribers as $sub) {
         $vars   = ['meno' => $sub->name ?: '', 'email' => $sub->email];
         $s_subj = function_exists('zcn_apply_vars') ? zcn_apply_vars($item['subject'], $vars) : $item['subject'];
         $s_body = function_exists('zcn_apply_vars') ? zcn_apply_vars($item['body'], $vars) : $item['body'];
         $html   = zcn_build_newsletter_email($s_subj, $s_body, $sub->token, $sub->name);
+        if ($cid && function_exists('zcn_apply_tracking')) $html = zcn_apply_tracking($html, $cid, $sub->email);
         wp_mail($sub->email, $s_subj, $html, $headers) ? $sent++ : $failed++;
         usleep(150000);
     }
+    if ($cid && function_exists('zcn_campaign_set_sent')) zcn_campaign_set_sent($cid, $sent);
     $log = get_option('zcn_send_log', []);
     array_unshift($log, ['date' => current_time('mysql'), 'subject' => '[naplánované] ' . $item['subject'], 'sent' => $sent, 'failed' => $failed]);
     update_option('zcn_send_log', array_slice($log, 0, 30));

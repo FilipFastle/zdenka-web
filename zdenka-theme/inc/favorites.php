@@ -5,9 +5,9 @@ add_shortcode('property_favorites', function () {
     ob_start(); ?>
     <div id="zcFavPage">
         <div id="zcFavEmpty" style="text-align:center;padding:80px 20px;display:none">
-            <div style="font-size:48px;margin-bottom:16px"></div>
+            <div style="margin-bottom:16px;color:var(--accent,#B8A47A)"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
             <h3 style="font-family:var(--serif);margin-bottom:10px">Žiadne obľúbené</h3>
-            <p style="color:var(--muted)">Klikni na  pri nehnuteľnosti aby si ju uložil.</p>
+            <p style="color:var(--muted)">Klikni na srdiečko pri nehnuteľnosti a uloží sa sem.</p>
             <a href="<?php echo home_url('/ponuky/'); ?>" class="zc-btn zc-btn-primary" style="margin-top:20px">Pozrieť ponuky</a>
         </div>
         <div class="property-grid" id="zcFavGrid"></div>
@@ -83,7 +83,7 @@ function zc_get_favorites_handler() {
 
             $html .= '<div class="zc-prop-card">';
             $html .= '<div class="zc-prop-img">';
-            $html .= $cover ? wp_get_attachment_image($cover,'medium',false,['loading'=>'lazy']) : (has_post_thumbnail() ? get_the_post_thumbnail($id,'medium',['loading'=>'lazy']) : '<div style="height:100%;display:flex;align-items:center;justify-content:center;background:var(--section);font-size:32px"></div>');
+            $html .= $cover ? wp_get_attachment_image($cover,'medium',false,['loading'=>'lazy']) : (has_post_thumbnail() ? get_the_post_thumbnail($id,'medium',['loading'=>'lazy']) : '<div style="height:100%;display:flex;align-items:center;justify-content:center;background:var(--section);color:#ccc"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>');
             if ($typ) $html .= '<span class="zc-prop-badge '.esc_attr($typ).'">'.($typ_labels[$typ]??$typ).'</span>';
             $html .= '<button class="zc-fav-remove" data-id="'.$id.'" style="position:absolute;top:12px;right:12px;width:32px;height:32px;background:rgba(255,255,255,.9);border:none;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s" title="Odstrániť z obľúbených">✕</button>';
             $html .= '</div>';

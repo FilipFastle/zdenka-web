@@ -14,13 +14,10 @@ add_action('wp_head', function () {
 <link rel="apple-touch-icon" href="<?php echo $theme_uri; ?>/assets/images/zc-logo.svg">
 <script>
 if ('serviceWorker' in navigator) {
-    // Inject cache version so SW knows current version
-    self.CACHE_VERSION = <?php echo json_encode($cache_ver); ?>;
-    navigator.serviceWorker.register('<?php echo $theme_uri; ?>/assets/sw.js', { scope: '/' })
-        .then(function(reg) {
-            // Check for updates
-            reg.update();
-        });
+    // SW sa servíruje z koreňa (?zcpwa=1) aby platil scope '/' pre celý web
+    navigator.serviceWorker.register('<?php echo esc_url(home_url('/sw.js?zcpwa=1')); ?>', { scope: '/' })
+        .then(function(reg) { reg.update(); })
+        .catch(function(){});
 }
 </script>
     <?php

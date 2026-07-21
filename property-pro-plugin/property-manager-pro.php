@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Property Manager Pro
  * Description: Profesionálny real estate plugin na správu nehnuteľností
- * Version: 5.3
+ * Version: 5.4
  * Author: Filip
  */
 
@@ -26,12 +26,28 @@ add_action('init', function() {
 
 // Load Shortcodes & Templates
 require_once PROPERTY_PRO_PATH . 'includes/helpers.php';
+require_once PROPERTY_PRO_PATH . 'includes/leads.php';
+require_once PROPERTY_PRO_PATH . 'includes/import-export.php';
 require_once PROPERTY_PRO_PATH . 'includes/expose.php';
 require_once PROPERTY_PRO_PATH . 'includes/amenities.php';
 require_once PROPERTY_PRO_PATH . 'includes/shortcodes.php';
 require_once PROPERTY_PRO_PATH . 'includes/meta-boxes.php';
 require_once PROPERTY_PRO_PATH . 'includes/single-template.php';
 require_once PROPERTY_PRO_PATH . 'includes/panel.php';
+
+// Auto-vytvorenie stránky porovnania (raz)
+add_action('admin_init', function () {
+    if (get_page_by_path('porovnanie')) return;
+    if (get_option('pp_porovnanie_created')) return;
+    wp_insert_post([
+        'post_type'    => 'page',
+        'post_title'   => 'Porovnanie ponúk',
+        'post_name'    => 'porovnanie',
+        'post_content' => '[porovnanie]',
+        'post_status'  => 'publish',
+    ]);
+    update_option('pp_porovnanie_created', 1);
+});
 
 // Admin CSS for meta boxes
 add_action('admin_enqueue_scripts', function($hook) {
