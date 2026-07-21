@@ -701,3 +701,67 @@ html { scroll-behavior: smooth; }
 @keyframes zcCardIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 .property-grid { transition: opacity .25s ease; }
 .zc-grid-loading { opacity: .45; }
+
+/* ═══════════════════════════════════════════════════
+   PREMIUM POLISH v2.7 — jemné doladenie celého webu
+═══════════════════════════════════════════════════ */
+
+/* Vyvážené zalamovanie nadpisov a odsekov (žiadne osamelé slová) */
+h1, h2, h3, .zc-hero-h1 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+/* Ostrejšia typografia + žiadny modrý záblesk pri ťuknutí na mobile */
+body { text-rendering: optimizeLegibility; -webkit-tap-highlight-color: transparent; }
+
+/* Jemný zlatý scrollbar (len myš/desktop) */
+@media (pointer: fine) {
+    html { scrollbar-width: thin; scrollbar-color: var(--accent) var(--section); }
+    ::-webkit-scrollbar { width: 11px; height: 11px; }
+    ::-webkit-scrollbar-track { background: var(--section); }
+    ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 20px; border: 3px solid var(--section); }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent-dk); }
+}
+
+/* Bohatšie, mäkšie viacvrstvové tiene kariet */
+.zc-card, .zc-testimonial {
+    box-shadow: 0 1px 2px rgba(40,32,20,.04), 0 6px 18px rgba(40,32,20,.05);
+}
+.zc-card:hover, .zc-testimonial:hover {
+    box-shadow: 0 14px 36px rgba(40,32,20,.13);
+}
+.zc-prop-card:hover {
+    box-shadow: 0 20px 48px rgba(40,32,20,.16);
+}
+
+/* Konzistentný aktívny stav tlačidiel */
+.zc-btn:active, .zc-prop-btn:active { transform: scale(.98); }
+
+/* Podčiarknutie odkazov v obsahu s odsadením */
+.ochrana-body a, .zc-prop-title a { text-underline-offset: 3px; }
+
+/* Eyebrow linka sa pri priamom hoveri jemne predĺži */
+.zc-eyebrow::before { transition: width .35s var(--ease); }
+.zc-eyebrow:hover::before { width: 38px; }
+
+/* Jednotný, výrazný focus pre klávesnicu (prístupnosť) */
+a:focus-visible, button:focus-visible,
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px;
+}
+
+/* Obrázky ponúk a portrétov — plynulejší zoom */
+.zc-prop-img img { transition: transform .7s var(--ease); }
+
+/* Vzdušnejšie sekcie na veľkých obrazovkách */
+@media (min-width: 1200px) { .zc-section { padding: 104px 0; } }
+
+/* Jemný horný predel medzi striedajúcimi sa sekciami */
+.bg-white + .bg-section, .bg-section + .bg-white { position: relative; }
+
+/* Plynulé nabehnutie obsahu po načítaní stránky (rešpektuje reduced-motion) */
+@media (prefers-reduced-motion: no-preference) {
+    @keyframes zcFadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+    .zc-footer-grid > * { animation: zcFadeUp .6s var(--ease) both; }
+    .zc-footer-grid > *:nth-child(2) { animation-delay: .08s; }
+    .zc-footer-grid > *:nth-child(3) { animation-delay: .16s; }
+}

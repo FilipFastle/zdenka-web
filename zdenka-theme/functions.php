@@ -3,8 +3,8 @@ defined('ABSPATH') || exit;
 
 add_action('wp_enqueue_scripts', function() {
     wp_enqueue_style('zdenka-fonts','https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,700&display=swap',[],null);
-    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'2.6.1');
-    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],null,true);
+    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'2.7');
+    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'2.7',true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.svg']);
 });
 
@@ -115,6 +115,13 @@ add_action('customize_register',function($wpc) {
         $wpc->add_setting($id,['default'=>'','sanitize_callback'=>'esc_url_raw']);
         $wpc->add_control($id,['label'=>$lbl,'section'=>'zc_ap','type'=>'url']);
     }
+    // Štartovacia hlasitosť videí — aby po spustení „nehúkalo"
+    $wpc->add_setting('zc_video_volume',['default'=>50,'sanitize_callback'=>'absint']);
+    $wpc->add_control('zc_video_volume',[
+        'label'=>'Štartovacia hlasitosť videí (%)','section'=>'zc_ap','type'=>'number',
+        'input_attrs'=>['min'=>0,'max'=>100,'step'=>5],
+        'description'=>'Platí pre videá v „Ako pracujem" aj na detaile ponuky.',
+    ]);
 });
 
 // Fotka maklérky: Customizer má prednosť, inak súbor v téme (assets/images/hero.* / portrait.*)
@@ -134,14 +141,16 @@ function zc_agent($k,$f='') { return get_theme_mod('zc_agent_'.$k,$f)?:$f; }
 
 // Univerzálny video embed – YouTube (watch, youtu.be, shorts, embed, live) aj Vimeo.
 // Vracia ['url'=>iframe_src, 'vertical'=>bool] alebo [] pri neplatnom vstupe.
+// enablejsapi/api umožňuje nastaviť štartovaciu hlasitosť cez JS (aby nehúkalo).
 function zc_video_embed($url) {
     $url = trim((string)$url);
     if (!$url) return [];
     // YouTube – ID má vždy 11 znakov
     if (preg_match('~(?:youtube\.com/(?:watch\?(?:.*&)?v=|embed/|live/|shorts/|v/)|youtu\.be/)([A-Za-z0-9_-]{11})~', $url, $m)) {
         $vertical = (stripos($url, '/shorts/') !== false);
+        $origin   = rawurlencode(home_url());
         return [
-            'url'      => 'https://www.youtube.com/embed/' . $m[1] . '?rel=0&modestbranding=1&playsinline=1',
+            'url'      => 'https://www.youtube.com/embed/' . $m[1] . '?rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=' . $origin,
             'vertical' => $vertical,
         ];
     }
@@ -150,6 +159,12 @@ function zc_video_embed($url) {
         return ['url' => 'https://player.vimeo.com/video/' . $m[1], 'vertical' => false];
     }
     return [];
+}
+
+// Štartovacia hlasitosť videí (0–100 %), nastaviteľná v Customizeri.
+function zc_video_volume() {
+    $v = (int) get_theme_mod('zc_video_volume', 50);
+    return max(0, min(100, $v));
 }
 
 // One-time self-healing migration: ensure the saved agent name always

@@ -476,6 +476,7 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     if (!empty($pp_video['url'])): ?>
     <div class="pp-video<?php echo !empty($pp_video['vertical']) ? ' vertical' : '' ?>">
         <iframe src="<?php echo esc_url($pp_video['url']) ?>" allowfullscreen loading="lazy"
+            data-zc-vol="<?php echo function_exists('zc_video_volume') ? esc_attr(zc_video_volume()) : '50' ?>"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"></iframe>
     </div>
     <?php endif; ?>

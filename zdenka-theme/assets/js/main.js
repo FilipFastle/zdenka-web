@@ -332,4 +332,52 @@ if ('IntersectionObserver' in window) {
 })();
 
 
+/* ══ VIDEO — štartovacia hlasitosť (aby po spustení nehúkalo) ══════════ */
+(function () {
+    var vids = document.querySelectorAll('iframe[data-zc-vol]');
+    if (!vids.length) return;
+    var needYT = false, needVimeo = false;
+    vids.forEach(function (f) {
+        var s = f.src || '';
+        if (s.indexOf('youtube.com') !== -1) needYT = true;
+        else if (s.indexOf('vimeo.com') !== -1) needVimeo = true;
+    });
+
+    function volOf(f) { var v = parseInt(f.getAttribute('data-zc-vol'), 10); return isNaN(v) ? 50 : Math.max(0, Math.min(100, v)); }
+
+    if (needYT) {
+        var prevReady = window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady = function () {
+            if (typeof prevReady === 'function') prevReady();
+            document.querySelectorAll('iframe[data-zc-vol]').forEach(function (f) {
+                if ((f.src || '').indexOf('youtube.com') === -1) return;
+                if (!f.id) f.id = 'zcyt_' + Math.random().toString(36).slice(2, 8);
+                try {
+                    new YT.Player(f.id, { events: { onReady: function (e) { e.target.setVolume(volOf(f)); } } });
+                } catch (err) {}
+            });
+        };
+        if (!window.YT || !window.YT.Player) {
+            var tag = document.createElement('script');
+            tag.src = 'https://www.youtube.com/iframe_api';
+            document.head.appendChild(tag);
+        } else {
+            window.onYouTubeIframeAPIReady();
+        }
+    }
+
+    if (needVimeo) {
+        var vtag = document.createElement('script');
+        vtag.src = 'https://player.vimeo.com/api/player.js';
+        vtag.onload = function () {
+            document.querySelectorAll('iframe[data-zc-vol]').forEach(function (f) {
+                if ((f.src || '').indexOf('vimeo.com') === -1) return;
+                try { new Vimeo.Player(f).setVolume(volOf(f) / 100); } catch (err) {}
+            });
+        };
+        document.head.appendChild(vtag);
+    }
+})();
+
+
 });

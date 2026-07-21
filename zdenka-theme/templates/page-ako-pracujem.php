@@ -168,6 +168,7 @@ $ap_vcount = count($ap_videos);
         <?php foreach ($ap_videos as $v): ?>
         <div class="ap-vid <?php echo !empty($v['vertical']) ? 'vertical' : 'horizontal' ?>">
             <iframe src="<?php echo esc_url($v['url']) ?>" title="Video prehliadka"
+                data-zc-vol="<?php echo esc_attr(zc_video_volume()) ?>"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
                 allowfullscreen loading="lazy"></iframe>
         </div>
