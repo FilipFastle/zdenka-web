@@ -115,6 +115,11 @@ add_action('customize_register',function($wpc) {
         $wpc->add_setting($id,['default'=>'','sanitize_callback'=>'esc_url_raw']);
         $wpc->add_control($id,['label'=>$lbl,'section'=>'zc_ap','type'=>'url']);
     }
+    // Kurz EUR→CZK pre prepínač meny na ponukách
+    $wpc->add_section('zc_misc',['title'=>'Ostatné nastavenia','priority'=>34]);
+    $wpc->add_setting('zc_czk_rate',['default'=>25.2,'sanitize_callback'=>function($v){return (float)str_replace(',','.',$v);}]);
+    $wpc->add_control('zc_czk_rate',['label'=>'Kurz EUR → CZK (prepínač meny na ponukách)','section'=>'zc_misc','type'=>'text']);
+
     // Štartovacia hlasitosť videí — aby po spustení „nehúkalo"
     $wpc->add_setting('zc_video_volume',['default'=>50,'sanitize_callback'=>'absint']);
     $wpc->add_control('zc_video_volume',[

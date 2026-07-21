@@ -84,6 +84,22 @@ function pp_price_per_m2($cena_raw, $plocha_raw) {
     return '';
 }
 
+// ── Log aktivity ────────────────────────────────────────────────────────
+function pp_log($action, $pid = 0, $extra = '') {
+    $log = get_option('pp_activity_log', []);
+    if (!is_array($log)) $log = [];
+    $user = wp_get_current_user();
+    array_unshift($log, [
+        'time'   => current_time('mysql'),
+        'user'   => $user ? $user->display_name : 'systém',
+        'action' => $action,
+        'pid'    => (int) $pid,
+        'title'  => $pid ? get_the_title($pid) : '',
+        'extra'  => $extra,
+    ]);
+    update_option('pp_activity_log', array_slice($log, 0, 120));
+}
+
 // AJAX: rýchle prepnutie stavu ponuky z listu v paneli
 add_action('wp_ajax_pp_quick_status', function() {
     check_ajax_referer('pp_quick_status', 'nonce');
@@ -95,7 +111,29 @@ add_action('wp_ajax_pp_quick_status', function() {
     if (!$post || $post->post_type !== 'property') wp_send_json_error(['message' => 'Neplatná ponuka.']);
     if (!current_user_can('edit_post', $pid)) wp_send_json_error(['message' => 'Bez oprávnenia.']);
     update_post_meta($pid, '_property_stav_predaja', $st);
+    pp_log('Zmena stavu na „' . (pp_sale_states()[$st] ?: 'Aktívna') . '"', $pid);
     wp_send_json_success(['status' => $st]);
+});
+
+// AJAX: hromadné akcie (viac ponúk naraz)
+add_action('wp_ajax_pp_bulk', function() {
+    check_ajax_referer('pp_bulk', 'nonce');
+    if (!current_user_can('edit_posts')) wp_send_json_error(['message' => 'Nedostatočné oprávnenie.']);
+    $ids = array_filter(array_map('intval', (array) ($_POST['ids'] ?? [])));
+    $op  = sanitize_key($_POST['op'] ?? '');
+    if (!$ids) wp_send_json_error(['message' => 'Nič nie je označené.']);
+    $done = 0;
+    foreach ($ids as $pid) {
+        $post = get_post($pid);
+        if (!$post || $post->post_type !== 'property') continue;
+        if ($op === 'delete') {
+            if (current_user_can('delete_post', $pid)) { pp_log('Hromadne zmazaná ponuka', $pid); wp_delete_post($pid, true); $done++; }
+        } elseif (in_array($op, ['', 'rezervovane', 'predane'], true)) {
+            if (current_user_can('edit_post', $pid)) { update_post_meta($pid, '_property_stav_predaja', $op); $done++; }
+        }
+    }
+    if ($op !== 'delete') pp_log('Hromadná zmena stavu (' . $done . ' ponúk)');
+    wp_send_json_success(['done' => $done]);
 });
 
 // Počítadlo zobrazení — bezpečné zvýšenie (raz za reláciu prehliadača)

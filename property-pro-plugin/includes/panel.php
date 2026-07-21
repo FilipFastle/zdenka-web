@@ -375,8 +375,29 @@ function pnlBlast(id, btn){
 function panel_list() {
     $props = get_posts(['post_type'=>'property','posts_per_page'=>-1,'orderby'=>'date','order'=>'DESC']);
     $typ_labels = ['predaj'=>'Na predaj','prenajom'=>'Na prenájom','pozemok'=>'Pozemok'];
+
+    // Štatistiky pre dashboard
+    $st_active=0;$st_rez=0;$st_sold=0;$views_total=0;
+    foreach($props as $pp){
+        $sp=get_post_meta($pp->ID,'_property_stav_predaja',true);
+        if($sp==='predane')$st_sold++;elseif($sp==='rezervovane')$st_rez++;else $st_active++;
+        $views_total+=(int)get_post_meta($pp->ID,'_property_views',true);
+    }
     ?>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:14px">
+    <div class="pnl-dash" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px">
+        <?php foreach([
+            ['Aktívne ponuky',$st_active,'#16a34a'],
+            ['Rezervované',$st_rez,'#C6902B'],
+            ['Predané',$st_sold,'#7A7068'],
+            ['Zobrazenia spolu',$views_total,'#7C5E33'],
+        ] as [$l,$n,$c]): ?>
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center">
+            <div style="font-family:var(--serif);font-size:26px;font-weight:800;color:<?php echo $c ?>"><?php echo number_format($n,0,',',' ') ?></div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px"><?php echo $l ?></div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:14px">
         <div>
             <h1 style="font-family:var(--serif);font-size:22px;color:var(--dark)">Nehnuteľnosti</h1>
             <p style="font-size:13px;color:var(--muted);margin-top:3px"><?php echo count($props) ?> ponúk celkovo</p>
@@ -391,6 +412,16 @@ function panel_list() {
         <a href="?action=add" class="btn btn-primary" style="padding:12px 28px">Pridať ponuku</a>
     </div>
     <?php else: ?>
+    <!-- Hromadné akcie -->
+    <div id="pnlBulkBar" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;background:var(--dark);color:#fff;border-radius:var(--r);padding:12px 18px;margin-bottom:16px;position:sticky;top:74px;z-index:50">
+        <strong id="pnlBulkCount" style="font-size:13px">0 označených</strong>
+        <span style="opacity:.5">|</span>
+        <button class="btn btn-ghost" style="background:rgba(255,255,255,.12);color:#fff;border-color:transparent" onclick="pnlBulk('')">Aktívne</button>
+        <button class="btn btn-ghost" style="background:rgba(255,255,255,.12);color:#fff;border-color:transparent" onclick="pnlBulk('rezervovane')">Rezervované</button>
+        <button class="btn btn-ghost" style="background:rgba(255,255,255,.12);color:#fff;border-color:transparent" onclick="pnlBulk('predane')">Predané</button>
+        <button class="btn btn-danger" onclick="pnlBulk('delete')">Zmazať označené</button>
+        <button class="btn btn-ghost" style="background:transparent;color:rgba(255,255,255,.7);border-color:transparent;margin-left:auto" onclick="pnlBulkClear()">Zrušiť výber</button>
+    </div>
     <div class="prop-list">
     <?php foreach ($props as $p):
         $typ  = get_post_meta($p->ID,'_property_typ',true);
@@ -398,7 +429,10 @@ function panel_list() {
         $cid  = get_post_meta($p->ID,'_property_cover_id',true);
         if ($cena && strpos($cena,'€')===false) $cena .= ' €';
         ?>
-        <div class="prop-item">
+        <div class="prop-item" data-id="<?php echo $p->ID ?>" style="position:relative">
+            <label class="pnl-check" style="position:absolute;top:8px;left:8px;z-index:3;background:rgba(255,255,255,.9);border-radius:5px;padding:2px;display:flex;cursor:pointer">
+                <input type="checkbox" class="pnl-cb" value="<?php echo $p->ID ?>" onchange="pnlBulkUpd()" style="width:17px;height:17px;cursor:pointer;accent-color:var(--accent)">
+            </label>
             <div class="prop-item-img">
                 <?php if($cid) echo wp_get_attachment_image($cid,'medium'); else echo ''; ?>
                 <?php if($typ): ?><span class="prop-item-badge"><?php echo $typ_labels[$typ]??$typ ?></span><?php endif; ?>
@@ -430,6 +464,46 @@ function panel_list() {
         </div>
     <?php endforeach; ?>
     </div>
+
+    <!-- Log aktivity -->
+    <?php $log = get_option('pp_activity_log', []); if (is_array($log) && $log): ?>
+    <div style="margin-top:36px">
+        <h2 style="font-family:var(--serif);font-size:18px;color:var(--dark);margin-bottom:12px">Posledná aktivita</h2>
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+            <?php foreach (array_slice($log, 0, 12) as $l): ?>
+            <div style="display:flex;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px">
+                <span style="color:var(--muted);font-size:12px;white-space:nowrap;min-width:110px"><?php echo esc_html(date('d.m.Y H:i', strtotime($l['time']))) ?></span>
+                <span style="color:var(--dark);font-weight:600"><?php echo esc_html($l['action']) ?></span>
+                <?php if (!empty($l['title'])): ?><span style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">— <?php echo esc_html($l['title']) ?></span><?php endif; ?>
+                <span style="margin-left:auto;color:var(--accent-txt);font-size:12px"><?php echo esc_html($l['user']) ?></span>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <script>
+    var pnlBulkNonce='<?php echo wp_create_nonce('pp_bulk') ?>';
+    function pnlChecked(){return Array.prototype.map.call(document.querySelectorAll('.pnl-cb:checked'),function(c){return c.value})}
+    function pnlBulkUpd(){
+        var n=pnlChecked().length, bar=document.getElementById('pnlBulkBar');
+        if(bar){bar.style.display=n?'flex':'none';document.getElementById('pnlBulkCount').textContent=n+' označených';}
+    }
+    function pnlBulkClear(){document.querySelectorAll('.pnl-cb:checked').forEach(function(c){c.checked=false});pnlBulkUpd();}
+    function pnlBulk(op){
+        var ids=pnlChecked(); if(!ids.length)return;
+        var msg = op==='delete' ? ('Naozaj zmazať '+ids.length+' ponúk? Nedá sa vrátiť.') : ('Zmeniť stav '+ids.length+' ponúk?');
+        if(!confirm(msg))return;
+        var data=new FormData();
+        data.append('action','pp_bulk');data.append('nonce',pnlBulkNonce);data.append('op',op);
+        ids.forEach(function(id){data.append('ids[]',id)});
+        fetch('<?php echo admin_url('admin-ajax.php') ?>',{method:'POST',body:data})
+        .then(function(r){return r.json()}).then(function(res){
+            if(res.success){toast('Hotovo ('+res.data.done+')',true);setTimeout(function(){location.reload()},600);}
+            else toast((res.data&&res.data.message)||'Chyba',false);
+        }).catch(function(){toast('Chyba pripojenia',false)});
+    }
+    </script>
     <?php endif;
 }
 
@@ -660,6 +734,7 @@ add_action('template_redirect', function() {
         if (!current_user_can('delete_post', $del_id)) {
             wp_die('Nemáte oprávnenie vymazať túto ponuku.');
         }
+        if (function_exists('pp_log')) pp_log('Zmazaná ponuka', $del_id);
         wp_delete_post($del_id, true);
         wp_redirect(get_permalink(get_page_by_path('realitny-panel')).'?action=list');exit;
     }
@@ -682,13 +757,16 @@ add_action('template_redirect', function() {
             update_post_meta($new_id, '_property_stav_predaja', '');
             update_post_meta($new_id, '_property_views', 0);
         }
+        if (function_exists('pp_log')) pp_log('Duplikovaná ponuka', $new_id);
         wp_redirect(get_permalink(get_page_by_path('realitny-panel')).'?action=edit&id='.$new_id);exit;
     }
 
     if (!isset($_POST['title'])||!wp_verify_nonce($_POST['_wpnonce']??'','panel_save')) return;
     $pid = intval($_GET['id']??0);
+    $is_new = !$pid;
     $data = ['post_title'=>sanitize_text_field($_POST['title']),'post_content'=>wp_kses_post($_POST['content']??''),'post_type'=>'property','post_status'=>'publish'];
     if ($pid){$data['ID']=$pid;wp_update_post($data);}else{$pid=wp_insert_post($data);}
+    if (function_exists('pp_log')) pp_log($is_new ? 'Vytvorená ponuka' : 'Upravená ponuka', $pid);
     foreach(['typ','cena','cena_povodna','lokalita','mesto','okres','popis_kratky','plocha','pozemok','spalne','kupelne','wc','poschodie','rocnik','stav','vlastnictvo','stav_predaja','energie','poznamka'] as $f) {
         if (isset($_POST[$f])) {
             $val = sanitize_text_field($_POST[$f]);

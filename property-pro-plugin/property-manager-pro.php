@@ -26,6 +26,7 @@ add_action('init', function() {
 
 // Load Shortcodes & Templates
 require_once PROPERTY_PRO_PATH . 'includes/helpers.php';
+require_once PROPERTY_PRO_PATH . 'includes/expose.php';
 require_once PROPERTY_PRO_PATH . 'includes/amenities.php';
 require_once PROPERTY_PRO_PATH . 'includes/shortcodes.php';
 require_once PROPERTY_PRO_PATH . 'includes/meta-boxes.php';

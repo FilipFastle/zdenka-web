@@ -537,7 +537,14 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
             <?php if ($znizena): ?>
             <div style="font-size:15px;color:#9A8660;text-decoration:line-through;margin-bottom:2px"><?php echo esc_html(pp_price_fmt($cena_pov)) ?></div>
             <?php endif; ?>
-            <div class="pp-price-val"<?php if (pp_price_num($cena_raw) === 0) echo ' style="font-size:20px;letter-spacing:0"'; ?>><?php echo esc_html($cena_fmt); ?></div>
+            <?php $cena_num_val = pp_price_num($cena_raw); $czk_rate = (float) (function_exists('get_theme_mod') ? get_theme_mod('zc_czk_rate', 25.2) : 25.2); ?>
+            <div class="pp-price-val" id="ppPriceVal" data-eur="<?php echo esc_attr($cena_num_val) ?>" data-rate="<?php echo esc_attr($czk_rate) ?>"<?php if ($cena_num_val === 0) echo ' style="font-size:20px;letter-spacing:0"'; ?>><?php echo esc_html($cena_fmt); ?></div>
+            <?php if ($cena_num_val > 0): ?>
+            <div class="pp-cur" role="group" aria-label="Mena">
+                <button type="button" class="pp-cur-btn active" data-cur="EUR" onclick="ppSetCur(this,'EUR')">€ EUR</button>
+                <button type="button" class="pp-cur-btn" data-cur="CZK" onclick="ppSetCur(this,'CZK')">Kč CZK</button>
+            </div>
+            <?php endif; ?>
             <?php if ($per_m2): ?><div style="font-size:12px;color:#6B6560;margin-top:4px"><?php echo esc_html($per_m2) ?></div><?php endif; ?>
         </div>
         <div class="pp-price-body">
@@ -592,6 +599,10 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
             </button>
         </div>
+        <a href="<?php echo esc_url(add_query_arg('expose', '1', get_permalink())) ?>" target="_blank" rel="noopener" class="pp-pdf-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15h6"/></svg>
+            Stiahnuť PDF s ponukou
+        </a>
     </div>
 </div>
 </aside>
@@ -605,8 +616,20 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
 .pp-share-btn{flex:1;height:40px;border:none;border-radius:9px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;transition:transform .15s,filter .15s}
 .pp-share-btn:hover{transform:translateY(-2px);filter:brightness(1.08)}
 .pp-share-btn.copied{background:#16a34a !important}
+.pp-pdf-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;padding:11px;border-radius:9px;border:1.5px solid #E2DACE;background:#F5F1EA;color:#2C2C2C;font-size:13px;font-weight:700;text-decoration:none;transition:all .2s}
+.pp-pdf-btn:hover{border-color:#B8A47A;background:#fff;color:#7C5E33}
+.pp-cur{display:inline-flex;gap:0;margin-top:8px;border:1.5px solid rgba(255,255,255,.25);border-radius:8px;overflow:hidden}
+.pp-cur-btn{background:transparent;color:rgba(255,255,255,.7);border:none;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans,sans-serif);transition:all .2s}
+.pp-cur-btn.active{background:#B8A47A;color:#1C1A18}
 </style>
 <script>
+function ppSetCur(btn,cur){
+    var el=document.getElementById('ppPriceVal'); if(!el)return;
+    document.querySelectorAll('.pp-cur-btn').forEach(function(b){b.classList.toggle('active',b===btn)});
+    var eur=parseFloat(el.getAttribute('data-eur'))||0, rate=parseFloat(el.getAttribute('data-rate'))||25.2;
+    function fmt(n){return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ')}
+    el.textContent = cur==='CZK' ? (fmt(eur*rate)+' Kč') : (fmt(eur)+' €');
+}
 function ppCopyLink(btn){
     var url=<?php echo wp_json_encode(get_permalink()) ?>;
     var done=function(){btn.classList.add('copied');btn.title='Skopírované!';setTimeout(function(){btn.classList.remove('copied');btn.title='Kopírovať odkaz'},1400)};
