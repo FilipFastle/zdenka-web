@@ -786,3 +786,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 .zc-prop-card.is-sold .zc-prop-img img { filter:grayscale(.35); }
 .zc-prop-price-old { color:var(--muted); text-decoration:line-through; font-size:15px; font-weight:600; margin-right:6px; }
 .zc-prop-perm2 { display:block; font-family:var(--sans); font-size:12px; font-weight:500; color:var(--muted); letter-spacing:0; margin-top:3px; }
+
+/* Po odstránení emoji: skry prázdne ikonové kontajnery (žiadne prázdne boxy) */
+.zc-card-icon:empty, .ap-card-icon:empty, .odhad-info-icon:empty,
+.pp-spec-icon:empty, .zc-testimonial-avatar:empty { display: none; }

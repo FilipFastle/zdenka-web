@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
 add_action('admin_menu', function() {
-    add_menu_page('ZC Recenzie','Recenzie ⭐','edit_posts',
+    add_menu_page('ZC Recenzie','Recenzie ','edit_posts',
         'zc-reviews','zcr_admin_page','dashicons-star-filled',27);
 });
 
@@ -10,7 +10,7 @@ function zcr_admin_page() {
     $rows = $wpdb->get_results("SELECT * FROM ".zcr_table()." ORDER BY sort_order ASC, id ASC");
     ?>
     <div class="wrap">
-    <h1>⭐ Recenzie a referencie
+    <h1>Recenzie a referencie
         <button onclick="zcrOpenModal(0)" class="page-title-action">+ Pridať recenziu</button>
     </h1>
 
@@ -35,8 +35,8 @@ function zcr_admin_page() {
                 : '<span style="background:#f1f5f9;color:#94a3b8;padding:2px 10px;border-radius:50px;font-size:11px;font-weight:700">Skrytá</span>'
             ?></td>
             <td>
-                <button onclick="zcrOpenModal(<?php echo $r->id ?>)" class="button button-small">✏️ Upraviť</button>
-                <button onclick="zcrDelete(<?php echo $r->id ?>)" class="button button-small" style="color:#dc2626">🗑</button>
+                <button onclick="zcrOpenModal(<?php echo $r->id ?>)" class="button button-small">Upraviť</button>
+                <button onclick="zcrDelete(<?php echo $r->id ?>)" class="button button-small" style="color:#dc2626"></button>
             </td>
         </tr>
         <?php endforeach; else: ?>
@@ -104,7 +104,7 @@ function zcr_modal() {
             <div id="zcrModalMsg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:8px;font-size:13px"></div>
             <div style="display:flex;justify-content:flex-end;gap:8px">
                 <button onclick="document.getElementById('zcrModal').style.display='none'" class="button">Zrušiť</button>
-                <button onclick="zcrSave()" class="button button-primary">💾 Uložiť recenziu</button>
+                <button onclick="zcrSave()" class="button button-primary">Uložiť recenziu</button>
             </div>
         </div>
     </div>

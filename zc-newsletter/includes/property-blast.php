@@ -17,9 +17,9 @@ function zcn_property_email_parts($pid) {
     $typ_labels = ['predaj' => 'Na predaj', 'prenajom' => 'Na prenájom', 'pozemok' => 'Pozemok'];
 
     $meta = array_filter([
-        $lok    ? '📍 ' . esc_html($lok) : '',
-        $plocha ? '📐 ' . esc_html($plocha) . ' m²' : '',
-        $izby   ? '🚪 ' . esc_html($izby) . ' izby' : '',
+        $lok    ? '' . esc_html($lok) : '',
+        $plocha ? '' . esc_html($plocha) . ' m²' : '',
+        $izby   ? '' . esc_html($izby) . ' izby' : '',
     ]);
 
     $body = '';
@@ -55,7 +55,7 @@ function zcn_handle_property_blast() {
     if ($test) {
         $html = zcn_build_newsletter_email($parts['subject'], $parts['body'], zcn_generate_token(), '');
         $ok   = wp_mail($test, '[TEST] ' . $parts['subject'], $html, $headers);
-        wp_send_json_success(['message' => $ok ? "✅ Test odoslaný na {$test}" : '❌ Odoslanie zlyhalo.']);
+        wp_send_json_success(['message' => $ok ? "Test odoslaný na {$test}" : 'Odoslanie zlyhalo.']);
     }
 
     global $wpdb;
@@ -77,5 +77,5 @@ function zcn_handle_property_blast() {
     update_option('zcn_send_log', array_slice($log, 0, 30));
     update_post_meta($pid, '_zcn_blast_sent', current_time('mysql'));
 
-    wp_send_json_success(['message' => "✅ Ponuka odoslaná {$sent} odberateľom" . ($failed ? " | ⚠️ Zlyhalo: {$failed}" : '')]);
+    wp_send_json_success(['message' => "Ponuka odoslaná {$sent} odberateľom" . ($failed ? " | Zlyhalo: {$failed}" : '')]);
 }

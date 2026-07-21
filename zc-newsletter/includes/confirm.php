@@ -16,14 +16,14 @@ add_action('init', function() {
 
     if ($action === 'confirm') {
         if ($row->status === 'active') {
-            wp_die('<div style="font-family:sans-serif;max-width:480px;margin:80px auto;text-align:center"><h2>✅ Odber už potvrdený</h2><p>Ste prihlásený na odber noviniek.</p><a href="' . home_url() . '">← Späť na web</a></div>', 'Potvrdené');
+            wp_die('<div style="font-family:sans-serif;max-width:480px;margin:80px auto;text-align:center"><h2>Odber už potvrdený</h2><p>Ste prihlásený na odber noviniek.</p><a href="' . home_url() . '">← Späť na web</a></div>', 'Potvrdené');
         }
         $wpdb->update($table,
             ['status' => 'active', 'confirmed_at' => current_time('mysql')],
             ['token'  => $token]
         );
         wp_die(zcn_page_response(
-            '✅ Prihlásenie potvrdené!',
+            'Prihlásenie potvrdené!',
             'Ste prihlásený na odber noviniek. Budeme vás informovať o nových ponukách.',
             '← Späť na web'
         ), 'Potvrdené');

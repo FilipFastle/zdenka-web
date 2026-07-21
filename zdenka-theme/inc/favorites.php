@@ -5,9 +5,9 @@ add_shortcode('property_favorites', function () {
     ob_start(); ?>
     <div id="zcFavPage">
         <div id="zcFavEmpty" style="text-align:center;padding:80px 20px;display:none">
-            <div style="font-size:48px;margin-bottom:16px">🏠</div>
+            <div style="font-size:48px;margin-bottom:16px"></div>
             <h3 style="font-family:var(--serif);margin-bottom:10px">Žiadne obľúbené</h3>
-            <p style="color:var(--muted)">Klikni na ❤️ pri nehnuteľnosti aby si ju uložil.</p>
+            <p style="color:var(--muted)">Klikni na  pri nehnuteľnosti aby si ju uložil.</p>
             <a href="<?php echo home_url('/ponuky/'); ?>" class="zc-btn zc-btn-primary" style="margin-top:20px">Pozrieť ponuky</a>
         </div>
         <div class="property-grid" id="zcFavGrid"></div>
@@ -83,14 +83,14 @@ function zc_get_favorites_handler() {
 
             $html .= '<div class="zc-prop-card">';
             $html .= '<div class="zc-prop-img">';
-            $html .= $cover ? wp_get_attachment_image($cover,'medium',false,['loading'=>'lazy']) : (has_post_thumbnail() ? get_the_post_thumbnail($id,'medium',['loading'=>'lazy']) : '<div style="height:100%;display:flex;align-items:center;justify-content:center;background:var(--section);font-size:32px">🏠</div>');
+            $html .= $cover ? wp_get_attachment_image($cover,'medium',false,['loading'=>'lazy']) : (has_post_thumbnail() ? get_the_post_thumbnail($id,'medium',['loading'=>'lazy']) : '<div style="height:100%;display:flex;align-items:center;justify-content:center;background:var(--section);font-size:32px"></div>');
             if ($typ) $html .= '<span class="zc-prop-badge '.esc_attr($typ).'">'.($typ_labels[$typ]??$typ).'</span>';
             $html .= '<button class="zc-fav-remove" data-id="'.$id.'" style="position:absolute;top:12px;right:12px;width:32px;height:32px;background:rgba(255,255,255,.9);border:none;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s" title="Odstrániť z obľúbených">✕</button>';
             $html .= '</div>';
             $html .= '<div class="zc-prop-body">';
             $html .= '<div class="zc-prop-title"><a href="'.get_permalink().'">'.get_the_title().'</a></div>';
             if ($local) $html .= '<div class="zc-prop-location"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'.esc_html($local).'</div>';
-            if ($plocha) $html .= '<div class="zc-prop-specs"><span>📐 '.esc_html($plocha).' m²</span></div>';
+            if ($plocha) $html .= '<div class="zc-prop-specs"><span>'.esc_html($plocha).' m²</span></div>';
             $html .= '<div class="zc-prop-price'.($cena ? '' : ' zc-prop-price--nego').'">'.esc_html($cena ?: 'Cena dohodou').'</div>';
             $html .= '<a href="'.get_permalink().'" class="zc-prop-btn">Zobraziť ponuku →</a>';
             $html .= '</div></div>';

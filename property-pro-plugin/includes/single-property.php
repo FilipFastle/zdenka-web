@@ -371,7 +371,7 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     </div>
     <?php else: ?>
     <!-- Bez fotky: nižší zlatý hero namiesto tmavej 100vh plochy -->
-    <div style="height:100%;background:linear-gradient(135deg,#B8A47A,#8F7B55);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55);font-size:72px;">🏠</div>
+    <div style="height:100%;background:linear-gradient(135deg,#B8A47A,#8F7B55);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55);font-size:72px;"></div>
     <?php endif; ?>
     <div class="pp-hero-overlay"></div>
     <button class="zc-fav-btn pp-hero-fav" data-id="<?php echo $id ?>" title="Pridať do obľúbených" onclick="zcToggleFav(this,<?php echo $id ?>)" aria-label="Pridať do obľúbených">
@@ -387,9 +387,9 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
         <h1 class="pp-hero-title"><?php the_title() ?></h1>
         <?php if ($lokalita || $plocha || $spalne): ?>
         <div class="pp-hero-meta">
-            <?php if ($lokalita): ?><span>📍 <?php echo esc_html($lokalita) ?></span><?php endif; ?>
-            <?php if ($plocha): ?><span>📐 <?php echo esc_html($plocha) ?> m²</span><?php endif; ?>
-            <?php if ($spalne): ?><span>🚪 <?php echo esc_html($spalne) ?> izby</span><?php endif; ?>
+            <?php if ($lokalita): ?><span><?php echo esc_html($lokalita) ?></span><?php endif; ?>
+            <?php if ($plocha): ?><span><?php echo esc_html($plocha) ?> m²</span><?php endif; ?>
+            <?php if ($spalne): ?><span><?php echo esc_html($spalne) ?> izby</span><?php endif; ?>
         </div>
         <?php endif; ?>
     </div>
@@ -413,7 +413,7 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
 
     <?php if ($note_int && current_user_can('edit_posts')): ?>
     <div class="pp-card" style="background:#FFFBEB;border:1px solid #FDE68A">
-        <div class="pp-sec-title" style="color:#92400E">🔒 Interná poznámka (vidí len maklér)</div>
+        <div class="pp-sec-title" style="color:#92400E">Interná poznámka (vidí len maklér)</div>
         <div style="white-space:pre-wrap;color:#78350F;font-size:14px;line-height:1.7"><?php echo esc_html($note_int) ?></div>
     </div>
     <?php endif; ?>
@@ -423,7 +423,7 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     <div class="pp-card">
         <div class="pp-sec-title">Parametre nehnuteľnosti</div>
         <div class="pp-specs">
-            <?php $specs=[['📐','Úžitk. plocha','m²',$plocha],['🌍','Pozemok','m²',$pozemok],['🚪','Izby','',$spalne],['🚿','Kúpeľne','',$kupelne],['🚽','WC','',$wc],['🏢','Poschodie','',$poschodie],['📅','Ročník','',$rocnik],['🔨','Stav','',$stav]];
+            <?php $specs=[['','Úžitk. plocha','m²',$plocha],['','Pozemok','m²',$pozemok],['','Izby','',$spalne],['','Kúpeľne','',$kupelne],['','WC','',$wc],['','Poschodie','',$poschodie],['','Ročník','',$rocnik],['','Stav','',$stav]];
             foreach($specs as [$icon,$lbl,$unit,$val]):
                 if(!$val) continue; ?>
             <div class="pp-spec">
@@ -473,10 +473,10 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     <?php endif; ?>
 
     <div class="pp-cta">
-        <div class="pp-cta-title">📩 Mám záujem o túto nehnuteľnosť</div>
+        <div class="pp-cta-title">Mám záujem o túto nehnuteľnosť</div>
         <div class="pp-cta-sub">Zanechajte kontakt a ozveme sa vám čo najskôr</div>
         <?php if (isset($_POST['cta_send']) && wp_verify_nonce($_POST['cta_nonce']??'','cta_form')): ?>
-            <div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:14px;border-radius:10px;text-align:center;color:#15803d">✅ Správa odoslaná!</div>
+            <div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:14px;border-radius:10px;text-align:center;color:#15803d">Správa odoslaná!</div>
             <?php wp_mail($agent_email,'Záujem o: '.get_the_title(),"Meno: ".sanitize_text_field($_POST['cta_name']??'')."\nTel: ".sanitize_text_field($_POST['cta_phone']??'')."\n\n".sanitize_textarea_field($_POST['cta_msg']??'')."\n\n".get_permalink()); ?>
         <?php else: ?>
         <form method="post" class="pp-cta-form">
@@ -570,7 +570,7 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     <div class="pp-share">
         <div class="pp-share-row">
             <span class="pp-share-lbl">Zdieľať ponuku</span>
-            <?php if ($views > 0): ?><span class="pp-views">👁 <?php echo number_format($views, 0, ',', ' ') ?>×</span><?php endif; ?>
+            <?php if ($views > 0): ?><span class="pp-views"><?php echo number_format($views, 0, ',', ' ') ?>×</span><?php endif; ?>
         </div>
         <?php
         $purl = rawurlencode(get_permalink());
@@ -578,9 +578,9 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
         ?>
         <div class="pp-share-btns">
             <a class="pp-share-btn" style="background:#1877F2" target="_blank" rel="noopener" title="Facebook" href="https://www.facebook.com/sharer/sharer.php?u=<?php echo $purl ?>">f</a>
-            <a class="pp-share-btn" style="background:#22c55e" target="_blank" rel="noopener" title="WhatsApp" href="https://wa.me/?text=<?php echo $ptxt ?>%20<?php echo $purl ?>">✆</a>
-            <a class="pp-share-btn" style="background:#B8A47A;color:#1C1A18" title="E-mail" href="mailto:?subject=<?php echo $ptxt ?>&body=<?php echo $purl ?>">✉</a>
-            <button type="button" class="pp-share-btn" style="background:#2C2C2C" title="Kopírovať odkaz" onclick="ppCopyLink(this)">🔗</button>
+            <a class="pp-share-btn" style="background:#22c55e" target="_blank" rel="noopener" title="WhatsApp" href="https://wa.me/?text=<?php echo $ptxt ?>%20<?php echo $purl ?>"></a>
+            <a class="pp-share-btn" style="background:#B8A47A;color:#1C1A18" title="E-mail" href="mailto:?subject=<?php echo $ptxt ?>&body=<?php echo $purl ?>"></a>
+            <button type="button" class="pp-share-btn" style="background:#2C2C2C" title="Kopírovať odkaz" onclick="ppCopyLink(this)"></button>
         </div>
     </div>
 </div>

@@ -100,7 +100,7 @@ $email = zc_agent('email', get_option('admin_email'));
                 <?php if($zc_portrait): ?>
                 <img src="<?php echo esc_url($zc_portrait); ?>" alt="<?php echo esc_attr($name); ?>" class="ko-avatar" style="object-fit:cover;object-position:center 18%">
                 <?php else: ?>
-                <div class="ko-avatar">👩</div>
+                <div class="ko-avatar" style="font-family:var(--serif);font-size:18px;font-weight:700;color:var(--accent-txt)"><?php echo esc_html(function_exists('zc_initials') ? zc_initials($name) : ''); ?></div>
                 <?php endif; ?>
                 <div>
                     <div class="ko-name"><?php echo esc_html($name); ?></div>

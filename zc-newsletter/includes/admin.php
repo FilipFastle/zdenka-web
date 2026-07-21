@@ -28,7 +28,7 @@ add_action('admin_head', function() {
 });
 
 add_action('admin_menu', function() {
-    add_menu_page('ZC Newsletter', 'Newsletter 📧', 'manage_options',
+    add_menu_page('ZC Newsletter', 'Newsletter ', 'manage_options',
         'zc-newsletter', 'zcn_admin_page', 'dashicons-email-alt', 26);
 });
 
@@ -81,8 +81,8 @@ function zcn_admin_page() {
     ];
     ?>
     <div class="wrap">
-    <h1 style="display:flex;align-items:center;gap:10px;font-size:22px">📧 ZC Newsletter
-        <a href="?page=zc-newsletter&zcn_export=1" class="button" style="font-size:12px">⬇ Export CSV</a>
+    <h1 style="display:flex;align-items:center;gap:10px;font-size:22px">ZC Newsletter
+        <a href="?page=zc-newsletter&zcn_export=1" class="button" style="font-size:12px">Export CSV</a>
     </h1>
 
     <!-- Stats row -->
@@ -102,7 +102,7 @@ function zcn_admin_page() {
 
     <!-- Tabs -->
     <div style="display:flex;gap:2px;border-bottom:2px solid #e5e7eb;margin-bottom:20px">
-    <?php foreach(['subscribers'=>'👥 Odberatelia','send'=>'📤 Odoslať','log'=>'📋 História','import'=>'📥 Import'] as $t=>$l): ?>
+    <?php foreach(['subscribers'=>'Odberatelia','send'=>'Odoslať','log'=>'História','import'=>'Import'] as $t=>$l): ?>
     <a href="?page=zc-newsletter&tab=<?php echo $t ?>"
        style="padding:9px 16px;text-decoration:none;font-size:13px;font-weight:600;border-radius:8px 8px 0 0;margin-bottom:-2px;
               border:1px solid <?php echo $tab===$t?'#e5e7eb':'transparent' ?>;
@@ -149,7 +149,7 @@ function zcn_admin_page() {
             <input type="hidden" name="status" value="<?php echo $status_filter ?>">
             <input type="text" name="s" value="<?php echo esc_attr($search) ?>" placeholder="Hľadať..."
                 style="padding:6px 12px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px">
-            <button type="submit" class="button">🔍</button>
+            <button type="submit" class="button"></button>
         </form>
     </div>
     <table class="wp-list-table widefat fixed striped" style="border-radius:10px;overflow:hidden">
@@ -210,13 +210,13 @@ function zcn_admin_page() {
                 <label style="display:block;font-size:11px;font-weight:700;color:#666;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Testovací e-mail</label>
                 <input type="email" id="zcnTestEmail" style="width:100%;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:7px;font-size:13px" placeholder="vas@email.sk">
             </div>
-            <button onclick="zcnSend(true)" class="button" style="white-space:nowrap;padding:8px 14px">📨 Odoslať test</button>
+            <button onclick="zcnSend(true)" class="button" style="white-space:nowrap;padding:8px 14px">Odoslať test</button>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
             <span style="font-size:13px;color:#666">Odošle sa <strong><?php echo $stats['active'] ?></strong> aktívnym odberateľom</span>
             <div style="display:flex;gap:8px">
-                <button onclick="zcnPreview()" class="button">👁 Náhľad e-mailu</button>
-                <button onclick="zcnSend(false)" class="button button-primary">📧 Odoslať všetkým →</button>
+                <button onclick="zcnPreview()" class="button">Náhľad e-mailu</button>
+                <button onclick="zcnSend(false)" class="button button-primary">Odoslať všetkým →</button>
             </div>
         </div>
         <div id="zcnSendMsg" style="display:none;margin-top:14px;padding:12px 16px;border-radius:8px;font-size:14px"></div>
@@ -307,7 +307,7 @@ function zcn_admin_page() {
         <form method="post">
             <?php wp_nonce_field('zcn_admin') ?>
             <textarea name="zcn_import_emails" rows="10" style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:monospace;font-size:13px" placeholder="jan@email.sk&#10;maria@email.sk&#10;peter@email.sk"></textarea>
-            <button type="submit" name="zcn_import" value="1" class="button button-primary" style="margin-top:10px">📥 Importovať</button>
+            <button type="submit" name="zcn_import" value="1" class="button button-primary" style="margin-top:10px">Importovať</button>
         </form>
     </div>
     </div>

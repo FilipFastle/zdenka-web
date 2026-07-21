@@ -3,10 +3,10 @@ defined('ABSPATH') || exit;
 require_once PROPERTY_PRO_PATH . 'includes/amenities.php';
 
 add_action('add_meta_boxes', function() {
-    add_meta_box('prop_main', '🏠 Nehnuteľnosť', 'render_prop_main_meta', 'property', 'normal', 'high');
-    add_meta_box('prop_gallery', '📸 Fotky & Video', 'render_gallery_meta', 'property', 'normal', 'high');
-    add_meta_box('prop_amenities_box', '✨ Vybavenie a okolie', 'render_amenities_meta_box', 'property', 'normal', 'default');
-    add_meta_box('prop_agent_box', '👤 Maklér/ka', 'render_agent_meta_box', 'property', 'side', 'default');
+    add_meta_box('prop_main', 'Nehnuteľnosť', 'render_prop_main_meta', 'property', 'normal', 'high');
+    add_meta_box('prop_gallery', 'Fotky & Video', 'render_gallery_meta', 'property', 'normal', 'high');
+    add_meta_box('prop_amenities_box', 'Vybavenie a okolie', 'render_amenities_meta_box', 'property', 'normal', 'default');
+    add_meta_box('prop_agent_box', 'Maklér/ka', 'render_agent_meta_box', 'property', 'side', 'default');
 });
 
 function render_prop_main_meta($post) {
@@ -63,7 +63,7 @@ function render_prop_main_meta($post) {
         </div>
     </div>
     
-    <div class="pm-title">📐 Parametre</div>
+    <div class="pm-title">Parametre</div>
     <div class="pm-grid-3">
         <?php foreach ([
             'plocha' => 'Úžitková plocha (m²)',
@@ -105,7 +105,7 @@ function render_prop_main_meta($post) {
         </div>
     </div>
     
-    <div class="pm-title">📝 Popis</div>
+    <div class="pm-title">Popis</div>
     <div class="pm-field">
         <label>Krátky popis (na kartu)</label>
         <textarea name="prop_popis_kratky" rows="2" placeholder="Krátky popis..."><?php echo esc_textarea($f('popis_kratky')) ?></textarea>
@@ -133,7 +133,7 @@ function render_gallery_meta($post) {
         <div class="gal-thumb"><img src="<?php echo $img[0] ?>"><button type="button" class="gal-rm" onclick="rmCover()">✕</button></div>
         <?php endif; ?>
     </div>
-    <button type="button" class="gal-btn" style="background:#3498db;color:#fff" onclick="selCover()">📤 Vyber cover</button>
+    <button type="button" class="gal-btn" style="background:#3498db;color:#fff" onclick="selCover()">Vyber cover</button>
     <input type="hidden" name="prop_cover_id" id="cover-id" value="<?php echo esc_attr($cover_id) ?>">
     
     <hr style="margin:20px 0;border:none;border-top:1px solid #f0f0f0">
@@ -144,12 +144,12 @@ function render_gallery_meta($post) {
         <div class="gal-thumb" data-id="<?php echo $gid ?>"><img src="<?php echo $img[0] ?>"><button type="button" class="gal-rm" onclick="rmGal(this)">✕</button></div>
         <?php endif; endforeach; ?>
     </div>
-    <button type="button" class="gal-btn" style="background:#27ae60;color:#fff" onclick="selGal()">📤 Pridaj fotky</button>
+    <button type="button" class="gal-btn" style="background:#27ae60;color:#fff" onclick="selGal()">Pridaj fotky</button>
     <input type="hidden" name="prop_gallery_ids" id="gallery-ids" value="<?php echo esc_attr(json_encode($gallery_ids)) ?>">
     
     <hr style="margin:20px 0;border:none;border-top:1px solid #f0f0f0">
     
-    <p style="font-weight:600;margin-bottom:8px;color:#333">🎬 Video URL (YouTube / Vimeo)</p>
+    <p style="font-weight:600;margin-bottom:8px;color:#333">Video URL (YouTube / Vimeo)</p>
     <input type="text" name="prop_video_url" value="<?php echo esc_attr($video_url) ?>" placeholder="https://www.youtube.com/watch?v=..." style="width:100%;padding:9px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px">
     
     <script>
@@ -240,7 +240,7 @@ function render_agent_profile_fields($user) {
     $photo_id  = get_user_meta($user->ID, 'property_photo_id', true);
     $photo_src = $photo_id ? wp_get_attachment_image_url($photo_id, 'thumbnail') : '';
     ?>
-    <h3>🏠 Realitný profil</h3>
+    <h3>Realitný profil</h3>
     <table class="form-table">
         <tr>
             <th><label>Profilová fotka</label></th>

@@ -34,7 +34,7 @@ function zcn_handle_send() {
         $t_body = function_exists('zcn_apply_vars') ? zcn_apply_vars($body_html, ['meno'=>'Test','email'=>$test]) : $body_html;
         $html = zcn_build_newsletter_email($t_subj, $t_body, zcn_generate_token(), '');
         $ok   = wp_mail($test, "[TEST] {$t_subj}", $html, $headers);
-        wp_send_json_success(['message' => $ok ? "✅ Testovací e-mail odoslaný na {$test}" : '❌ Odoslanie zlyhalo.']);
+        wp_send_json_success(['message' => $ok ? "Testovací e-mail odoslaný na {$test}" : 'Odoslanie zlyhalo.']);
     }
 
     global $wpdb;
@@ -63,7 +63,7 @@ function zcn_handle_send() {
     ]);
     update_option('zcn_send_log', array_slice($log, 0, 30));
 
-    wp_send_json_success(['message' => "✅ Odoslané: {$sent}" . ($failed ? " | ⚠️ Zlyhalo: {$failed}" : '')]);
+    wp_send_json_success(['message' => "Odoslané: {$sent}" . ($failed ? " | Zlyhalo: {$failed}" : '')]);
 }
 
 function zcn_build_newsletter_email($subject, $body_html, $token, $name = '') {

@@ -3,7 +3,7 @@ defined('ABSPATH') || exit;
 function get_property_amenities() {
     $amenities = [
         'interior' => [
-            'label' => '🛋️ Interiér a dispozícia',
+            'label' => 'Interiér a dispozícia',
             'items' => [
                 'zariadeny_kompletne' => 'Kompletne zariadený',
                 'zariadeny_ciastocne' => 'Čiastočne zariadený',
@@ -32,7 +32,7 @@ function get_property_amenities() {
             ]
         ],
         'exterior' => [
-            'label' => '🌳 Exteriér a príslušenstvo',
+            'label' => 'Exteriér a príslušenstvo',
             'items' => [
                 'balkon' => 'Balkón',
                 'lodzia' => 'Loggia',
@@ -55,7 +55,7 @@ function get_property_amenities() {
             ]
         ],
         'building' => [
-            'label' => '🏢 Budova a spoločné priestory',
+            'label' => 'Budova a spoločné priestory',
             'items' => [
                 'vytah' => 'Výťah osobný',
                 'vytah_nakladny' => 'Výťah nákladný',
@@ -72,7 +72,7 @@ function get_property_amenities() {
             ]
         ],
         'parking' => [
-            'label' => '🚗 Parkovanie',
+            'label' => 'Parkovanie',
             'items' => [
                 'garaza' => 'Samostatná garáž',
                 'garazove_statie' => 'Garážové státie (podzemné)',
@@ -84,7 +84,7 @@ function get_property_amenities() {
             ]
         ],
         'energy' => [
-            'label' => '🔥 Kúrenie a energie',
+            'label' => 'Kúrenie a energie',
             'items' => [
                 'plyn_kotol' => 'Plynový kotol',
                 'czt' => 'Centrálne zásobovanie teplom',
@@ -96,7 +96,7 @@ function get_property_amenities() {
             ]
         ],
         'tech' => [
-            'label' => '🔌 Technológie a bezpečnosť',
+            'label' => 'Technológie a bezpečnosť',
             'items' => [
                 'opticky_internet' => 'Optický internet',
                 'kabelova_tv' => 'Káblová televízia',
@@ -111,7 +111,7 @@ function get_property_amenities() {
             ]
         ],
         'location' => [
-            'label' => '📍 Lokalita a okolie',
+            'label' => 'Lokalita a okolie',
             'items' => [
                 'ticha_lokalita' => 'Tichá lokalita',
                 'vyhlad_mesto' => 'Výhľad na mesto',
@@ -135,7 +135,7 @@ function get_property_amenities() {
     // Vlastné položky pridané v Realitnom paneli
     $custom = get_option('pp_custom_amenities', []);
     if (is_array($custom) && $custom) {
-        $amenities['custom'] = ['label' => '⭐ Vlastné vybavenie', 'items' => $custom];
+        $amenities['custom'] = ['label' => 'Vlastné vybavenie', 'items' => $custom];
     }
 
     return $amenities;

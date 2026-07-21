@@ -3,8 +3,8 @@ defined('ABSPATH') || exit;
 
 add_action('wp_enqueue_scripts', function() {
     wp_enqueue_style('zdenka-fonts','https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,700&display=swap',[],null);
-    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'2.7.2');
-    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'2.7.1',true);
+    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'2.8');
+    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'2.8',true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.svg']);
 });
 
@@ -71,8 +71,8 @@ function zc_handle_contact() {
 
 // Customizer – kontaktné údaje
 add_action('customize_register',function($wpc) {
-    $wpc->add_section('zc_agent',['title'=>'🏠 Maklérka – Kontakt','priority'=>30]);
-    $wpc->add_section('zc_emails',['title'=>'📧 Email adresy','priority'=>31]);
+    $wpc->add_section('zc_agent',['title'=>'Maklérka – Kontakt','priority'=>30]);
+    $wpc->add_section('zc_emails',['title'=>'Email adresy','priority'=>31]);
     foreach([
         'zc_email_main'  =>['Email pre kontaktný formulár (prázdne = admin e-mail webu)',''],
         'zc_email_odhad' =>['Email pre odhad nehnuteľnosti (prázdne = admin e-mail webu)',''],
@@ -87,8 +87,8 @@ add_action('customize_register',function($wpc) {
         $wpc->add_control($id,['label'=>$lbl,'section'=>'zc_agent','type'=>'text']);
     }
 
-    // 📸 Fotky maklérky – hero (široká) + portrét (vertikálna tvár)
-    $wpc->add_section('zc_photos',['title'=>'📸 Fotky maklérky','priority'=>32,
+    // Fotky maklérky – hero (široká) + portrét (vertikálna tvár)
+    $wpc->add_section('zc_photos',['title'=>'Fotky maklérky','priority'=>32,
         'description'=>'Hero fotka sa zobrazí na úvodnej stránke, portrét v sekcii O mne a vo všetkých kruhoch s menom.']);
     foreach([
         'zc_photo_hero'     => 'Hero fotka (široká / horizontálna)',
@@ -98,8 +98,8 @@ add_action('customize_register',function($wpc) {
         $wpc->add_control(new WP_Customize_Image_Control($wpc,$id,['label'=>$lbl,'section'=>'zc_photos']));
     }
 
-    // 🎬 Ako pracujem – fotky a video (šablóna ich už používa, sekcia chýbala)
-    $wpc->add_section('zc_ap',['title'=>'🎬 Ako pracujem – médiá','priority'=>33]);
+    // Ako pracujem – fotky a video (šablóna ich už používa, sekcia chýbala)
+    $wpc->add_section('zc_ap',['title'=>'Ako pracujem – médiá','priority'=>33]);
     foreach([
         'zc_apfoto1' => 'Fotka – Profesionálne fotografie',
         'zc_apfoto2' => 'Fotka – Moderný marketing',
@@ -138,6 +138,16 @@ function zc_photo($which, $fallback = '') {
 }
 
 function zc_agent($k,$f='') { return get_theme_mod('zc_agent_'.$k,$f)?:$f; }
+
+// Iniciálky z mena (fallback namiesto emoji avatara), napr. „Mgr. Zdenka Cibuľová" → „ZC"
+function zc_initials($name) {
+    $name = trim(preg_replace('/\b(Mgr|Ing|Bc|PhDr|JUDr|MUDr|Dr)\.?\s*/iu', '', (string)$name));
+    $parts = preg_split('/\s+/', $name, -1, PREG_SPLIT_NO_EMPTY);
+    if (!$parts) return '';
+    $ini = mb_substr($parts[0], 0, 1);
+    if (count($parts) > 1) $ini .= mb_substr(end($parts), 0, 1);
+    return mb_strtoupper($ini);
+}
 
 // Univerzálny video embed – YouTube (watch, youtu.be, shorts, embed, live) aj Vimeo.
 // Vracia ['url'=>iframe_src, 'vertical'=>bool] alebo [] pri neplatnom vstupe.
@@ -207,7 +217,7 @@ add_action('admin_init', function() {
 add_action('admin_notices', function() {
     if (!current_user_can('manage_options')) return;
     if (get_option('zdenka_pages_created')) {
-        echo '<div class="notice notice-success is-dismissible"><p>✅ <strong>Zdenka téma:</strong> Všetky stránky sú vytvorené! <a href="' . home_url() . '" target="_blank">Pozrieť web →</a></p></div>';
+        echo '<div class="notice notice-success is-dismissible"><p><strong>Zdenka téma:</strong> Všetky stránky sú vytvorené! <a href="' . home_url() . '" target="_blank">Pozrieť web →</a></p></div>';
     }
 });
 
@@ -278,11 +288,11 @@ function zdenka_setup_page() {
             update_option('page_on_front', $home_id);
         }
 
-        echo '<div class="notice notice-success"><p>✅ Hotovo! Vytvorené: <strong>' . $created . '</strong>, aktualizované: <strong>' . $existing . '</strong>. <a href="' . home_url() . '" target="_blank">Pozrieť web →</a></p></div>';
+        echo '<div class="notice notice-success"><p>Hotovo! Vytvorené: <strong>' . $created . '</strong>, aktualizované: <strong>' . $existing . '</strong>. <a href="' . home_url() . '" target="_blank">Pozrieť web →</a></p></div>';
     }
     ?>
     <div class="wrap">
-        <h1>🏠 Zdenka Téma – Setup</h1>
+        <h1>Zdenka Téma – Setup</h1>
         <div style="background:#fff;padding:28px;border-radius:8px;max-width:600px;margin-top:20px;border:1px solid #e2e8f0">
             <h2 style="margin-bottom:12px;font-size:18px">Vytvorenie stránok</h2>
             <p style="color:#666;margin-bottom:20px">Klikni na tlačidlo a automaticky sa vytvoria všetky stránky so správnymi templatemi.</p>
@@ -293,18 +303,18 @@ function zdenka_setup_page() {
                 <tr>
                     <td style="padding:10px;border:1px solid #dee2e6"><strong><?php echo $t ?></strong></td>
                     <td style="padding:10px;border:1px solid #dee2e6"><code>/<?php echo $s ?>/</code></td>
-                    <td style="padding:10px;border:1px solid #dee2e6"><?php echo $exists ? '<span style="color:#16a34a">✅ Existuje</span>' : '<span style="color:#dc2626">❌ Chýba</span>'; ?></td>
+                    <td style="padding:10px;border:1px solid #dee2e6"><?php echo $exists ? '<span style="color:#16a34a">Existuje</span>' : '<span style="color:#dc2626">Chýba</span>'; ?></td>
                 </tr>
                 <?php endforeach; ?>
             </table>
             <form method="post">
                 <?php wp_nonce_field('zdenka_setup') ?>
-                <input type="submit" name="zdenka_create" value="🚀 Vytvoriť / Opraviť všetky stránky" class="button button-primary button-large">
+                <input type="submit" name="zdenka_create" value="Vytvoriť / Opraviť všetky stránky" class="button button-primary button-large">
             </form>
         </div>
         <div style="background:#fff;padding:28px;border-radius:8px;max-width:600px;margin-top:20px;border:1px solid #e2e8f0">
             <h2 style="margin-bottom:12px;font-size:18px">Kontaktné údaje maklérky</h2>
-            <p style="color:#666;margin-bottom:12px">Nastav tu: <strong>Appearance → Customize → 🏠 Maklérka – Kontakt</strong></p>
+            <p style="color:#666;margin-bottom:12px">Nastav tu: <strong>Appearance → Customize → Maklérka – Kontakt</strong></p>
             <a href="<?php echo admin_url('customize.php?autofocus[section]=zc_agent') ?>" class="button">Otvoriť Customizer →</a>
         </div>
 
@@ -325,7 +335,7 @@ function zdenka_setup_page() {
             update_option('zc_cache_version', 'v' . time());
             flush_rewrite_rules();
         }
-            echo '<div class="notice notice-success"><p>✅ Nastavenia uložené!</p></div>';
+            echo '<div class="notice notice-success"><p>Nastavenia uložené!</p></div>';
         }
         $maint_on    = get_option('zc_maintenance_on', 0);
         $maint_msg   = get_option('zc_maintenance_msg', 'Web sa momentálne aktualizuje. Ozvite sa mi priamo.');
@@ -340,7 +350,7 @@ function zdenka_setup_page() {
         <?php wp_nonce_field('zc_maint') ?>
 
         <div style="background:#fff;padding:28px;border-radius:8px;margin-top:20px;border:1px solid #e2e8f0">
-            <h2 style="font-size:18px;margin-bottom:16px">🔧 Maintenance Mode</h2>
+            <h2 style="font-size:18px;margin-bottom:16px">Maintenance Mode</h2>
             <table class="form-table">
                 <tr>
                     <th>Zapnúť maintenance</th>
@@ -348,7 +358,7 @@ function zdenka_setup_page() {
                         <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
                             <input type="hidden" name="zc_maint_on" value="0">
                             <input type="checkbox" name="zc_maint_on" value="1" <?php checked($maint_on,1) ?> style="width:18px;height:18px;accent-color:#B8A47A">
-                            <span style="font-weight:600;color:<?php echo $maint_on?'#dc2626':'#666'?>"><?php echo $maint_on?'🔴 Zapnuté':'⚪ Vypnuté'?></span>
+                            <span style="font-weight:600;color:<?php echo $maint_on?'#dc2626':'#666'?>"><?php echo $maint_on?'Zapnuté':'Vypnuté'?></span>
                         </label>
                     </td>
                 </tr>
@@ -394,11 +404,11 @@ function zdenka_setup_page() {
                     </td>
                 </tr>
             </table>
-            <a href="<?php echo home_url('/?preview_maintenance=1') ?>" target="_blank" class="button" style="margin-top:8px">👁 Náhľad maintenance stránky</a>
+            <a href="<?php echo home_url('/?preview_maintenance=1') ?>" target="_blank" class="button" style="margin-top:8px">Náhľad maintenance stránky</a>
         </div>
 
         <div style="background:#fff;padding:28px;border-radius:8px;margin-top:20px;border:1px solid #e2e8f0">
-            <h2 style="font-size:18px;margin-bottom:16px">🖼 WebP Optimalizátor</h2>
+            <h2 style="font-size:18px;margin-bottom:16px">WebP Optimalizátor</h2>
             <table class="form-table">
                 <tr>
                     <th>Kvalita WebP</th>
@@ -422,13 +432,13 @@ function zdenka_setup_page() {
             </table>
             <p style="margin-top:16px">
                 <button type="button" class="button button-secondary" onclick="zcBulkWebp(this)">
-                    ⚡ Konvertovať všetky existujúce fotky na WebP
+                    Konvertovať všetky existujúce fotky na WebP
                 </button>
             </p>
             <p style="margin-top:12px">
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600">
                     <input type="checkbox" name="zc_bump_cache" value="1" style="accent-color:#B8A47A">
-                    🔄 Pri uložení vymazať cache PWA (odporúča sa pri každej aktualizácii webu)
+                    Pri uložení vymazať cache PWA (odporúča sa pri každej aktualizácii webu)
                 </label>
                 <small style="color:#666;margin-top:4px;display:block">Aktuálna verzia: <code><?php echo esc_html(get_option('zc_cache_version','v1')); ?></code></small>
                 <span id="zcWebpResult" style="margin-left:12px;font-size:13px;color:#666"></span>
@@ -442,10 +452,10 @@ function zdenka_setup_page() {
                 fetch('<?php echo admin_url("admin-ajax.php") ?>',{method:'POST',body:data})
                 .then(function(r){return r.json()})
                 .then(function(res){
-                    btn.disabled=false;btn.textContent='⚡ Konvertovať všetky existujúce fotky na WebP';
+                    btn.disabled=false;btn.textContent='Konvertovať všetky existujúce fotky na WebP';
                     if(res.success){
                         document.getElementById('zcWebpResult').innerHTML=
-                            '✅ Hotovo! Skonvertované: <strong>'+res.data.converted+'</strong> / '+res.data.total+
+                            'Hotovo! Skonvertované: <strong>'+res.data.converted+'</strong> / '+res.data.total+
                             (res.data.failed?' | Chyby: '+res.data.failed:'');
                     }
                 });
@@ -454,7 +464,7 @@ function zdenka_setup_page() {
         </div>
 
         <p style="margin-top:20px">
-            <input type="submit" name="zc_maint_save" value="💾 Uložiť nastavenia" class="button button-primary button-large">
+            <input type="submit" name="zc_maint_save" value="Uložiť nastavenia" class="button button-primary button-large">
         </p>
         </form>
     </div>

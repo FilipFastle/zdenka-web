@@ -119,19 +119,19 @@ $ap_vcount = count($ap_videos);
 
         <?php
         $services = [
-            ['📷','Profesionálne fotografie',
+            ['','Profesionálne fotografie',
              'Prvý dojem rozhoduje. Vašu nehnuteľnosť zachytíme tak, aby vynikla medzi ostatnými ponukami. Spolupracujem s profesionálnym fotografom, ktorý dokáže vyzdvihnúť jej priestor, atmosféru a potenciál.',
              $foto_1],
-            ['🎬','Video prehliadka',
+            ['','Video prehliadka',
              'Video dokáže preniesť emóciu aj atmosféru priestoru. Pripravíme modernú video prezentáciu, ktorá nehnuteľnosť predstaví prirodzene, atraktívne a pomôže osloviť širší okruh záujemcov.',
              ''],
-            ['✍️','Copywriting',
+            ['','Copywriting',
              'Každá nehnuteľnosť má svoj príbeh. Vytvorím profesionálny text inzerátu, ktorý jasne vyzdvihne výhody nehnuteľnosti, osloví správnych kupujúcich a podporí výsledok predaja.',
              ''],
-            ['📣','Moderný marketing a inzercia',
+            ['','Moderný marketing a inzercia',
              'Vašu nehnuteľnosť prezentujem cielene a efektívne – na realitných portáloch, sociálnych sieťach, v online reklame aj medzi overenými kontaktmi z databázy. Cieľom nie je len zobrazenie, ale oslovenie správneho kupujúceho.',
              $foto_2],
-            ['⚖️','Právne služby a katastrálny servis',
+            ['','Právne služby a katastrálny servis',
              'Zabezpečím kompletný právny servis spojený s prevodom nehnuteľnosti – prípravu zmluvnej dokumentácie, katastrálny servis aj koordináciu jednotlivých krokov až po úspešné odovzdanie. Chránim záujmy všetkých zúčastnených strán.',
              ''],
         ];
@@ -176,8 +176,8 @@ $ap_vcount = count($ap_videos);
     </div>
     <?php elseif (current_user_can('manage_options')): ?>
     <div class="ap-video-placeholder">
-        <div style="font-size:40px">🎬</div>
-        <div style="font-size:14px">Nastav videá: <strong>Vzhľad → Prispôsobiť → 🎬 Ako pracujem → médiá</strong><br><small style="opacity:.7">Môžeš pridať 1 až 3 videá alebo YouTube Shorts.</small></div>
+        <div style="font-size:40px"></div>
+        <div style="font-size:14px">Nastav videá: <strong>Vzhľad → Prispôsobiť → Ako pracujem → médiá</strong><br><small style="opacity:.7">Môžeš pridať 1 až 3 videá alebo YouTube Shorts.</small></div>
     </div>
     <?php endif; ?>
 </div>

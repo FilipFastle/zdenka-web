@@ -188,7 +188,7 @@ if (isset($_POST['odhad_send']) && wp_verify_nonce($_POST['odhad_nonce'] ?? '', 
 
         <?php if ($sent): ?>
         <div class="odhad-success">
-            ✅ <strong>Ďakujeme!</strong> Vaša žiadosť bola odoslaná. Ozvem sa vám najneskôr do <strong>24 hodín</strong>.
+            <strong>Ďakujeme!</strong> Vaša žiadosť bola odoslaná. Ozvem sa vám najneskôr do <strong>24 hodín</strong>.
         </div>
         <?php elseif ($error): ?>
         <div style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:20px 28px;border-radius:10px;margin-bottom:24px"><?php echo esc_html($error); ?></div>
@@ -261,9 +261,9 @@ if (isset($_POST['odhad_send']) && wp_verify_nonce($_POST['odhad_nonce'] ?? '', 
         <!-- INFO BOXES -->
         <div class="odhad-info">
             <?php foreach ([
-                ['🏡', 'Bezplatne', 'Odhad je úplne zdarma a nezáväzný. Bez skrytých poplatkov.'],
-                ['⚡', 'Do 24 hodín', 'Ozvem sa vám najneskôr do jedného pracovného dňa.'],
-                ['📊', 'Odborný odhad', 'Vychádzam z aktuálnych dát trhu a lokality vašej nehnuteľnosti.'],
+                ['', 'Bezplatne', 'Odhad je úplne zdarma a nezáväzný. Bez skrytých poplatkov.'],
+                ['', 'Do 24 hodín', 'Ozvem sa vám najneskôr do jedného pracovného dňa.'],
+                ['', 'Odborný odhad', 'Vychádzam z aktuálnych dát trhu a lokality vašej nehnuteľnosti.'],
             ] as [$icon, $title, $text]): ?>
             <div class="odhad-info-box">
                 <div class="odhad-info-icon"><?php echo $icon; ?></div>

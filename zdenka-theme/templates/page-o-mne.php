@@ -21,14 +21,14 @@ $title = zc_agent('title','Realitná maklérka');
     </div>
     <div>
         <?php
-        // Portrét: Customizer (📸 Fotky maklérky) → featured image stránky → placeholder
+        // Portrét: Customizer (Fotky maklérky) → featured image stránky → placeholder
         $zc_omne_img = function_exists('zc_photo') ? zc_photo('portrait') : '';
         if (!$zc_omne_img && has_post_thumbnail()) $zc_omne_img = get_the_post_thumbnail_url(null, 'large');
         ?>
         <?php if($zc_omne_img): ?>
         <img src="<?php echo esc_url($zc_omne_img); ?>" style="width:100%;border-radius:var(--r-lg);box-shadow:var(--sh-lg)" alt="<?php echo esc_attr($name); ?>">
         <?php else: ?>
-        <div style="aspect-ratio:3/4;background:linear-gradient(135deg,var(--border),var(--accent));border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;font-size:80px;box-shadow:var(--sh-lg)">👩</div>
+        <div style="aspect-ratio:3/4;background:linear-gradient(135deg,var(--border),var(--accent));border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;font-size:64px;font-family:var(--serif);font-weight:700;color:#fff;box-shadow:var(--sh-lg)"><?php echo esc_html(function_exists('zc_initials') ? zc_initials($name) : ''); ?></div>
         <?php endif; ?>
     </div>
 </div>

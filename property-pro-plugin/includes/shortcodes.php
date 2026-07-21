@@ -266,7 +266,7 @@ function render_property_card() {
             <?php
             if ($cover_id) echo wp_get_attachment_image($cover_id,'medium',false,['loading'=>'lazy']);
             elseif (has_post_thumbnail()) the_post_thumbnail('medium',['loading'=>'lazy']);
-            else echo '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#F5F1EA;color:#ccc;font-size:36px">🏠</div>';
+            else echo '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#F5F1EA;color:#ccc;font-size:36px"></div>';
             ?>
             <div class="zc-prop-badges">
                 <?php if ($typ_label): ?><span class="zc-prop-badge <?php echo esc_attr($typ) ?>"><?php echo $typ_label ?></span><?php endif; ?>
@@ -285,9 +285,9 @@ function render_property_card() {
             <?php endif; ?>
             <?php if ($plocha || $spalne || $kupelne): ?>
             <div class="zc-prop-specs">
-                <?php if ($plocha):  ?><span>📐 <?php echo esc_html($plocha) ?> m²</span><?php endif; ?>
-                <?php if ($spalne):  ?><span>🚪 <?php echo esc_html($spalne) ?> izby</span><?php endif; ?>
-                <?php if ($kupelne): ?><span>🚿 <?php echo esc_html($kupelne) ?></span><?php endif; ?>
+                <?php if ($plocha):  ?><span><?php echo esc_html($plocha) ?> m²</span><?php endif; ?>
+                <?php if ($spalne):  ?><span><?php echo esc_html($spalne) ?> izby</span><?php endif; ?>
+                <?php if ($kupelne): ?><span><?php echo esc_html($kupelne) ?></span><?php endif; ?>
             </div>
             <?php endif; ?>
             <div class="zc-prop-price<?php echo $cena ? '' : ' zc-prop-price--nego' ?>">
@@ -352,7 +352,7 @@ add_shortcode('property_carousel', function($atts) {
         <div class="prop-sc-track" id="<?php echo $uid ?>T">
         <?php foreach ($slides as $s): ?>
         <div class="prop-sc-slide">
-            <?php echo $s['img'] ?: '<div style="position:absolute;inset:0;background:#2c2c2c;display:flex;align-items:center;justify-content:center;color:#555;font-size:40px">🏠</div>'; ?>
+            <?php echo $s['img'] ?: '<div style="position:absolute;inset:0;background:#2c2c2c;display:flex;align-items:center;justify-content:center;color:#555;font-size:40px"></div>'; ?>
             <div class="prop-sc-overlay"></div>
             <div class="prop-sc-info">
                 <?php if ($s['typ']): ?><span class="prop-sc-badge" style="background:<?php echo $s['typ_color'] ?>;color:<?php echo $s['typ_text'] ?>"><?php echo $s['typ'] ?></span><?php endif; ?>

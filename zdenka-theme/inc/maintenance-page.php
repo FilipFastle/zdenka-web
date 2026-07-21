@@ -131,7 +131,7 @@ h1 em{font-style:italic;color:#7C5E33}
         <?php if($portrait): ?>
         <img src="<?php echo esc_url($portrait); ?>" alt="<?php echo esc_attr($name); ?>" class="agent-avatar" style="object-fit:cover;object-position:center 18%">
         <?php else: ?>
-        <div class="agent-avatar">👩</div>
+        <div class="agent-avatar" style="font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#7C5E33"><?php echo esc_html(function_exists('zc_initials') ? zc_initials($name) : ''); ?></div>
         <?php endif; ?>
         <div>
             <div class="agent-name"><?php echo esc_html($name); ?></div>

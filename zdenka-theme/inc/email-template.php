@@ -91,7 +91,7 @@ body  { margin:0; padding:0; background:#F2EEE8; font-family:'DM Sans',Arial,san
     <div class="bar"></div>
     <div class="body">
         <div class="sender">
-            <div class="avatar">👤</div>
+            <div class="avatar"></div>
             <div>
                 <p class="sender-name"><?php echo esc_html($name); ?></p>
                 <p class="sender-mail"><?php echo esc_html($email); ?></p>
@@ -106,12 +106,12 @@ body  { margin:0; padding:0; background:#F2EEE8; font-family:'DM Sans',Arial,san
         </table>
         <div class="actions">
             <p class="act-label">Rýchle akcie</p>
-            <a href="mailto:<?php echo esc_attr($email); ?>" class="btn btn-dark">✉️ Odpovedať</a>
+            <a href="mailto:<?php echo esc_attr($email); ?>" class="btn btn-dark">Odpovedať</a>
             <?php if ($phone): ?>
-            <a href="tel:<?php echo esc_attr(preg_replace('#[^0-9+]#','', $phone)); ?>" class="btn btn-gold">📞 Zavolať</a>
+            <a href="tel:<?php echo esc_attr(preg_replace('#[^0-9+]#','', $phone)); ?>" class="btn btn-gold">Zavolať</a>
             <?php endif; ?>
             <?php if ($wa_link): ?>
-            <a href="<?php echo esc_url($wa_link); ?>" class="btn btn-green">💬 WhatsApp</a>
+            <a href="<?php echo esc_url($wa_link); ?>" class="btn btn-green">WhatsApp</a>
             <?php endif; ?>
         </div>
         <p class="meta">IP: <?php echo esc_html($ip); ?> &nbsp;·&nbsp; <?php echo esc_html($date); ?></p>

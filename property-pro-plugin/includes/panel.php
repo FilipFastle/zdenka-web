@@ -43,7 +43,7 @@ function panel_login_page() {
     return '
     <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F5F1EA;padding:20px;font-family:-apple-system,BlinkMacSystemFont,\'DM Sans\',sans-serif">
         <div style="background:#fff;padding:48px 40px;border-radius:20px;max-width:400px;width:100%;box-shadow:0 12px 48px rgba(60,50,30,.12);border:1px solid #E2DACE;text-align:center">
-            <div style="width:64px;height:64px;background:#F5F1EA;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 24px">🏠</div>
+            <div style="width:64px;height:64px;background:#F5F1EA;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 24px"></div>
             <h1 style="font-family:\'Playfair Display\',Georgia,serif;font-size:22px;margin-bottom:8px;color:#1C1A18">Realitný Panel</h1>
             <p style="color:#6B6560;font-size:14px;margin-bottom:32px">Správa nehnuteľností</p>
             <a href="'.esc_url($url).'" style="display:block;padding:14px;background:#B8A47A;color:#1C1A18;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:.8px;text-transform:uppercase;transition:all .2s">Prihlásiť sa</a>
@@ -253,21 +253,21 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 <div>
 <div class="ph">
     <div class="ph-logo">
-        <div class="ph-logo-icon">🏠</div>
+        <div class="ph-logo-icon"></div>
         <div>Realitný Panel<small>Správa nehnuteľností</small></div>
     </div>
     <nav class="ph-nav">
         <a href="?action=list" class="<?php echo $action==='list'?'active':'' ?>">Ponuky</a>
         <a href="?action=add" class="<?php echo ($action==='add'||$action==='edit')?'active':'' ?>">+ Nová ponuka</a>
         <?php if (function_exists('zcn_table')): ?>
-        <a href="?action=newsletter" class="<?php echo $action==='newsletter'?'active':'' ?>">📧 Newsletter</a>
+        <a href="?action=newsletter" class="<?php echo $action==='newsletter'?'active':'' ?>">Newsletter</a>
         <?php endif; ?>
         <?php if (function_exists('zcr_table')): ?>
-        <a href="?action=reviews" class="<?php echo $action==='reviews'?'active':'' ?>">⭐ Recenzie</a>
+        <a href="?action=reviews" class="<?php echo $action==='reviews'?'active':'' ?>">Recenzie</a>
         <?php endif; ?>
     </nav>
     <div class="ph-right">
-        <span class="ph-user">👤 <?php echo esc_html($user->display_name) ?></span>
+        <span class="ph-user"><?php echo esc_html($user->display_name) ?></span>
         <button class="ph-logout" onclick="window.location='<?php echo esc_url($logout) ?>'">Odhlásiť</button>
     </div>
 </div>
@@ -275,9 +275,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 <div class="pc">
     <?php if(isset($_GET['saved'])): $saved_pid = intval($_GET['pid'] ?? 0); ?>
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;padding:12px 16px;border-radius:var(--r-sm);margin-bottom:20px;font-size:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-        <span>✅ Nehnuteľnosť uložená!</span>
+        <span>Nehnuteľnosť uložená!</span>
         <?php if ($saved_pid && function_exists('zcn_handle_property_blast')): ?>
-        <button class="btn btn-primary" onclick="pnlBlast(<?php echo $saved_pid ?>, this)">📧 Poslať odberateľom newslettera</button>
+        <button class="btn btn-primary" onclick="pnlBlast(<?php echo $saved_pid ?>, this)">Poslať odberateľom newslettera</button>
         <?php endif; ?>
     </div>
     <?php endif; ?>
@@ -300,7 +300,7 @@ function showTab(name,btn){
 }
 function toast(msg,ok){
     var t=document.getElementById('toast');
-    t.innerHTML=(ok?'✅ ':'⚠️ ')+msg;
+    t.innerHTML=(ok?'':'')+msg;
     t.classList.add('show');
     setTimeout(function(){t.classList.remove('show')},3000);
 }
@@ -350,7 +350,7 @@ function pnlBlast(id, btn){
     data.append('property_id',id);
     fetch('<?php echo admin_url('admin-ajax.php') ?>',{method:'POST',body:data})
     .then(function(r){return r.json()}).then(function(res){
-        btn.disabled=false;btn.innerHTML=res.success?'📧 ✓':orig;
+        btn.disabled=false;btn.innerHTML=res.success?'✓':orig;
         toast((res.data&&res.data.message)||(res.success?'Odoslané':'Chyba'),res.success);
     }).catch(function(){btn.disabled=false;btn.innerHTML=orig;toast('Chyba pripojenia',false)});
 }
@@ -373,7 +373,7 @@ function panel_list() {
     </div>
     <?php if (empty($props)): ?>
     <div class="empty">
-        <div class="empty-icon">🏡</div>
+        <div class="empty-icon"></div>
         <p style="font-size:16px;font-weight:600;margin-bottom:8px;color:var(--dark)">Žiadne ponuky</p>
         <p style="font-size:14px;margin-bottom:24px">Pridajte prvú nehnuteľnosť</p>
         <a href="?action=add" class="btn btn-primary" style="padding:12px 28px">Pridať ponuku</a>
@@ -388,7 +388,7 @@ function panel_list() {
         ?>
         <div class="prop-item">
             <div class="prop-item-img">
-                <?php if($cid) echo wp_get_attachment_image($cid,'medium'); else echo '🏠'; ?>
+                <?php if($cid) echo wp_get_attachment_image($cid,'medium'); else echo ''; ?>
                 <?php if($typ): ?><span class="prop-item-badge"><?php echo $typ_labels[$typ]??$typ ?></span><?php endif; ?>
             </div>
             <div class="prop-item-body">
@@ -401,7 +401,7 @@ function panel_list() {
                         $blast_sent = get_post_meta($p->ID, '_zcn_blast_sent', true); ?>
                     <button class="btn btn-success" onclick="pnlBlast(<?php echo $p->ID ?>, this)"
                         title="<?php echo $blast_sent ? 'Odoslané '.esc_attr(date('d.m.Y H:i', strtotime($blast_sent))).' – kliknutím pošleš znova' : 'Poslať ponuku odberateľom newslettera' ?>">
-                        📧<?php echo $blast_sent ? ' ✓' : '' ?>
+                        <?php echo $blast_sent ? ' ✓' : '' ?>
                     </button>
                     <?php endif; ?>
                     <button class="btn btn-danger" onclick="delProp(<?php echo $p->ID ?>, '<?php echo wp_create_nonce('panel_delete_'.$p->ID) ?>')">Zmazať</button>
@@ -556,7 +556,7 @@ function panel_form($pid) {
 
             <!-- Správa vlastného vybavenia -->
             <div class="am-cat" style="background:var(--section);border-radius:var(--r-sm);padding:16px">
-                <div class="am-cat-hd" style="background:var(--white)">⭐ Pridať vlastné vybavenie</div>
+                <div class="am-cat-hd" style="background:var(--white)">Pridať vlastné vybavenie</div>
                 <?php if (empty($all_am['custom'])): ?>
                 <div class="am-items" id="ppCustomItems" style="margin-bottom:10px"></div>
                 <?php endif; ?>
@@ -614,7 +614,7 @@ function panel_form($pid) {
         </div>
         <div class="pf-footer">
             <a href="?action=list" class="btn btn-ghost">Zrušiť</a>
-            <button type="submit" class="btn btn-primary" style="padding:12px 28px;font-size:13px"><?php echo $pid?'💾 Uložiť zmeny':'✅ Vytvoriť ponuku' ?></button>
+            <button type="submit" class="btn btn-primary" style="padding:12px 28px;font-size:13px"><?php echo $pid?'Uložiť zmeny':'Vytvoriť ponuku' ?></button>
         </div>
         </form>
     </div>
@@ -691,9 +691,9 @@ function panel_newsletter() {
     <!-- Stats -->
     <div class="pnl-nl-stats-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px">
         <?php foreach([
-            ['📧 Aktívni odberatelia', $stats['active'],  '#B8A47A'],
-            ['🆕 Tento mesiac',        $stats['month'],   '#22c55e'],
-            ['⏳ Čakajú na potvrd.',   $stats['pending'], '#f59e0b'],
+            ['Aktívni odberatelia', $stats['active'],  '#B8A47A'],
+            ['Tento mesiac',        $stats['month'],   '#22c55e'],
+            ['Čakajú na potvrd.',   $stats['pending'], '#f59e0b'],
         ] as [$l,$n,$c]): ?>
         <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center">
             <div style="font-size:26px;font-weight:800;color:<?php echo $c ?>;font-family:var(--serif)"><?php echo $n ?></div>
@@ -704,7 +704,7 @@ function panel_newsletter() {
 
     <!-- Sub-tabs -->
     <div class="pnl-nl-subtabs" style="display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:20px">
-    <?php foreach(['send'=>'📤 Odoslať','subscribers'=>'👥 Odberatelia','log'=>'📋 História'] as $st=>$sl): ?>
+    <?php foreach(['send'=>'Odoslať','subscribers'=>'Odberatelia','log'=>'História'] as $st=>$sl): ?>
     <a href="?action=newsletter&sub=<?php echo $st ?>"
        style="padding:9px 16px;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:.4px;
               text-transform:uppercase;border-radius:8px 8px 0 0;margin-bottom:-2px;
@@ -753,7 +753,7 @@ function panel_newsletter() {
                 </div>
                 <button onclick="pnlNlSend(true)"
                     style="padding:9px 16px;background:var(--section);border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s">
-                    📨 Test
+                    Test
                 </button>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
@@ -764,10 +764,10 @@ function panel_newsletter() {
                 <div style="display:flex;gap:8px">
                     <button onclick="pnlNlPreview()"
                         style="padding:11px 18px;background:var(--section);border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer">
-                        👁 Náhľad
+                        Náhľad
                     </button>
                     <button onclick="pnlNlSend(false)" class="btn btn-primary" style="padding:11px 22px;font-size:12px">
-                        📧 Odoslať všetkým →
+                        Odoslať všetkým →
                     </button>
                 </div>
             </div>
@@ -844,7 +844,7 @@ function panel_newsletter() {
     ?>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
         <span style="font-size:13px;color:var(--muted)"><strong style="color:var(--dark)"><?php echo $stats['active'] ?></strong> aktívnych · <strong style="color:var(--dark)"><?php echo $stats['pending'] ?></strong> čaká</span>
-        <a href="<?php echo admin_url('admin.php?page=zc-newsletter&zcn_export=1') ?>" class="btn btn-ghost" style="font-size:12px;padding:8px 14px">⬇ Export CSV</a>
+        <a href="<?php echo admin_url('admin.php?page=zc-newsletter&zcn_export=1') ?>" class="btn btn-ghost" style="font-size:12px;padding:8px 14px">Export CSV</a>
     </div>
     <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
     <?php if ($rows): ?>
@@ -943,11 +943,11 @@ function panel_reviews() {
         ];
         if ($id) {
             $wpdb->update($t, $data, ['id'=>$id]);
-            $msg = '✅ Recenzia uložená!';
+            $msg = 'Recenzia uložená!';
         } else {
             $data['sort_order'] = (int)$wpdb->get_var("SELECT COALESCE(MAX(sort_order),0)+1 FROM {$t}");
             $wpdb->insert($t, $data);
-            $msg = '✅ Recenzia pridaná!';
+            $msg = 'Recenzia pridaná!';
         }
     }
     if (isset($_POST['zcr_panel_delete']) && wp_verify_nonce($_POST['_zcrnonce'],'zcr_panel')) {
@@ -988,11 +988,11 @@ function panel_reviews() {
                         : '<span style="background:#f1f5f9;color:#94a3b8;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:700">Skrytá</span>'
                     ?>
                     <div style="display:flex;gap:6px">
-                        <a href="?action=reviews&edit_review=<?php echo $r->id ?>" style="padding:5px 10px;background:var(--section);border:1px solid var(--border);border-radius:5px;font-size:11px;font-weight:700;color:var(--dark);text-decoration:none">✏️ Upraviť</a>
+                        <a href="?action=reviews&edit_review=<?php echo $r->id ?>" style="padding:5px 10px;background:var(--section);border:1px solid var(--border);border-radius:5px;font-size:11px;font-weight:700;color:var(--dark);text-decoration:none">Upraviť</a>
                         <form method="post" style="display:inline" onsubmit="return confirm('Vymazať?')">
                             <?php wp_nonce_field('zcr_panel','_zcrnonce') ?>
                             <input type="hidden" name="zcr_id" value="<?php echo $r->id ?>">
-                            <button name="zcr_panel_delete" value="1" style="padding:5px 8px;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:5px;font-size:11px;cursor:pointer;font-family:var(--sans)">🗑</button>
+                            <button name="zcr_panel_delete" value="1" style="padding:5px 8px;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:5px;font-size:11px;cursor:pointer;font-family:var(--sans)"></button>
                         </form>
                     </div>
                 </div>
@@ -1052,7 +1052,7 @@ function panel_reviews() {
                         </label>
                     </div>
                     <button type="submit" name="zcr_panel_save" value="1" class="btn btn-primary" style="width:100%;justify-content:center">
-                        💾 Uložiť recenziu
+                        Uložiť recenziu
                     </button>
                     <?php if ($edit_r): ?>
                     <a href="?action=reviews" style="display:block;text-align:center;margin-top:10px;font-size:12px;color:var(--muted)">Zrušiť úpravu</a>

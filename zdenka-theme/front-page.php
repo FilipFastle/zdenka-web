@@ -65,7 +65,7 @@ $title=zc_agent('title','Realitná maklérka');
 
 <div class="zc-home-hero" id="zcHomeHero">
     <?php
-    // Hero fotka: Customizer (📸 Fotky maklérky) → featured image stránky → tmavé pozadie
+    // Hero fotka: Customizer (Fotky maklérky) → featured image stránky → tmavé pozadie
     $zc_hero_img = function_exists('zc_photo') ? zc_photo('hero') : '';
     if (!$zc_hero_img && has_post_thumbnail()) $zc_hero_img = get_the_post_thumbnail_url(null, 'full');
     ?>
@@ -86,7 +86,7 @@ $title=zc_agent('title','Realitná maklérka');
             <?php if($zc_portrait): ?>
             <img src="<?php echo esc_url($zc_portrait); ?>" alt="<?php echo esc_attr($name); ?>" style="width:44px;height:44px;border-radius:50%;border:2px solid var(--accent,#B8A47A);object-fit:cover;object-position:center 18%;flex-shrink:0">
             <?php else: ?>
-            <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid var(--accent,#B8A47A);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">👩</div>
+            <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid var(--accent,#B8A47A);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;font-family:var(--serif);flex-shrink:0"><?php echo esc_html(function_exists('zc_initials') ? zc_initials($name) : ''); ?></div>
             <?php endif; ?>
             <div><div class="zc-hero-name-card-name"><?php echo esc_html($name); ?></div><div class="zc-hero-name-card-role"><?php echo esc_html($title); ?></div></div>
         </div>
@@ -133,10 +133,10 @@ $title=zc_agent('title','Realitná maklérka');
     </div>
     <div class="zc-precoja-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:22px">
     <?php foreach([
-        ['❤️','Záujem','Vaša spokojnosť je môj úspech. Každý prípad riešim osobne.'],
-        ['💡','Odbornosť','Trh sledujem denne. Znalosti využívam v prospech klienta.'],
-        ['⚡','Rýchlosť','Váš čas je cenný. Komunikujem promptne a procesy urýchľujem.'],
-        ['🤝','Férovosť','Vždy poviem pravdu, aj keď nie je príjemná. Žiadne skryté poplatky.'],
+        ['','Záujem','Vaša spokojnosť je môj úspech. Každý prípad riešim osobne.'],
+        ['','Odbornosť','Trh sledujem denne. Znalosti využívam v prospech klienta.'],
+        ['','Rýchlosť','Váš čas je cenný. Komunikujem promptne a procesy urýchľujem.'],
+        ['','Férovosť','Vždy poviem pravdu, aj keď nie je príjemná. Žiadne skryté poplatky.'],
     ] as [$ic,$t,$d]): ?>
     <div class="zc-card"><div class="zc-card-icon"><?php echo $ic; ?></div><h3 style="font-size:17px;margin-bottom:8px"><?php echo $t; ?></h3><p style="font-size:14px;color:var(--muted);margin:0;line-height:1.7"><?php echo $d; ?></p></div>
     <?php endforeach; ?>
@@ -177,7 +177,7 @@ $title=zc_agent('title','Realitná maklérka');
         foreach ($fallback as [$a,$m,$q]) {
             echo '<div class="zc-testimonial"><div class="zc-stars">★★★★★</div>';
             echo '<div class="zc-testimonial-quote">'.esc_html($q).'</div>';
-            echo '<div class="zc-testimonial-author"><div class="zc-testimonial-avatar">👤</div>';
+            echo '<div class="zc-testimonial-author"><div class="zc-testimonial-avatar"></div>';
             echo '<div><div class="zc-testimonial-name">'.esc_html($a).'</div>';
             echo '<div class="zc-testimonial-meta">'.esc_html($m).'</div></div></div></div>';
         }

@@ -58,9 +58,9 @@ function zcn_render_tpl_toolbar($editor_id, $subject_id) {
             <option value="<?php echo esc_attr($id) ?>"><?php echo esc_html($t['name']) ?></option>
             <?php endforeach; ?>
         </select>
-        <button type="button" style="<?php echo $btn ?>" onclick="zcnTplLoad_<?php echo $uid ?>()">📂 Načítať</button>
-        <button type="button" style="<?php echo $btn ?>" onclick="zcnTplSave_<?php echo $uid ?>()">💾 Uložiť ako šablónu</button>
-        <button type="button" style="<?php echo $btn ?>;color:#dc2626" onclick="zcnTplDel_<?php echo $uid ?>()" title="Zmazať vybranú šablónu">🗑</button>
+        <button type="button" style="<?php echo $btn ?>" onclick="zcnTplLoad_<?php echo $uid ?>()">Načítať</button>
+        <button type="button" style="<?php echo $btn ?>" onclick="zcnTplSave_<?php echo $uid ?>()">Uložiť ako šablónu</button>
+        <button type="button" style="<?php echo $btn ?>;color:#dc2626" onclick="zcnTplDel_<?php echo $uid ?>()" title="Zmazať vybranú šablónu"></button>
         <span style="flex-basis:100%;font-size:11px;color:#7A7068;line-height:2">Premenné (kliknutím vložíš, doplnia sa pri odoslaní pre každého odberateľa zvlášť):
             <?php foreach (['meno' => 'Meno odberateľa', 'email' => 'E-mail odberateľa'] as $v => $tip): ?>
             <code style="cursor:pointer;background:#fff;border:1px solid #E0D8CE;border-radius:4px;padding:1px 7px;margin-right:4px" title="<?php echo esc_attr($tip) ?>"
@@ -114,7 +114,7 @@ function zcn_render_tpl_toolbar($editor_id, $subject_id) {
             }
             zcnTpls_<?php echo $uid ?>[res.data.id] = {name: res.data.name, subject: subj ? subj.value : '', body: body};
             sel.value = res.data.id;
-            alert('✅ Šablóna uložená.');
+            alert('Šablóna uložená.');
         });
     }
     function zcnTplDel_<?php echo $uid ?>() {

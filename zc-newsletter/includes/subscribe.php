@@ -63,7 +63,7 @@ function zcn_handle_subscribe() {
     ]);
 
     zcn_send_confirmation($email, $name, $token);
-    wp_send_json_success(['message' => 'Skontrolujte e-mail a potvrďte prihlásenie na odber. 📬']);
+    wp_send_json_success(['message' => 'Skontrolujte e-mail a potvrďte prihlásenie na odber. ']);
 }
 
 function zcn_send_confirmation($email, $name, $token) {
@@ -85,7 +85,7 @@ function zcn_send_confirmation($email, $name, $token) {
                style='display:inline-block;padding:14px 32px;background:#B8A47A;color:#1C1A18;
                       text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;
                       letter-spacing:.5px;font-family:DM Sans,sans-serif'>
-                ✅ Potvrdiť prihlásenie
+                Potvrdiť prihlásenie
             </a>
         </div>
         <p style='font-size:12px;color:#999;text-align:center'>

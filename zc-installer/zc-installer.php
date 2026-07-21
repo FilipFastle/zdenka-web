@@ -10,7 +10,7 @@ defined('ABSPATH') || exit;
 define('ZCI_PATH', plugin_dir_path(__FILE__));
 
 add_action('admin_menu', function() {
-    add_menu_page('ZC Inštalátor', '📦 ZC Inštalátor', 'install_plugins',
+    add_menu_page('ZC Inštalátor', 'ZC Inštalátor', 'install_plugins',
         'zc-installer', 'zci_render_page', 'dashicons-download', 2);
 });
 
@@ -68,7 +68,7 @@ function zci_install_zip($zip_path, $orig_name = '') {
         'name'   => $orig_name ?: $folder,
         'type'   => $is_theme ? 'theme' : 'plugin',
         'folder' => $folder,
-        'msg'    => ($is_theme ? '🎨 Téma' : '🔌 Plugin') . ' „' . $folder . '" nainštalované.',
+        'msg'    => ($is_theme ? 'Téma' : 'Plugin') . ' „' . $folder . '" nainštalované.',
     ];
 }
 
@@ -131,7 +131,7 @@ function zci_render_page() {
     $bundle_files = glob(ZCI_PATH . 'bundles/*.zip') ?: [];
     ?>
     <div class="wrap">
-        <h1>📦 ZC Inštalátor</h1>
+        <h1>ZC Inštalátor</h1>
         <p style="font-size:14px;color:#555;max-width:720px">Nahraj tému a všetky pluginy <strong>naraz</strong> — nemusíš ich inštalovať po jednom. Inštalátor sám rozpozná, čo je téma a čo plugin, a umiestni ich správne. Existujúce verzie prepíše (aktualizuje).</p>
 
         <?php if ($results): ?>
@@ -139,7 +139,7 @@ function zci_render_page() {
             <h2 style="font-size:16px;margin:0 0 10px">Výsledok inštalácie</h2>
             <?php foreach ($results as $r): ?>
             <div style="padding:8px 0;border-bottom:1px solid #f1f5f9;display:flex;gap:10px;align-items:flex-start">
-                <span style="font-size:16px"><?php echo !empty($r['ok']) ? '✅' : '⚠️'; ?></span>
+                <span style="font-weight:800;color:<?php echo !empty($r['ok']) ? '#16a34a' : '#dc2626'; ?>"><?php echo !empty($r['ok']) ? '✓' : '×'; ?></span>
                 <div>
                     <strong><?php echo esc_html($r['name']); ?></strong><br>
                     <span style="color:#666;font-size:13px"><?php echo esc_html($r['msg']); ?></span>
@@ -153,7 +153,7 @@ function zci_render_page() {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px;margin-top:20px">
             <!-- Hromadný upload -->
             <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:26px">
-                <h2 style="font-size:17px;margin:0 0 8px">⬆️ Nahrať viac .zip naraz</h2>
+                <h2 style="font-size:17px;margin:0 0 8px">Nahrať viac .zip naraz</h2>
                 <p style="color:#666;font-size:13px;margin:0 0 16px">Vyber všetky zipy témy a pluginov (podrž Ctrl / Cmd pri výbere) a nahraj ich jedným kliknutím.</p>
                 <form method="post" enctype="multipart/form-data">
                     <?php wp_nonce_field('zci_install'); ?>
@@ -165,7 +165,7 @@ function zci_render_page() {
 
             <!-- Priložený balík -->
             <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:26px">
-                <h2 style="font-size:17px;margin:0 0 8px">⚡ Priložený balík</h2>
+                <h2 style="font-size:17px;margin:0 0 8px">Priložený balík</h2>
                 <?php if ($bundle_files): ?>
                 <p style="color:#666;font-size:13px;margin:0 0 12px">V tomto inštalátore je pribalené:</p>
                 <ul style="margin:0 0 16px;padding-left:18px;color:#444;font-size:13px">
