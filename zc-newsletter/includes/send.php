@@ -23,7 +23,7 @@ function zcn_handle_send() {
     }
 
     $from_name  = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : get_bloginfo('name');
-    $from_email = get_theme_mod('zc_email_from', 'noreply@zdenkacibulova.sk');
+    $from_email = get_theme_mod('zc_email_from', '') ?: get_option('admin_email');
     $headers    = [
         'Content-Type: text/html; charset=UTF-8',
         "From: {$from_name} <{$from_email}>",
@@ -45,7 +45,7 @@ function zcn_handle_send() {
 
     $sent = 0; $failed = 0;
     foreach ($subscribers as $sub) {
-        // Premenné {meno}/{email} — dosadené pre každého odberateľa zvlášť
+        // Premenné {meno}/{email} – dosadené pre každého odberateľa zvlášť
         $vars   = ['meno' => $sub->name ?: '', 'email' => $sub->email];
         $s_subj = function_exists('zcn_apply_vars') ? zcn_apply_vars($subject, $vars) : $subject;
         $s_body = function_exists('zcn_apply_vars') ? zcn_apply_vars($body_html, $vars) : $body_html;

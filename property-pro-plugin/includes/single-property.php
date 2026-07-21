@@ -1,6 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
-// Pull header in TRANSPARENT mode — we overlay the hero
+// Pull header in TRANSPARENT mode – we overlay the hero
 get_header();
 
 require_once PROPERTY_PRO_PATH . 'includes/amenities.php';
@@ -34,11 +34,9 @@ function zc_format_price($raw) {
 }
 $cena = zc_format_price($cena_raw);
 
-// Meno maklérky: prednostne z Customizera témy (jednomaklérsky web) — WP
-// display name býva napr. „Administrátor Webstránky", čo na webe pôsobí zle.
-$agent_name  = (function_exists('zc_agent') ? zc_agent('name', '') : '')
-    ?: get_the_author_meta('display_name', $agent_id)
-    ?: 'Zdenka Cibuľová';
+// Meno maklérky: z WP profilu priradenej maklérky (Users → Profil → Zobrazovať
+// meno ako). Web tak zvládne aj viac maklérov – každá ponuka ukáže svojho.
+$agent_name  = get_the_author_meta('display_name', $agent_id) ?: 'Realitná maklérka';
 $agent_phone = get_user_meta($agent_id, 'property_phone', true) ?: '+421 907 579 742';
 $agent_wa    = get_user_meta($agent_id, 'property_whatsapp', true) ?: '421907579742';
 $agent_email = get_user_meta($agent_id, 'property_email', true) ?: get_the_author_meta('user_email', $agent_id);
@@ -51,7 +49,7 @@ $typ_colors = ['predaj' => '#B8A47A', 'prenajom' => '#FFFFFF', 'pozemok' => '#6a
 $typ_color  = $typ_colors[$typ] ?? '#B8A47A';
 $typ_text_color = $typ === 'pozemok' ? '#fff' : '#1C1A18';
 
-// Robustne — žiadne prázdne/nulové/duplicitné obrázky
+// Robustne – žiadne prázdne/nulové/duplicitné obrázky
 $raw_ids    = array_merge($cover_id ? [$cover_id] : [], is_array($gallery_ids) ? $gallery_ids : []);
 $all_images = []; $images_json = [];
 foreach ($raw_ids as $img_id) {
@@ -69,7 +67,7 @@ $total_images = count($all_images);
 $all_amenities = get_property_amenities();
 ?>
 <style>
-/* ── HERO — overlaps header (negative margin-top) ── */
+/* ── HERO – overlaps header (negative margin-top) ── */
 .pp-hero {
     position: relative;
     background: #111;
@@ -80,7 +78,7 @@ $all_amenities = get_property_amenities();
     /* Pull up behind the header */
     margin-top: calc(-1 * var(--hh, 72px));
 }
-/* Bez fotiek stačí nižší hero — žiadna prázdna plocha na celú obrazovku */
+/* Bez fotiek stačí nižší hero – žiadna prázdna plocha na celú obrazovku */
 .pp-hero--nophoto { height:62vh; min-height:420px; }
 .pp-hero-track { display:flex; height:100%; transition:transform .6s cubic-bezier(.4,0,.2,1); will-change:transform; }
 /* Each slide: absolute-positioned img fills 100% regardless of source size */
@@ -111,7 +109,7 @@ $all_amenities = get_property_amenities();
 }
 .pp-hero-meta { display:flex; gap:18px; flex-wrap:wrap; font-size:14px; color:#fff; opacity:1; text-shadow:0 1px 6px rgba(0,0,0,.6); }
 
-/* Nav arrows — glass */
+/* Nav arrows – glass */
 .pp-hero-btn {
     position:absolute; top:50%; transform:translateY(-50%);
     width:50px; height:50px; border-radius:50%;
@@ -178,12 +176,13 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
 }
 .pp-sec-title::after { content:''; flex:1; height:1px; background:#E2DACE; }
 
-/* Specs */
+/* Specs – flex s grow: bunky sa roztiahnu a vždy vyplnia riadok (žiadne prázdne pole) */
 .pp-specs {
-    display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+    display:flex; flex-wrap:wrap;
     gap:1px; background:#E2DACE; border-radius:12px; overflow:hidden;
 }
 .pp-spec {
+    flex:1 1 130px; min-width:110px;
     background:#fff; padding:18px 12px;
     display:flex; flex-direction:column; align-items:center; gap:5px; text-align:center;
     transition:background .2s;
@@ -240,6 +239,7 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
 
 /* Video */
 .pp-video { border-radius:14px; overflow:hidden; aspect-ratio:16/9; margin-bottom:22px; }
+.pp-video.vertical { aspect-ratio:9/16; max-width:340px; margin-left:auto; margin-right:auto; }
 .pp-video iframe { width:100%; height:100%; border:none; display:block; }
 
 /* Masonry gallery */
@@ -278,12 +278,13 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     font-family:var(--sans,sans-serif);
 }
 .pp-btn:hover { transform:translateY(-2px); }
-.pp-btn-call  { background:#B8A47A; color:#1C1A18; }
+/* Farbu textu držíme aj v :hover – inak ju prebije globálne a:hover (zlatá) a text zmizne */
+.pp-btn-call, .pp-btn-call:hover  { background:#B8A47A; color:#1C1A18; }
 .pp-btn-call:hover  { background:#9A8660; box-shadow:0 6px 18px rgba(184,164,122,.4); }
-.pp-btn-wa    { background:#22c55e; color:#fff; }
+.pp-btn-wa, .pp-btn-wa:hover    { background:#22c55e; color:#fff; }
 .pp-btn-wa:hover    { background:#16a34a; box-shadow:0 6px 18px rgba(34,197,94,.3); }
 .pp-btn-email { background:#F5F1EA; color:#2C2C2C; border:1.5px solid #E2DACE; }
-.pp-btn-email:hover { border-color:#B8A47A; color:#9A8660; background:#fff; }
+.pp-btn-email:hover { border-color:#B8A47A; color:#2C2C2C; background:#fff; }
 
 .pp-agent { background:#fff; border-radius:14px; box-shadow:0 4px 20px rgba(60,50,30,.09); padding:22px; text-align:center; }
 .pp-agent-avatar { width:72px; height:72px; border-radius:50%; margin:0 auto 14px; overflow:hidden; background:#F5F1EA; display:flex; align-items:center; justify-content:center; font-size:28px; box-shadow:0 0 0 3px #fff,0 0 0 5px #B8A47A; }
@@ -291,7 +292,7 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
 .pp-agent-name { font-size:15px; font-weight:700; color:#1C1A18; margin-bottom:3px; font-family:var(--serif,serif); }
 .pp-agent-role { font-size:11px; color:#6B6560; text-transform:uppercase; letter-spacing:.5px; }
 
-/* Lightbox — plynulé otvorenie namiesto skokového display:none */
+/* Lightbox – plynulé otvorenie namiesto skokového display:none */
 .pp-lb { display:flex; visibility:hidden; opacity:0; position:fixed; inset:0; background:rgba(5,5,10,.96); z-index:99999; align-items:center; justify-content:center; transition:opacity .28s ease, visibility 0s .28s; }
 .pp-lb.open { visibility:visible; opacity:1; transition:opacity .28s ease; }
 .pp-lb-img { max-width:92vw; max-height:88vh; border-radius:10px; object-fit:contain; box-shadow:0 20px 60px rgba(0,0,0,.5); transform:scale(.96); transition:transform .3s cubic-bezier(.22,.9,.36,1); }
@@ -313,7 +314,7 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     .pp-hero-dots { left:50%; transform:translateX(-50%); bottom:14px; }
     .pp-body { padding:24px 16px 48px; gap:20px; }
     .pp-card { padding:20px 18px; }
-    .pp-specs { grid-template-columns: repeat(3,1fr); }
+    .pp-specs .pp-spec { flex-basis: calc(33.333% - 1px); }
     .pp-price-val { font-size:24px; }
     .pp-btn { padding:11px 12px; font-size:12px; }
     .pp-cta { padding:20px 16px; }
@@ -321,12 +322,12 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
 }
 @media (max-width: 480px) {
     .pp-hero { height: 100vh; height: 100svh; min-height: 380px; }
-    .pp-specs { grid-template-columns: repeat(2,1fr); }
+    .pp-specs .pp-spec { flex-basis: calc(50% - 1px); }
     .pp-hero-counter { font-size:11px; padding:4px 10px; }
 }
 </style>
 
-<!-- TRANSPARENT HEADER SCRIPT — must run before scroll -->
+<!-- TRANSPARENT HEADER SCRIPT – must run before scroll -->
 <script>
 (function(){
     var hdr = document.getElementById('zcHeader');
@@ -464,15 +465,13 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
         <?php endif; ?>
     </div>
 
-    <?php if ($video_url): ?>
-    <div class="pp-video">
-        <?php
-        if (preg_match('/youtube\.com.*v=([^&]+)|youtu\.be\/([^?]+)/',$video_url,$m)) {
-            $vid=$m[1]?:$m[2];
-            echo '<iframe src="https://www.youtube.com/embed/'.esc_attr($vid).'?rel=0" allowfullscreen loading="lazy"></iframe>';
-        } elseif (preg_match('/vimeo\.com\/(\d+)/',$video_url,$m)) {
-            echo '<iframe src="https://player.vimeo.com/video/'.esc_attr($m[1]).'" allowfullscreen loading="lazy"></iframe>';
-        } ?>
+    <?php
+    // Univerzálny embed – YouTube (aj Shorts), Vimeo; Shorts sa zobrazí zvislo
+    $pp_video = function_exists('zc_video_embed') ? zc_video_embed($video_url) : [];
+    if (!empty($pp_video['url'])): ?>
+    <div class="pp-video<?php echo !empty($pp_video['vertical']) ? ' vertical' : '' ?>">
+        <iframe src="<?php echo esc_url($pp_video['url']) ?>" allowfullscreen loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"></iframe>
     </div>
     <?php endif; ?>
 
@@ -526,11 +525,9 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     <div class="pp-agent">
         <div class="pp-agent-avatar">
             <?php
-            // Manual photo override (panel) takes priority; otherwise the theme's
-            // portrait photo (Customizer → 📸 Fotky maklérky); Gravatar as last resort.
-            $zc_theme_portrait = function_exists('zc_photo') ? zc_photo('portrait') : '';
-            if ($agent_photo) echo wp_get_attachment_image($agent_photo,'thumbnail');
-            elseif ($zc_theme_portrait) echo '<img src="'.esc_url($zc_theme_portrait).'" alt="'.esc_attr($agent_name).'" style="object-position:center 18%">';
+            // Fotka maklérky z jej WP profilu: nahratá profilová fotka
+            // (Users → Profil → Profilová fotka), inak Gravatar podľa e-mailu.
+            if ($agent_photo) echo wp_get_attachment_image($agent_photo, 'thumbnail', false, ['alt' => esc_attr($agent_name)]);
             else echo get_avatar($agent_id, 144);
             ?>
         </div>

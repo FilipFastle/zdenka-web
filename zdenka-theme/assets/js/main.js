@@ -20,13 +20,13 @@ if (!document.getElementById('zcOvCSS')) {
     var menuCSS = document.createElement('style');
     menuCSS.id = 'zcOvCSS';
     menuCSS.textContent = [
-        /* Base — always hidden */
+        /* Base – always hidden */
         '#zcOv{position:fixed;inset:0;z-index:9998;display:flex;flex-direction:column;align-items:center;justify-content:center;',
         '  visibility:hidden;',
         /* Delay visibility:hidden until close animation ends (.56s) */
         '  transition:visibility 0s .56s;}',
 
-        /* Open — instant visibility */
+        /* Open – instant visibility */
         '#zcOv.open{visibility:visible;transition:visibility 0s 0s;}',
 
         /* Keep visible while closing animation plays */
@@ -107,7 +107,7 @@ if (!document.getElementById('zcOv')) {
 
     var nav = document.getElementById('zcOvNav');
     [['/', 'Domov'], ['/o-mne/', 'O mne'], ['/ako-pracujem/', 'Ako pracujem'],
-     ['/ponuky/', 'Ponuky'], ['/odhad/', 'Odhad ZADARMO'], ['/kontakt/', 'Kontakt']
+     ['/ponuky/', 'Ponuky'], ['/odhad/', 'Odhad ZDARMA'], ['/kontakt/', 'Kontakt']
     ].forEach(function (item) {
         var a = document.createElement('a');
         a.href = location.origin + item[0];
@@ -182,7 +182,7 @@ var hero = document.getElementById('zcHomeHero') || document.getElementById('ppH
 if (hero && hdr) {
     window.removeEventListener('scroll', window._zcTrans);
     window._zcTrans = function () {
-        // scrollY namiesto rect.bottom — sticky hero má bottom vždy = viewport
+        // scrollY namiesto rect.bottom – sticky hero má bottom vždy = viewport
         hdr.classList.toggle('transparent', window.scrollY < hero.offsetHeight - 60);
     };
     window.addEventListener('scroll', window._zcTrans, { passive: true });

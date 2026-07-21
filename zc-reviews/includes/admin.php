@@ -27,7 +27,7 @@ function zcr_admin_page() {
         <tr data-id="<?php echo $r->id ?>">
             <td style="color:#aaa;font-size:12px"><?php echo $r->id ?></td>
             <td style="font-weight:600"><?php echo esc_html($r->author_name) ?></td>
-            <td style="color:#666;font-size:13px"><?php echo esc_html($r->author_role ?: '—') ?></td>
+            <td style="color:#666;font-size:13px"><?php echo esc_html($r->author_role ?: '–') ?></td>
             <td style="font-size:13px;color:#444;max-width:280px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis"><?php echo esc_html($r->body) ?></td>
             <td style="color:#B8A47A;letter-spacing:2px"><?php echo str_repeat('★',intval($r->rating)) ?></td>
             <td><?php echo $r->published

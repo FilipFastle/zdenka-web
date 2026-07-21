@@ -10,7 +10,7 @@ $title=zc_agent('title','Realitná maklérka');
 ?>
 <?php $zc_hero_portrait = function_exists('zc_photo') ? zc_photo('portrait') : ''; ?>
 <style>
-/* Sticky hero — zvyšok stránky sa naň pri scrolle nasunie ako opona */
+/* Sticky hero – zvyšok stránky sa naň pri scrolle nasunie ako opona */
 .zc-home-hero{height:100vh;min-height:560px;margin-top:calc(-1 * var(--hh,72px));position:sticky;top:0;z-index:0;overflow:hidden;display:flex;align-items:center}
 .zc-home-hero ~ section{position:relative;z-index:2}
 .zc-home-hero ~ footer.zc-footer{position:relative;z-index:2}
@@ -40,7 +40,7 @@ $title=zc_agent('title','Realitná maklérka');
 .zc-hero-scroll{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:rgba(255,255,255,.4);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-family:var(--sans,sans-serif);z-index:5;animation:heroScroll 2s ease-in-out infinite}
 @keyframes heroScroll{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(7px)}}
 <?php if ($zc_hero_portrait): ?>
-/* Mobil: hero = vertikálny portrét — tvár je vycentrovaná z podstaty fotky */
+/* Mobil: hero = vertikálny portrét – tvár je vycentrovaná z podstaty fotky */
 @media(max-width:768px){
     .zc-hero-bg{background-image:url('<?php echo esc_url($zc_hero_portrait); ?>') !important;background-position:center 22% !important;transform-origin:center 25%}
     .zc-home-hero{align-items:flex-end}
@@ -57,7 +57,7 @@ $title=zc_agent('title','Realitná maklérka');
     var hdr=document.getElementById('zcHeader');
     if(!hdr)return;
     hdr.classList.add('transparent');
-    // Sticky hero má rect.bottom vždy = výška viewportu — meriame preto scrollY
+    // Sticky hero má rect.bottom vždy = výška viewportu – meriame preto scrollY
     function u(){var h=document.getElementById('zcHomeHero');if(!h)return;hdr.classList.toggle('transparent',window.scrollY < h.offsetHeight - 60);}
     window.addEventListener('scroll',u,{passive:true});
 })();
@@ -76,7 +76,7 @@ $title=zc_agent('title','Realitná maklérka');
     <div class="zc-hero-text">
         <div class="zc-hero-eyebrow">Banská Bystrica · Zvolen</div>
         <h1 class="zc-hero-h1">Predáme váš domov <em>za najlepšiu cenu</em></h1>
-        <p class="zc-hero-p">Profesionálna realitná maklérka s bohatými skúsenosťami. Predaj, prenájom aj poradenstvo — vždy s osobným prístupom.</p>
+        <p class="zc-hero-p">Profesionálna realitná maklérka s bohatými skúsenosťami. Predaj, prenájom aj poradenstvo – vždy s osobným prístupom.</p>
         <div class="zc-hero-btns">
             <a href="<?php echo home_url('/ponuky/'); ?>" class="zc-btn zc-btn-primary">Pozrieť ponuky</a>
             <a href="<?php echo home_url('/kontakt/'); ?>" class="zc-btn" style="background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.3)">Bezplatná konzultácia</a>
@@ -133,10 +133,10 @@ $title=zc_agent('title','Realitná maklérka');
     </div>
     <div class="zc-precoja-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:22px">
     <?php foreach([
-        ['🤝','Férovosť','Vždy poviem pravdu — aj keď nie je príjemná. Žiadne skryté poplatky.'],
+        ['❤️','Záujem','Vaša spokojnosť je môj úspech. Každý prípad riešim osobne.'],
         ['💡','Odbornosť','Trh sledujem denne. Znalosti využívam v prospech klienta.'],
         ['⚡','Rýchlosť','Váš čas je cenný. Komunikujem promptne a procesy urýchľujem.'],
-        ['❤️','Záujem','Vaša spokojnosť je môj úspech. Každý prípad riešim osobne.'],
+        ['🤝','Férovosť','Vždy poviem pravdu, aj keď nie je príjemná. Žiadne skryté poplatky.'],
     ] as [$ic,$t,$d]): ?>
     <div class="zc-card"><div class="zc-card-icon"><?php echo $ic; ?></div><h3 style="font-size:17px;margin-bottom:8px"><?php echo $t; ?></h3><p style="font-size:14px;color:var(--muted);margin:0;line-height:1.7"><?php echo $d; ?></p></div>
     <?php endforeach; ?>
@@ -167,7 +167,7 @@ $title=zc_agent('title','Realitná maklérka');
         // Dynamic reviews from plugin
         echo do_shortcode('[zc_reviews limit="6" cols="3"]');
     } else {
-        // Fallback — hardcoded kým plugin nie je aktívny
+        // Fallback – hardcoded kým plugin nie je aktívny
         $fallback = [
             ['Jana a Peter K.','Predaj rodinného domu','Zdenka predala náš dom za 3 týždne za cenu, o akej sme ani nesnívali. Profesionálny prístup, skvelá komunikácia.'],
             ['Miroslav T.','Kúpa 3-izbového bytu','Pomohla nám nájsť presne to, čo sme hľadali. Ušetrila nám kopu času a stresu.'],

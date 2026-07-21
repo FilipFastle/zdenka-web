@@ -1,5 +1,5 @@
 <?php
-// Database — creates wp_zc_newsletter table
+// Database – creates wp_zc_newsletter table
 function zcn_install() {
     global $wpdb;
     $table = $wpdb->prefix . ZCN_TABLE;

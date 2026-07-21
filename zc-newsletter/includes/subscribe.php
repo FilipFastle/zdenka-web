@@ -7,7 +7,7 @@ add_action('wp_ajax_nopriv_zcn_subscribe', 'zcn_handle_subscribe');
 function zcn_handle_subscribe() {
     check_ajax_referer('zcn_nonce', 'nonce');
 
-    // SECURITY: rate limit — max 5 subscribe requests / 10 min per IP
+    // SECURITY: rate limit – max 5 subscribe requests / 10 min per IP
     $ip  = $_SERVER['REMOTE_ADDR'] ?? '';
     $key = 'zcn_sub_' . md5($ip);
     $attempts = (int) get_transient($key);
@@ -70,10 +70,10 @@ function zcn_send_confirmation($email, $name, $token) {
     $confirm_url = add_query_arg(['zcn_action' => 'confirm', 'token' => $token], home_url('/'));
     $unsub_url   = add_query_arg(['zcn_action' => 'unsubscribe', 'token' => $token], home_url('/'));
     $site        = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : get_bloginfo('name');
-    $from_email  = get_theme_mod('zc_email_from', 'noreply@zdenkacibulova.sk');
+    $from_email  = get_theme_mod('zc_email_from', '') ?: get_option('admin_email');
     $greeting    = $name ? "Dobrý deň {$name}," : 'Dobrý deň,';
 
-    $subject = "Potvrďte prihlásenie na odber — {$site}";
+    $subject = "Potvrďte prihlásenie na odber – {$site}";
     $body    = zcn_email_wrap($subject, "
         <p style='font-size:16px;color:#2C2825;margin:0 0 20px'>{$greeting}</p>
         <p style='color:#555;line-height:1.75;margin:0 0 28px'>

@@ -1,6 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
-// HTML Email template — light/dark mode, clean ob_start approach
+// HTML Email template – light/dark mode, clean ob_start approach
 function zc_email_template($data) {
     $name    = $data['name']    ?? '';
     $email   = $data['email']   ?? '';

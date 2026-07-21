@@ -141,7 +141,7 @@ function get_property_amenities() {
     return $amenities;
 }
 
-// ── Vlastné vybavenie — pridanie / mazanie (Realitný panel) ─────────────
+// ── Vlastné vybavenie – pridanie / mazanie (Realitný panel) ─────────────
 add_action('wp_ajax_pp_amenity_add', function() {
     check_ajax_referer('pp_amenity', 'nonce');
     if (!current_user_can('edit_posts')) wp_send_json_error(['message' => 'Nedostatočné oprávnenie.']);

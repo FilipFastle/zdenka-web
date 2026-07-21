@@ -228,13 +228,55 @@ add_action('save_post_property', function($post_id) {
     update_post_meta($post_id, '_property_amenities', $amenities);
 }, 10, 1);
 
+// Médiá pre uploader profilovej fotky na stránke profilu
+add_action('admin_enqueue_scripts', function($hook) {
+    if ($hook === 'profile.php' || $hook === 'user-edit.php') wp_enqueue_media();
+});
+
 // User profile fields for agent
 add_action('show_user_profile', 'render_agent_profile_fields');
 add_action('edit_user_profile', 'render_agent_profile_fields');
 function render_agent_profile_fields($user) {
+    $photo_id  = get_user_meta($user->ID, 'property_photo_id', true);
+    $photo_src = $photo_id ? wp_get_attachment_image_url($photo_id, 'thumbnail') : '';
     ?>
     <h3>🏠 Realitný profil</h3>
     <table class="form-table">
+        <tr>
+            <th><label>Profilová fotka</label></th>
+            <td>
+                <div id="pp-photo-preview" style="margin-bottom:10px">
+                    <?php if ($photo_src): ?>
+                    <img src="<?php echo esc_url($photo_src) ?>" style="width:96px;height:96px;object-fit:cover;border-radius:50%;box-shadow:0 0 0 3px #fff,0 0 0 5px #B8A47A">
+                    <?php endif; ?>
+                </div>
+                <input type="hidden" name="property_photo_id" id="pp-photo-id" value="<?php echo esc_attr($photo_id) ?>">
+                <button type="button" class="button" id="pp-photo-pick">Vybrať / nahrať fotku</button>
+                <button type="button" class="button" id="pp-photo-clear" <?php echo $photo_src ? '' : 'style="display:none"' ?>>Odstrániť</button>
+                <p class="description">Táto fotka sa zobrazí pri ponukách priradených tejto maklérke. Ak nie je nastavená, použije sa Gravatar podľa e-mailu.</p>
+                <script>
+                (function(){
+                    var frame, pick=document.getElementById('pp-photo-pick'), clr=document.getElementById('pp-photo-clear'),
+                        idIn=document.getElementById('pp-photo-id'), prev=document.getElementById('pp-photo-preview');
+                    if(!pick) return;
+                    pick.addEventListener('click', function(e){
+                        e.preventDefault();
+                        if(frame){ frame.open(); return; }
+                        frame = wp.media({title:'Profilová fotka', button:{text:'Použiť'}, multiple:false, library:{type:'image'}});
+                        frame.on('select', function(){
+                            var a = frame.state().get('selection').first().toJSON();
+                            idIn.value = a.id;
+                            var url = (a.sizes && a.sizes.thumbnail) ? a.sizes.thumbnail.url : a.url;
+                            prev.innerHTML = '<img src="'+url+'" style="width:96px;height:96px;object-fit:cover;border-radius:50%;box-shadow:0 0 0 3px #fff,0 0 0 5px #B8A47A">';
+                            clr.style.display='';
+                        });
+                        frame.open();
+                    });
+                    clr.addEventListener('click', function(e){ e.preventDefault(); idIn.value=''; prev.innerHTML=''; clr.style.display='none'; });
+                })();
+                </script>
+            </td>
+        </tr>
         <tr><th><label>Telefón</label></th><td><input type="text" name="property_phone" value="<?php echo esc_attr(get_user_meta($user->ID,'property_phone',true)) ?>" class="regular-text" placeholder="+421 907 579 742"></td></tr>
         <tr><th><label>WhatsApp číslo</label></th><td><input type="text" name="property_whatsapp" value="<?php echo esc_attr(get_user_meta($user->ID,'property_whatsapp',true)) ?>" class="regular-text" placeholder="421907579742"></td></tr>
         <tr><th><label>Kontaktný email</label></th><td><input type="email" name="property_email" value="<?php echo esc_attr(get_user_meta($user->ID,'property_email',true)) ?>" class="regular-text"></td></tr>
@@ -249,5 +291,8 @@ function save_agent_profile_fields($user_id) {
     if (!current_user_can('edit_user', $user_id)) return;
     foreach (['property_phone','property_whatsapp','property_email','property_title'] as $f) {
         if (isset($_POST[$f])) update_user_meta($user_id, $f, sanitize_text_field($_POST[$f]));
+    }
+    if (isset($_POST['property_photo_id'])) {
+        update_user_meta($user_id, 'property_photo_id', absint($_POST['property_photo_id']));
     }
 }

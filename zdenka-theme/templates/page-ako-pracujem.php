@@ -8,15 +8,9 @@ $foto_1 = get_theme_mod('zc_apfoto1','');
 $foto_2 = get_theme_mod('zc_apfoto2','');
 $video  = get_theme_mod('zc_apvideo','');
 
-function zc_embed_url($url) {
-    if (!$url) return '';
-    if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/', $url, $m))
-        return 'https://www.youtube.com/embed/'.$m[1].'?rel=0&modestbranding=1&autoplay=0';
-    if (preg_match('/vimeo\.com\/(\d+)/', $url, $m))
-        return 'https://player.vimeo.com/video/'.$m[1];
-    return $url;
-}
-$embed = zc_embed_url($video);
+$video_data = function_exists('zc_video_embed') ? zc_video_embed($video) : [];
+$embed      = $video_data['url'] ?? '';
+$embed_vert = !empty($video_data['vertical']);
 ?>
 
 <style>
@@ -68,6 +62,8 @@ $embed = zc_embed_url($video);
 .ap-video-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;
     border-radius:16px;box-shadow:var(--sh-lg)}
 .ap-video-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+/* Zvislý formát pre YouTube Shorts (9:16), vycentrovaný a s rozumnou šírkou */
+.ap-video-wrap.vertical{max-width:360px;margin:0 auto;padding-bottom:177.78%}
 .ap-video-placeholder{aspect-ratio:16/9;background:var(--section);border:2px dashed var(--border);border-radius:16px;
     display:flex;align-items:center;justify-content:center;flex-direction:column;
     gap:12px;color:var(--muted)}
@@ -96,7 +92,7 @@ $embed = zc_embed_url($video);
     <div class="zc-container" style="max-width:700px">
         <div class="zc-eyebrow" style="justify-content:center">Postup spolupráce</div>
         <h1>Ako <em>pracujem</em></h1>
-        <p>Transparentný, overený proces — od prvého stretnutia po odovzdanie kľúčov. Každý krok robím osobne a vždy v záujme klienta.</p>
+        <p>Transparentný, overený proces – od prvého stretnutia po odovzdanie kľúčov. Každý krok robím osobne a vždy v záujme klienta.</p>
     </div>
 </div>
 
@@ -121,20 +117,17 @@ $embed = zc_embed_url($video);
              'Každá nehnuteľnosť má svoj príbeh. Vytvorím profesionálny text inzerátu, ktorý jasne vyzdvihne výhody nehnuteľnosti, osloví správnych kupujúcich a podporí výsledok predaja.',
              ''],
             ['📣','Moderný marketing a inzercia',
-             'Vašu nehnuteľnosť prezentujem cielene a efektívne — na realitných portáloch, sociálnych sieťach, v online reklame aj medzi overenými kontaktmi z databázy. Cieľom nie je len zobrazenie, ale oslovenie správneho kupujúceho.',
+             'Vašu nehnuteľnosť prezentujem cielene a efektívne – na realitných portáloch, sociálnych sieťach, v online reklame aj medzi overenými kontaktmi z databázy. Cieľom nie je len zobrazenie, ale oslovenie správneho kupujúceho.',
              $foto_2],
             ['⚖️','Právne služby a katastrálny servis',
-             'Zabezpečím kompletný právny servis spojený s prevodom nehnuteľnosti — prípravu zmluvnej dokumentácie, katastrálny servis aj koordináciu jednotlivých krokov až po úspešné odovzdanie. Chránim záujmy všetkých zúčastnených strán.',
+             'Zabezpečím kompletný právny servis spojený s prevodom nehnuteľnosti – prípravu zmluvnej dokumentácie, katastrálny servis aj koordináciu jednotlivých krokov až po úspešné odovzdanie. Chránim záujmy všetkých zúčastnených strán.',
              ''],
         ];
         foreach ($services as $i => [$icon, $title, $text, $foto]):
         ?>
         <div class="ap-card zc-card">
-            <div style="display:flex;align-items:center;gap:12px">
-                <div class="ap-card-num"><?php echo $i+1 ?></div>
-                <span class="ap-card-icon"><?php echo $icon ?></span>
-            </div>
-            <div class="ap-card-title"><?php echo $title ?></div>
+            <div class="ap-card-num"><?php echo $i+1 ?></div>
+            <div class="ap-card-title"><span class="ap-card-icon"><?php echo $icon ?></span> <?php echo $title ?></div>
             <div class="ap-card-text"><?php echo esc_html($text) ?></div>
             <?php if ($foto): ?>
             <img src="<?php echo esc_url($foto) ?>" alt="<?php echo esc_attr($title) ?>" class="ap-card-img" loading="lazy">
@@ -156,7 +149,7 @@ $embed = zc_embed_url($video);
         <p style="color:var(--muted);max-width:520px;margin:12px auto 0">Pozrite si, ako vyzerá naša video prezentácia nehnuteľnosti.</p>
     </div>
     <?php if ($embed): ?>
-    <div class="ap-video-wrap">
+    <div class="ap-video-wrap<?php echo $embed_vert ? ' vertical' : '' ?>">
         <iframe src="<?php echo esc_url($embed) ?>" title="Video prehliadka"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
             allowfullscreen loading="lazy"></iframe>
@@ -164,7 +157,7 @@ $embed = zc_embed_url($video);
     <?php elseif (current_user_can('manage_options')): ?>
     <div class="ap-video-placeholder">
         <div style="font-size:40px">🎬</div>
-        <div style="font-size:14px">Nastav video: <strong>Appearance → Customize → Ako pracujem → Video URL</strong></div>
+        <div style="font-size:14px">Nastav video: <strong>Vzhľad → Prispôsobiť → Ako pracujem → Video URL</strong><br><small style="opacity:.7">Funguje bežné video aj YouTube Shorts.</small></div>
     </div>
     <?php endif; ?>
 </div>

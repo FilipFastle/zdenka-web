@@ -1,6 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
-// Page transition — outputs in <head> priority 1 (before everything else)
+// Page transition – outputs in <head> priority 1 (before everything else)
 add_action('wp_head', function () {
     $logo = get_stylesheet_directory_uri() . '/assets/images/zc-logo.svg';
     $logo_e = esc_url($logo);
@@ -64,12 +64,12 @@ body.zc-ready { opacity: 1; transition: opacity .45s ease; }
     if (sessionStorage.getItem(KEY) === '1') {
         sessionStorage.removeItem(KEY);
 
-        // Overlay shows immediately (body is opacity:0) — looks seamless
+        // Overlay shows immediately (body is opacity:0) – looks seamless
         var ov = getOv();
 
         function fadeOut() {
             setTimeout(function () {
-                // Start BOTH at exact same moment — no crack between them
+                // Start BOTH at exact same moment – no crack between them
                 ov.classList.add('out');
                 showBody();
                 setTimeout(function () { if (ov.parentNode) ov.remove(); }, 580);
@@ -82,7 +82,7 @@ body.zc-ready { opacity: 1; transition: opacity .45s ease; }
             window.addEventListener('load', fadeOut);
         }
     } else {
-        // Normal load — just show body
+        // Normal load – just show body
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', showBody);
         } else {
@@ -90,7 +90,7 @@ body.zc-ready { opacity: 1; transition: opacity .45s ease; }
         }
     }
 
-    /* ── DEPARTURE — intercept internal link clicks ──────────── */
+    /* ── DEPARTURE – intercept internal link clicks ──────────── */
     document.addEventListener('click', function (e) {
         var a = e.target.closest('a');
         if (!a) return;

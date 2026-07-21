@@ -7,7 +7,7 @@ function zcn_get_templates() {
     return is_array($tpls) ? $tpls : [];
 }
 
-// Nahradí {premenne} v texte — používa sa pri odoslaní pre každého odberateľa
+// Nahradí {premenne} v texte – používa sa pri odoslaní pre každého odberateľa
 function zcn_apply_vars($text, $vars) {
     foreach ($vars as $k => $v) {
         $text = str_replace('{' . $k . '}', $v, $text);
@@ -16,7 +16,7 @@ function zcn_apply_vars($text, $vars) {
     return str_replace([' ,', ' .'], [',', '.'], $text);
 }
 
-// AJAX — uloženie šablóny
+// AJAX – uloženie šablóny
 add_action('wp_ajax_zcn_tpl_save', function() {
     check_ajax_referer('zcn_tpl', 'nonce');
     if (!current_user_can('edit_posts')) wp_send_json_error(['message' => 'Nedostatočné oprávnenie.']);
@@ -33,7 +33,7 @@ add_action('wp_ajax_zcn_tpl_save', function() {
     wp_send_json_success(['id' => $id, 'name' => $name]);
 });
 
-// AJAX — zmazanie šablóny
+// AJAX – zmazanie šablóny
 add_action('wp_ajax_zcn_tpl_delete', function() {
     check_ajax_referer('zcn_tpl', 'nonce');
     if (!current_user_can('edit_posts')) wp_send_json_error(['message' => 'Nedostatočné oprávnenie.']);
@@ -53,7 +53,7 @@ function zcn_render_tpl_toolbar($editor_id, $subject_id) {
     ?>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding:12px 14px;background:#F5F1EA;border:1px solid #E0D8CE;border-radius:8px">
         <select id="zcnTplSel_<?php echo $uid ?>" style="padding:7px 10px;border:1.5px solid #E0D8CE;border-radius:7px;font-size:13px;max-width:220px;background:#fff">
-            <option value="">— Šablóna —</option>
+            <option value="">– Šablóna –</option>
             <?php foreach ($tpls as $id => $t): ?>
             <option value="<?php echo esc_attr($id) ?>"><?php echo esc_html($t['name']) ?></option>
             <?php endforeach; ?>

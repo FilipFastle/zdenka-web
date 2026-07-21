@@ -41,7 +41,7 @@
                 <?php foreach([
                     ['/','Domov'],['/o-mne/','O mne'],
                     ['/ako-pracujem/','Ako pracujem'],['/ponuky/','Ponuky'],
-                    ['/odhad/','Odhad ZADARMO'],['/kontakt/','Kontakt'],
+                    ['/odhad/','Odhad ZDARMA'],['/kontakt/','Kontakt'],
                 ] as [$path,$label]): ?>
                 <li><a href="<?php echo home_url($path); ?>"><?php echo $label; ?></a></li>
                 <?php endforeach; ?>
@@ -75,7 +75,10 @@
     </div>
     <div class="zc-footer-bottom">
         <span>© <?php echo date('Y'); ?> <?php echo esc_html(zc_agent('name', 'Mgr. Zdenka Cibuľová')); ?>. Všetky práva vyhradené.</span>
-        <span>Realitná maklérka · Banská Bystrica · Zvolen</span>
+        <span style="display:inline-flex;gap:14px;align-items:center;flex-wrap:wrap">
+            <a href="<?php echo home_url('/ochrana-osobnych-udajov/'); ?>">Ochrana osobných údajov</a>
+            <span>Realitná maklérka · Banská Bystrica · Zvolen</span>
+        </span>
     </div>
 </footer>
 

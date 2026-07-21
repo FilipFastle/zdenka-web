@@ -12,7 +12,7 @@ $logo   = get_stylesheet_directory_uri() . '/assets/images/zc-logo.svg';
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title><?php echo esc_html($name); ?> — Údržba</title>
+<title><?php echo esc_html($name); ?> – Údržba</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
 <style>

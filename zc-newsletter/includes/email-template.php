@@ -144,7 +144,7 @@ function zcn_markdown_to_html($text) {
     // Blockquote
     $text = preg_replace('/^> (.+)$/m', '<blockquote style="border-left:3px solid #B8A47A;margin:16px 0;padding:10px 16px;background:#F8F5EE;border-radius:0 8px 8px 0;color:#7A7068;font-style:italic">$1</blockquote>', $text);
 
-    // Paragraphs — blank line = new paragraph
+    // Paragraphs – blank line = new paragraph
     $blocks = preg_split('/\n{2,}/', trim($text));
     $result = '';
     foreach ($blocks as $block) {

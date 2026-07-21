@@ -18,7 +18,7 @@ add_shortcode('zc_reviews', function($atts) {
     ob_start(); ?>
     <style>
     <?php if ($cols === 3): ?>
-    /* 3 stĺpce cez 6-stĺpcový grid — osirotené karty v poslednom riadku
+    /* 3 stĺpce cez 6-stĺpcový grid – osirotené karty v poslednom riadku
        sa roztiahnu (2 → 50/50, 1 → celá šírka), žiadne prázdne diery */
     .zcr-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:22px}
     .zcr-grid>*{grid-column:span 2}

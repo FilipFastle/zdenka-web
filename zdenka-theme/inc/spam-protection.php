@@ -1,6 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
-// ── Spam Protection — Honeypot + Time Check ───────────────────────────────
+// ── Spam Protection – Honeypot + Time Check ───────────────────────────────
 
 // 1. Output honeypot fields (call inside every form)
 function zc_honeypot_fields() {
@@ -17,16 +17,16 @@ function zc_honeypot_fields() {
     return ob_get_clean();
 }
 
-// 2. Verify — returns true if valid, string if spam
+// 2. Verify – returns true if valid, string if spam
 function zc_check_spam($post = null) {
     if ($post === null) $post = $_POST;
 
-    // Honeypot check — if filled = bot
+    // Honeypot check – if filled = bot
     if (!empty($post['website']) || !empty($post['phone_confirm'])) {
         return 'spam_honeypot';
     }
 
-    // Time check — submitted too fast (< 3 seconds) = bot
+    // Time check – submitted too fast (< 3 seconds) = bot
     $submit_time = intval($post['zc_form_time'] ?? 0);
     if ($submit_time && (time() - $submit_time) < 3) {
         return 'spam_too_fast';
@@ -43,7 +43,7 @@ function zc_check_spam($post = null) {
     return true;
 }
 
-// 3. WordPress comments — honeypot
+// 3. WordPress comments – honeypot
 add_action('comment_form', function() {
     echo zc_honeypot_fields();
 });
@@ -58,5 +58,5 @@ add_filter('preprocess_comment', function($data) {
 // 4. Akismet integration hint (if active)
 add_action('wp_head', function() {
     if (function_exists('akismet_get_key')) return; // already active
-    // Silently suggest Akismet via comment — no output
+    // Silently suggest Akismet via comment – no output
 }, 99);

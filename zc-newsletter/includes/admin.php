@@ -64,7 +64,7 @@ function zcn_admin_page() {
         $out = fopen('php://output', 'w');
         fputcsv($out, ['ID','Meno','Email','Status','Dátum prihlásenia','Dátum potvrdenia','Zdroj']);
         foreach ($rows as $r) {
-            // Prefix riskantných znakov — ochrana pred CSV/formula injection v Exceli
+            // Prefix riskantných znakov – ochrana pred CSV/formula injection v Exceli
             $name = preg_match('/^[=+\-@]/', (string)$r->name) ? "'" . $r->name : $r->name;
             fputcsv($out, [$r->id, $name, $r->email, $r->status,
                 $r->subscribed_at, $r->confirmed_at ?? '', $r->source]);
@@ -158,10 +158,10 @@ function zcn_admin_page() {
         <?php if ($rows): foreach ($rows as $r): ?>
         <tr>
             <td><a href="mailto:<?php echo esc_attr($r->email) ?>"><?php echo esc_html($r->email) ?></a></td>
-            <td><?php echo esc_html($r->name ?: '—') ?></td>
+            <td><?php echo esc_html($r->name ?: '–') ?></td>
             <td><span style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-size:11px"><?php echo esc_html($r->source) ?></span></td>
             <td style="font-size:12px"><?php echo date('d.m.Y', strtotime($r->subscribed_at)) ?></td>
-            <td style="font-size:12px"><?php echo $r->confirmed_at ? date('d.m.Y', strtotime($r->confirmed_at)) : '<span style="color:#aaa">—</span>' ?></td>
+            <td style="font-size:12px"><?php echo $r->confirmed_at ? date('d.m.Y', strtotime($r->confirmed_at)) : '<span style="color:#aaa">–</span>' ?></td>
             <td>
                 <?php if ($r->status === 'active'): ?>
                 <form method="post" style="display:inline" onsubmit="return confirm('Odhlásiť?')">
@@ -187,7 +187,7 @@ function zcn_admin_page() {
         <h3 style="margin:0 0 20px">Odoslať newsletter</h3>
         <div style="margin-bottom:16px">
             <label style="display:block;font-size:11px;font-weight:700;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Predmet *</label>
-            <input type="text" id="zcnSubject" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px" placeholder="Nová ponuka — 3-izbový byt Banská Bystrica">
+            <input type="text" id="zcnSubject" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px" placeholder="Nová ponuka – 3-izbový byt Banská Bystrica">
         </div>
         <?php zcn_render_tpl_toolbar('zcnBody', 'zcnSubject'); ?>
         <div style="margin-bottom:16px">

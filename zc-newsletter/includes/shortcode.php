@@ -1,6 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
-// [zc_newsletter] shortcode — subscribe form
+// [zc_newsletter] shortcode – subscribe form
 add_shortcode('zc_newsletter', function($atts) {
     $atts = shortcode_atts([
         'title'       => 'Odber noviniek',

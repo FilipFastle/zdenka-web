@@ -181,7 +181,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
     .wp-switch-editor{font-size:12px !important;padding:4px 10px !important}
     textarea.wp-editor-area{font-size:16px !important} /* prevents iOS zoom-in on focus */
 
-    /* --- Header — wraps to 2 rows: [logo][right] then [nav] --- */
+    /* --- Header – wraps to 2 rows: [logo][right] then [nav] --- */
     .ph{
         flex-wrap:wrap; height:auto; min-height:56px;
         padding:10px 14px; row-gap:8px;
@@ -400,7 +400,7 @@ function panel_list() {
                     <?php if (function_exists('zcn_handle_property_blast')):
                         $blast_sent = get_post_meta($p->ID, '_zcn_blast_sent', true); ?>
                     <button class="btn btn-success" onclick="pnlBlast(<?php echo $p->ID ?>, this)"
-                        title="<?php echo $blast_sent ? 'Odoslané '.esc_attr(date('d.m.Y H:i', strtotime($blast_sent))).' — kliknutím pošleš znova' : 'Poslať ponuku odberateľom newslettera' ?>">
+                        title="<?php echo $blast_sent ? 'Odoslané '.esc_attr(date('d.m.Y H:i', strtotime($blast_sent))).' – kliknutím pošleš znova' : 'Poslať ponuku odberateľom newslettera' ?>">
                         📧<?php echo $blast_sent ? ' ✓' : '' ?>
                     </button>
                     <?php endif; ?>
@@ -712,7 +712,7 @@ function panel_newsletter() {
                 <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Predmet *</label>
                 <input type="text" id="pnlSubject"
                     style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px;color:var(--text);outline:none;transition:border .2s"
-                    placeholder="Nová ponuka — 3-izbový byt Banská Bystrica">
+                    placeholder="Nová ponuka – 3-izbový byt Banská Bystrica">
             </div>
             <?php if (function_exists('zcn_render_tpl_toolbar')) zcn_render_tpl_toolbar('pnlBody', 'pnlSubject'); ?>
             <div style="margin-bottom:14px">
@@ -852,7 +852,7 @@ function panel_newsletter() {
         ?>
         <tr style="border-bottom:1px solid var(--border)">
             <td style="padding:11px 16px;color:var(--dark)"><?php echo esc_html($r->email) ?></td>
-            <td style="padding:11px 16px;color:var(--muted)"><?php echo esc_html($r->name ?: '—') ?></td>
+            <td style="padding:11px 16px;color:var(--muted)"><?php echo esc_html($r->name ?: '–') ?></td>
             <td style="padding:11px 16px"><?php echo $badge ?></td>
             <td style="padding:11px 16px;color:var(--muted);font-size:12px"><?php echo date('d.m.Y', strtotime($r->subscribed_at)) ?></td>
             <td style="padding:11px 16px">

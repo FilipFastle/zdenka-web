@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────
-   Service Worker — Zdenka Cibulová
+   Service Worker – Zdenka Cibulová
    Cache version managed via Zdenka Setup
 ───────────────────────────────────────── */
 
@@ -42,7 +42,7 @@ self.addEventListener('install', function (e) {
     );
 });
 
-// ── ACTIVATE — delete old caches ──
+// ── ACTIVATE – delete old caches ──
 self.addEventListener('activate', function (e) {
     e.waitUntil(
         caches.keys().then(function (keys) {

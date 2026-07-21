@@ -3,7 +3,7 @@ defined('ABSPATH') || exit;
 
 add_action('wp_enqueue_scripts', function() {
     wp_enqueue_style('zdenka-fonts','https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,700&display=swap',[],null);
-    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'2.5');
+    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'2.6');
     wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],null,true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.svg']);
 });
@@ -34,7 +34,7 @@ add_action('wp_ajax_zc_contact','zc_handle_contact');
 add_action('wp_ajax_nopriv_zc_contact','zc_handle_contact');
 function zc_handle_contact() {
     check_ajax_referer('zc_nonce','nonce');
-    // Honeypot — skryté polia vyplní iba bot (formulár na kontakte ich obsahuje)
+    // Honeypot – skryté polia vyplní iba bot (formulár na kontakte ich obsahuje)
     if (!empty($_POST['website']) || !empty($_POST['phone_confirm'])) {
         wp_send_json_error(['message'=>'Správu sa nepodarilo odoslať.']);
     }
@@ -44,9 +44,9 @@ function zc_handle_contact() {
     $msg   = sanitize_textarea_field($_POST['message']??'');
     if (!$name||!$email) { wp_send_json_error(['message'=>'Vyplňte meno a email.']); }
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    $to   = get_theme_mod('zc_email_main', 'filip@filipfastle.eu');
+    $to   = get_theme_mod('zc_email_main', '') ?: get_option('admin_email');
     $bcc  = get_theme_mod('zc_email_bcc', '');
-    $from = get_theme_mod('zc_email_from', 'noreply@zdenkacibulova.sk');
+    $from = get_theme_mod('zc_email_from', '') ?: get_option('admin_email');
     $site = zc_agent('name', 'Mgr. Zdenka Cibuľová');
     $headers = [
         "Content-Type: text/html; charset=UTF-8",
@@ -69,15 +69,15 @@ function zc_handle_contact() {
     wp_send_json_success(['message'=>'Správa odoslaná! Ozvem sa vám čoskoro.']);
 }
 
-// Customizer — kontaktné údaje
+// Customizer – kontaktné údaje
 add_action('customize_register',function($wpc) {
-    $wpc->add_section('zc_agent',['title'=>'🏠 Maklérka — Kontakt','priority'=>30]);
+    $wpc->add_section('zc_agent',['title'=>'🏠 Maklérka – Kontakt','priority'=>30]);
     $wpc->add_section('zc_emails',['title'=>'📧 Email adresy','priority'=>31]);
     foreach([
-        'zc_email_main'  =>['Email pre kontaktný formulár','filip@filipfastle.eu'],
-        'zc_email_odhad' =>['Email pre odhad nehnuteľnosti','filip@filipfastle.eu'],
+        'zc_email_main'  =>['Email pre kontaktný formulár (prázdne = admin e-mail webu)',''],
+        'zc_email_odhad' =>['Email pre odhad nehnuteľnosti (prázdne = admin e-mail webu)',''],
         'zc_email_bcc'   =>['BCC email (skrytá kópia, voliteľné)',''],
-        'zc_email_from'  =>['From email (odosielateľ)','noreply@zdenkacibulova.sk'],
+        'zc_email_from'  =>['From email (odosielateľ, ideálne na doméne webu)',''],
     ] as $id=>[$lbl,$def]) {
         $wpc->add_setting($id,['default'=>$def,'sanitize_callback'=>'sanitize_email']);
         $wpc->add_control($id,['label'=>$lbl,'section'=>'zc_emails','type'=>'email']);
@@ -87,7 +87,7 @@ add_action('customize_register',function($wpc) {
         $wpc->add_control($id,['label'=>$lbl,'section'=>'zc_agent','type'=>'text']);
     }
 
-    // 📸 Fotky maklérky — hero (široká) + portrét (vertikálna tvár)
+    // 📸 Fotky maklérky – hero (široká) + portrét (vertikálna tvár)
     $wpc->add_section('zc_photos',['title'=>'📸 Fotky maklérky','priority'=>32,
         'description'=>'Hero fotka sa zobrazí na úvodnej stránke, portrét v sekcii O mne a vo všetkých kruhoch s menom.']);
     foreach([
@@ -98,11 +98,11 @@ add_action('customize_register',function($wpc) {
         $wpc->add_control(new WP_Customize_Image_Control($wpc,$id,['label'=>$lbl,'section'=>'zc_photos']));
     }
 
-    // 🎬 Ako pracujem — fotky a video (šablóna ich už používa, sekcia chýbala)
-    $wpc->add_section('zc_ap',['title'=>'🎬 Ako pracujem — médiá','priority'=>33]);
+    // 🎬 Ako pracujem – fotky a video (šablóna ich už používa, sekcia chýbala)
+    $wpc->add_section('zc_ap',['title'=>'🎬 Ako pracujem – médiá','priority'=>33]);
     foreach([
-        'zc_apfoto1' => 'Fotka — Profesionálne fotografie',
-        'zc_apfoto2' => 'Fotka — Moderný marketing',
+        'zc_apfoto1' => 'Fotka – Profesionálne fotografie',
+        'zc_apfoto2' => 'Fotka – Moderný marketing',
     ] as $id=>$lbl) {
         $wpc->add_setting($id,['default'=>'','sanitize_callback'=>'esc_url_raw']);
         $wpc->add_control(new WP_Customize_Image_Control($wpc,$id,['label'=>$lbl,'section'=>'zc_ap']));
@@ -126,6 +126,26 @@ function zc_photo($which, $fallback = '') {
 
 function zc_agent($k,$f='') { return get_theme_mod('zc_agent_'.$k,$f)?:$f; }
 
+// Univerzálny video embed – YouTube (watch, youtu.be, shorts, embed, live) aj Vimeo.
+// Vracia ['url'=>iframe_src, 'vertical'=>bool] alebo [] pri neplatnom vstupe.
+function zc_video_embed($url) {
+    $url = trim((string)$url);
+    if (!$url) return [];
+    // YouTube – ID má vždy 11 znakov
+    if (preg_match('~(?:youtube\.com/(?:watch\?(?:.*&)?v=|embed/|live/|shorts/|v/)|youtu\.be/)([A-Za-z0-9_-]{11})~', $url, $m)) {
+        $vertical = (stripos($url, '/shorts/') !== false);
+        return [
+            'url'      => 'https://www.youtube.com/embed/' . $m[1] . '?rel=0&modestbranding=1&playsinline=1',
+            'vertical' => $vertical,
+        ];
+    }
+    // Vimeo
+    if (preg_match('~vimeo\.com/(?:video/)?(\d+)~', $url, $m)) {
+        return ['url' => 'https://player.vimeo.com/video/' . $m[1], 'vertical' => false];
+    }
+    return [];
+}
+
 // One-time self-healing migration: ensure the saved agent name always
 // includes the "Mgr." title, even if it was previously saved without it.
 add_action('after_setup_theme', function() {
@@ -135,9 +155,9 @@ add_action('after_setup_theme', function() {
     }
 });
 
-// Auto-create pages — runs on admin_init if not done yet
+// Auto-create pages – runs on admin_init if not done yet
 add_action('admin_init', function() {
-    // Always check — don't skip based on old option
+    // Always check – don't skip based on old option
     $pages = [
         ['O mne','o-mne','templates/page-o-mne.php'],
         ['Ako pracujem','ako-pracujem','templates/page-ako-pracujem.php'],
@@ -184,7 +204,7 @@ add_filter('template_include', function($template) {
     if (is_page('kontakt'))      return $dir . '/templates/page-kontakt.php';
     if (is_page('odhad'))        return $dir . '/templates/page-odhad.php';
     if (is_page('oblubene'))     return $dir . '/templates/page-oblubene.php';
-    // Ponuky — match by slug, title, or page template meta
+    // Ponuky – match by slug, title, or page template meta
     if (is_page('ponuky') || (is_page() && get_page_template_slug() === 'templates/page-ponuky.php')) {
         return $dir . '/templates/page-ponuky.php';
     }
@@ -241,7 +261,7 @@ function zdenka_setup_page() {
     }
     ?>
     <div class="wrap">
-        <h1>🏠 Zdenka Téma — Setup</h1>
+        <h1>🏠 Zdenka Téma – Setup</h1>
         <div style="background:#fff;padding:28px;border-radius:8px;max-width:600px;margin-top:20px;border:1px solid #e2e8f0">
             <h2 style="margin-bottom:12px;font-size:18px">Vytvorenie stránok</h2>
             <p style="color:#666;margin-bottom:20px">Klikni na tlačidlo a automaticky sa vytvoria všetky stránky so správnymi templatemi.</p>
@@ -263,7 +283,7 @@ function zdenka_setup_page() {
         </div>
         <div style="background:#fff;padding:28px;border-radius:8px;max-width:600px;margin-top:20px;border:1px solid #e2e8f0">
             <h2 style="margin-bottom:12px;font-size:18px">Kontaktné údaje maklérky</h2>
-            <p style="color:#666;margin-bottom:12px">Nastav tu: <strong>Appearance → Customize → 🏠 Maklérka — Kontakt</strong></p>
+            <p style="color:#666;margin-bottom:12px">Nastav tu: <strong>Appearance → Customize → 🏠 Maklérka – Kontakt</strong></p>
             <a href="<?php echo admin_url('customize.php?autofocus[section]=zc_agent') ?>" class="button">Otvoriť Customizer →</a>
         </div>
 
@@ -427,6 +447,8 @@ require_once get_stylesheet_directory() . '/inc/favorites.php';
 require_once get_stylesheet_directory() . '/inc/webp-optimizer.php';
 require_once get_stylesheet_directory() . '/inc/maintenance.php';
 require_once get_stylesheet_directory() . '/inc/email-template.php';
+require_once get_stylesheet_directory() . '/inc/privacy.php';
+require_once get_stylesheet_directory() . '/inc/seo.php';
 
 
 // ═══ SECURITY HARDENING ═══════════════════════════════════════

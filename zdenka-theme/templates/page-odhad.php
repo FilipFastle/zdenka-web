@@ -17,7 +17,7 @@ if (isset($_POST['odhad_send']) && wp_verify_nonce($_POST['odhad_nonce'] ?? '', 
     $popis      = sanitize_textarea_field($_POST['popis']  ?? '');
     $ip         = $_SERVER['REMOTE_ADDR'] ?? '';
 
-    $subject = "Odhad nehnuteľnosti ZADARMO — {$meno} {$priezvisko}";
+    $subject = "Odhad nehnuteľnosti ZDARMA – {$meno} {$priezvisko}";
 
     if (function_exists('zc_email_template')) {
         $html = zc_email_template([
@@ -36,9 +36,9 @@ if (isset($_POST['odhad_send']) && wp_verify_nonce($_POST['odhad_nonce'] ?? '', 
         $html = "<p>Typ: {$typ_ponuky} / {$typ_nehnut}<br>Meno: {$meno} {$priezvisko}<br>Email: {$email_od}<br>Tel: {$telefon}<br><br>{$popis}<br><br>IP: {$ip}</p>";
     }
 
-    $to      = get_theme_mod('zc_email_odhad', 'filip@filipfastle.eu');
+    $to      = get_theme_mod('zc_email_odhad', '') ?: get_option('admin_email');
     $bcc     = get_theme_mod('zc_email_bcc', '');
-    $from    = get_theme_mod('zc_email_from', 'noreply@zdenkacibulova.sk');
+    $from    = get_theme_mod('zc_email_from', '') ?: get_option('admin_email');
     $headers = [
         'Content-Type: text/html; charset=UTF-8',
         'From: ' . zc_agent('name', 'Mgr. Zdenka Cibuľová') . " <{$from}>",
@@ -179,7 +179,7 @@ if (isset($_POST['odhad_send']) && wp_verify_nonce($_POST['odhad_nonce'] ?? '', 
     <div class="odhad-hero">
         <div class="odhad-hero-inner">
             <div class="zc-eyebrow" style="justify-content:center">Bezplatná služba</div>
-            <h1 style="font-family:var(--serif);font-size:clamp(26px,4vw,42px);margin-bottom:16px">Cenový odhad nehnuteľnosti <em>ZADARMO</em></h1>
+            <h1 style="font-family:var(--serif);font-size:clamp(26px,4vw,42px);margin-bottom:16px">Cenový odhad nehnuteľnosti <em>ZDARMA</em></h1>
             <p style="font-size:16px;color:var(--muted);line-height:1.8;max-width:520px;margin:0 auto">Vyplňte formulár a ja sa vám do <strong>24 hodín</strong> ozvem s odborným odhadom trhovej hodnoty vašej nehnuteľnosti. Nezáväzne a zdarma.</p>
         </div>
     </div>
@@ -253,7 +253,7 @@ if (isset($_POST['odhad_send']) && wp_verify_nonce($_POST['odhad_nonce'] ?? '', 
                             <span>Chcem dostávať novinky a nové ponuky nehnuteľností na e-mail.</span>
                         </label>
                     </div>
-                    <button type="submit" name="odhad_send" class="odhad-submit">Vyžiadať odhad ZADARMO</button>
+                    <button type="submit" name="odhad_send" class="odhad-submit">Vyžiadať odhad ZDARMA</button>
                 </div>
             </form>
         </div>
@@ -261,7 +261,7 @@ if (isset($_POST['odhad_send']) && wp_verify_nonce($_POST['odhad_nonce'] ?? '', 
         <!-- INFO BOXES -->
         <div class="odhad-info">
             <?php foreach ([
-                ['🏡', 'Bezplatne', 'Odhad je úplne zadarmo a nezáväzný. Bez skrytých poplatkov.'],
+                ['🏡', 'Bezplatne', 'Odhad je úplne zdarma a nezáväzný. Bez skrytých poplatkov.'],
                 ['⚡', 'Do 24 hodín', 'Ozvem sa vám najneskôr do jedného pracovného dňa.'],
                 ['📊', 'Odborný odhad', 'Vychádzam z aktuálnych dát trhu a lokality vašej nehnuteľnosti.'],
             ] as [$icon, $title, $text]): ?>

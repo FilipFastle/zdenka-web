@@ -297,7 +297,7 @@ function render_property_card() {
     return ob_get_clean();
 }
 
-// Legacy shortcode — empty
+// Legacy shortcode – empty
 add_shortcode('property_filter', '__return_empty_string');
 
 // ── CAROUSEL ─────────────────────────────────────────────────────────────

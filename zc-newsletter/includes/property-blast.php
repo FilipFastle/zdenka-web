@@ -1,6 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
-// ── Blast novej ponuky odberateľom — jeden klik z Realitného panela ──────
+// ── Blast novej ponuky odberateľom – jeden klik z Realitného panela ──────
 
 function zcn_property_email_parts($pid) {
     $title  = get_the_title($pid);
@@ -47,10 +47,10 @@ function zcn_handle_property_blast() {
 
     $parts      = zcn_property_email_parts($pid);
     $from_name  = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : get_bloginfo('name');
-    $from_email = get_theme_mod('zc_email_from', 'noreply@zdenkacibulova.sk');
+    $from_email = get_theme_mod('zc_email_from', '') ?: get_option('admin_email');
     $headers    = ['Content-Type: text/html; charset=UTF-8', "From: {$from_name} <{$from_email}>"];
 
-    // Testovací e-mail — pošle iba na zadanú adresu
+    // Testovací e-mail – pošle iba na zadanú adresu
     $test = !empty($_POST['test_email']) ? sanitize_email($_POST['test_email']) : '';
     if ($test) {
         $html = zcn_build_newsletter_email($parts['subject'], $parts['body'], zcn_generate_token(), '');
