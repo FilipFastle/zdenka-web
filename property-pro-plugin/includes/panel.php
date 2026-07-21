@@ -449,10 +449,24 @@ function panel_form($pid) {
                 </div>
                 <div class="ff"><label>Cena (bez €, doplní sa auto)</label><input type="text" name="cena" value="<?php echo esc_attr(str_replace(' €','',$f('cena'))) ?>" placeholder="184 900"></div>
             </div>
+            <div class="ff-row">
+                <div class="ff"><label>Stav ponuky</label>
+                    <select name="stav_predaja">
+                        <option value="">Aktívna</option>
+                        <option value="rezervovane" <?php selected($f('stav_predaja'),'rezervovane') ?>>Rezervované</option>
+                        <option value="predane" <?php selected($f('stav_predaja'),'predane') ?>>Predané</option>
+                    </select>
+                </div>
+                <div class="ff"><label>Pôvodná cena (pre „Znížená cena", voliteľné)</label><input type="text" name="cena_povodna" value="<?php echo esc_attr(str_replace(' €','',$f('cena_povodna'))) ?>" placeholder="199 000"></div>
+            </div>
             <div class="ff-row-3">
                 <div class="ff"><label>Lokalita / Ulica</label><input type="text" name="lokalita" value="<?php echo esc_attr($f('lokalita')) ?>" placeholder="Sokolská, Zvolen"></div>
                 <div class="ff"><label>Mesto</label><input type="text" name="mesto" value="<?php echo esc_attr($f('mesto')) ?>" placeholder="Zvolen"></div>
                 <div class="ff"><label>Okres</label><input type="text" name="okres" value="<?php echo esc_attr($f('okres')) ?>" placeholder="Zvolen"></div>
+            </div>
+            <div class="ff-row">
+                <div class="ff"><label>Náklady na bývanie / mesiac (voliteľné)</label><input type="text" name="energie" value="<?php echo esc_attr($f('energie')) ?>" placeholder="180 €/mes."></div>
+                <div class="ff"><label>Interná poznámka (nezobrazí sa návštevníkom)</label><input type="text" name="poznamka" value="<?php echo esc_attr($f('poznamka')) ?>" placeholder="napr. dohodnutá provízia, kontakt na majiteľa"></div>
             </div>
             <div class="ff"><label>Krátky popis (na karte)</label><textarea name="popis_kratky" rows="3" placeholder="Stručný popis..." style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px;resize:vertical"><?php echo esc_textarea($f('popis_kratky')) ?></textarea></div>
             <div class="ff"><label>Detailný popis</label>
@@ -633,10 +647,10 @@ add_action('template_redirect', function() {
     $pid = intval($_GET['id']??0);
     $data = ['post_title'=>sanitize_text_field($_POST['title']),'post_content'=>wp_kses_post($_POST['content']??''),'post_type'=>'property','post_status'=>'publish'];
     if ($pid){$data['ID']=$pid;wp_update_post($data);}else{$pid=wp_insert_post($data);}
-    foreach(['typ','cena','lokalita','mesto','okres','popis_kratky','plocha','pozemok','spalne','kupelne','wc','poschodie','rocnik','stav','vlastnictvo'] as $f) {
+    foreach(['typ','cena','cena_povodna','lokalita','mesto','okres','popis_kratky','plocha','pozemok','spalne','kupelne','wc','poschodie','rocnik','stav','vlastnictvo','stav_predaja','energie','poznamka'] as $f) {
         if (isset($_POST[$f])) {
             $val = sanitize_text_field($_POST[$f]);
-            if ($f==='cena' && $val && strpos($val,'€')===false) $val = $val.' €';
+            if (($f==='cena'||$f==='cena_povodna') && $val && strpos($val,'€')===false) $val = $val.' €';
             update_post_meta($pid,'_property_'.$f,$val);
         }
     }

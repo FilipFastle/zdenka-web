@@ -34,6 +34,17 @@ function zc_format_price($raw) {
 }
 $cena = zc_format_price($cena_raw);
 
+// Nové funkcie: znížená cena, cena/m², stav predaja, započítanie zobrazenia
+$cena_pov   = get_post_meta($id, '_property_cena_povodna', true);
+$znizena    = pp_price_num($cena_pov) > pp_price_num($cena_raw) && pp_price_num($cena_raw) > 0;
+$per_m2     = pp_price_per_m2($cena_raw, $plocha);
+$energie    = get_post_meta($id, '_property_energie', true);
+$sale       = pp_sale_state($id);
+$sale_badge = pp_sale_badge($sale);
+$note_int   = get_post_meta($id, '_property_poznamka', true);
+pp_bump_views($id);
+$views      = (int) get_post_meta($id, '_property_views', true);
+
 // Meno maklérky: z WP profilu priradenej maklérky (Users → Profil → Zobrazovať
 // meno ako). Web tak zvládne aj viac maklérov – každá ponuka ukáže svojho.
 $agent_name  = get_the_author_meta('display_name', $agent_id) ?: 'Realitná maklérka';
@@ -367,7 +378,12 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
     </button>
     <div class="pp-hero-info">
-        <?php if ($typ): ?><div class="pp-hero-badge"><?php echo $typ_label ?></div><?php endif; ?>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+            <?php if ($typ): ?><span class="pp-hero-badge" style="margin:0"><?php echo $typ_label ?></span><?php endif; ?>
+            <?php if (pp_is_new($id) && !$sale): ?><span class="pp-hero-badge" style="margin:0;background:#5A8F6A;color:#fff">Nové</span><?php endif; ?>
+            <?php if ($znizena && !$sale): ?><span class="pp-hero-badge" style="margin:0;background:#C0392B;color:#fff">Znížená cena</span><?php endif; ?>
+            <?php if ($sale_badge): ?><span class="pp-hero-badge" style="margin:0;background:<?php echo $sale_badge['bg'] ?>;color:<?php echo $sale_badge['fg'] ?>"><?php echo $sale_badge['label'] ?></span><?php endif; ?>
+        </div>
         <h1 class="pp-hero-title"><?php the_title() ?></h1>
         <?php if ($lokalita || $plocha || $spalne): ?>
         <div class="pp-hero-meta">
@@ -395,6 +411,13 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
 <div class="pp-body">
 <main>
 
+    <?php if ($note_int && current_user_can('edit_posts')): ?>
+    <div class="pp-card" style="background:#FFFBEB;border:1px solid #FDE68A">
+        <div class="pp-sec-title" style="color:#92400E">🔒 Interná poznámka (vidí len maklér)</div>
+        <div style="white-space:pre-wrap;color:#78350F;font-size:14px;line-height:1.7"><?php echo esc_html($note_int) ?></div>
+    </div>
+    <?php endif; ?>
+
     <?php $has_specs = $plocha||$pozemok||$spalne||$kupelne||$wc||$poschodie||$rocnik||$stav; ?>
     <?php if ($has_specs): ?>
     <div class="pp-card">
@@ -417,6 +440,17 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     <div class="pp-card">
         <div class="pp-sec-title">Popis</div>
         <div class="pp-desc"><?php the_content() ?></div>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($energie): ?>
+    <div class="pp-card">
+        <div class="pp-sec-title">Náklady na bývanie</div>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <div style="font-family:var(--serif,serif);font-size:26px;font-weight:800;color:#1C1A18"><?php echo esc_html($energie) ?></div>
+            <div style="font-size:13px;color:#6B6560;line-height:1.6">Orientačné mesačné náklady<br>(energie, poplatky, správa)</div>
+        </div>
+        <p style="font-size:12px;color:#9A8660;margin:12px 0 0">Uvedené náklady sú orientačné a závisia od skutočnej spotreby.</p>
     </div>
     <?php endif; ?>
 
@@ -497,16 +531,12 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     <div class="pp-price-card">
         <div class="pp-price-top">
             <div class="pp-price-lbl">Cena</div>
-            <?php
-            // Format price with space as thousands separator
-            $cena_num = preg_replace('/[^0-9]/', '', $cena);
-            if ($cena_num && is_numeric($cena_num)) {
-                $cena_fmt = number_format(intval($cena_num), 0, ',', ' ') . ' €';
-            } else {
-                $cena_fmt = $cena;
-            }
-            ?>
-            <div class="pp-price-val"<?php if (!$cena_fmt) echo ' style="font-size:20px;letter-spacing:0"'; ?>><?php echo esc_html($cena_fmt ?: 'Cena dohodou'); ?></div>
+            <?php $cena_fmt = pp_price_fmt($cena_raw); ?>
+            <?php if ($znizena): ?>
+            <div style="font-size:15px;color:#9A8660;text-decoration:line-through;margin-bottom:2px"><?php echo esc_html(pp_price_fmt($cena_pov)) ?></div>
+            <?php endif; ?>
+            <div class="pp-price-val"<?php if (pp_price_num($cena_raw) === 0) echo ' style="font-size:20px;letter-spacing:0"'; ?>><?php echo esc_html($cena_fmt); ?></div>
+            <?php if ($per_m2): ?><div style="font-size:12px;color:#6B6560;margin-top:4px"><?php echo esc_html($per_m2) ?></div><?php endif; ?>
         </div>
         <div class="pp-price-body">
             <a href="tel:<?php echo preg_replace('/[^0-9+]/','',$agent_phone) ?>" class="pp-btn pp-btn-call">
@@ -535,9 +565,44 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
         <div class="pp-agent-name"><?php echo esc_html($agent_name) ?></div>
         <div class="pp-agent-role"><?php echo esc_html($agent_title) ?></div>
     </div>
+
+    <!-- Zdieľanie + zobrazenia -->
+    <div class="pp-share">
+        <div class="pp-share-row">
+            <span class="pp-share-lbl">Zdieľať ponuku</span>
+            <?php if ($views > 0): ?><span class="pp-views">👁 <?php echo number_format($views, 0, ',', ' ') ?>×</span><?php endif; ?>
+        </div>
+        <?php
+        $purl = rawurlencode(get_permalink());
+        $ptxt = rawurlencode(get_the_title());
+        ?>
+        <div class="pp-share-btns">
+            <a class="pp-share-btn" style="background:#1877F2" target="_blank" rel="noopener" title="Facebook" href="https://www.facebook.com/sharer/sharer.php?u=<?php echo $purl ?>">f</a>
+            <a class="pp-share-btn" style="background:#22c55e" target="_blank" rel="noopener" title="WhatsApp" href="https://wa.me/?text=<?php echo $ptxt ?>%20<?php echo $purl ?>">✆</a>
+            <a class="pp-share-btn" style="background:#B8A47A;color:#1C1A18" title="E-mail" href="mailto:?subject=<?php echo $ptxt ?>&body=<?php echo $purl ?>">✉</a>
+            <button type="button" class="pp-share-btn" style="background:#2C2C2C" title="Kopírovať odkaz" onclick="ppCopyLink(this)">🔗</button>
+        </div>
+    </div>
 </div>
 </aside>
 </div>
+<style>
+.pp-share{background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(60,50,30,.09);padding:20px 22px}
+.pp-share-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.pp-share-lbl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#6B6560}
+.pp-views{font-size:12px;color:#9A8660;font-weight:600}
+.pp-share-btns{display:flex;gap:8px}
+.pp-share-btn{flex:1;height:40px;border:none;border-radius:9px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;transition:transform .15s,filter .15s;font-family:Georgia,serif}
+.pp-share-btn:hover{transform:translateY(-2px);filter:brightness(1.08)}
+</style>
+<script>
+function ppCopyLink(btn){
+    var url=<?php echo wp_json_encode(get_permalink()) ?>;
+    var done=function(){var o=btn.textContent;btn.textContent='✓';setTimeout(function(){btn.textContent=o},1400)};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(done,function(){prompt('Skopíruj odkaz:',url)})}
+    else{prompt('Skopíruj odkaz:',url)}
+}
+</script>
 
 <!-- LIGHTBOX -->
 <div class="pp-lb" id="ppLb">
@@ -624,4 +689,29 @@ document.addEventListener('keydown',function(e){
 <script>
 /* Sticky sidebar handled by CSS */
 </script>
+
+<?php
+// ── Podobné ponuky ("Mohlo by vás zaujať") ──
+$mesto = get_post_meta($id, '_property_mesto', true);
+$sim_args = [
+    'post_type' => 'property', 'posts_per_page' => 3, 'post__not_in' => [$id],
+    'post_status' => 'publish', 'orderby' => 'rand',
+    'meta_query' => [['key' => '_property_typ', 'value' => $typ, 'compare' => '=']],
+];
+$sim = $typ ? new WP_Query($sim_args) : new WP_Query(['post_type'=>'property','posts_per_page'=>3,'post__not_in'=>[$id],'post_status'=>'publish','orderby'=>'rand']);
+if (!$sim->have_posts() && $typ) {
+    $sim = new WP_Query(['post_type'=>'property','posts_per_page'=>3,'post__not_in'=>[$id],'post_status'=>'publish','orderby'=>'rand']);
+}
+if ($sim->have_posts()): ?>
+<section style="background:var(--section,#F5EEDF);padding:64px 0;margin-top:20px">
+    <div style="max-width:1300px;margin:0 auto;padding:0 40px">
+        <div class="zc-eyebrow" style="justify-content:flex-start">Mohlo by vás zaujať</div>
+        <h2 style="font-family:var(--serif,serif);margin-bottom:32px">Podobné <em>nehnuteľnosti</em></h2>
+        <div class="property-grid">
+            <?php while ($sim->have_posts()): $sim->the_post(); echo render_property_card(); endwhile; wp_reset_postdata(); ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
 <?php get_footer(); ?>

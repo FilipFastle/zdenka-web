@@ -774,3 +774,15 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
     .zc-footer-grid > *:nth-child(2) { animation-delay: .08s; }
     .zc-footer-grid > *:nth-child(3) { animation-delay: .16s; }
 }
+
+/* ── Ponuky: štítky NOVÉ / ZNÍŽENÉ / stav + cena za m² ── */
+.zc-prop-badges { position:absolute; top:12px; left:12px; display:flex; flex-direction:column; gap:6px; align-items:flex-start; z-index:3; }
+.zc-prop-badges .zc-prop-badge { position:static; }
+.zc-prop-badge.is-new { background:#5A8F6A; color:#fff; }
+.zc-prop-badge.is-reduced { background:#C0392B; color:#fff; }
+.zc-prop-card.is-sold .zc-prop-img::after {
+    content:''; position:absolute; inset:0; background:rgba(28,26,24,.32);
+}
+.zc-prop-card.is-sold .zc-prop-img img { filter:grayscale(.35); }
+.zc-prop-price-old { color:var(--muted); text-decoration:line-through; font-size:15px; font-weight:600; margin-right:6px; }
+.zc-prop-perm2 { display:block; font-family:var(--sans); font-size:12px; font-weight:500; color:var(--muted); letter-spacing:0; margin-top:3px; }

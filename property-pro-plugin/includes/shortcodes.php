@@ -243,36 +243,37 @@ add_shortcode('property_grid', function($atts) {
 function render_property_card() {
     $id       = get_the_ID();
     $typ      = get_post_meta($id, '_property_typ',     true);
-    $cena     = get_post_meta($id, '_property_cena',    true);
+    $cena_raw = get_post_meta($id, '_property_cena',    true);
+    $cena_pov = get_post_meta($id, '_property_cena_povodna', true);
     $lokalita = get_post_meta($id, '_property_lokalita',true);
     $plocha   = get_post_meta($id, '_property_plocha',  true);
     $spalne   = get_post_meta($id, '_property_spalne',  true);
     $kupelne  = get_post_meta($id, '_property_kupelne', true);
     $cover_id = get_post_meta($id, '_property_cover_id',true);
 
-    if ($cena) {
-        $cena_num = preg_replace('/[^0-9]/', '', $cena);
-        if ($cena_num && is_numeric($cena_num)) {
-            $cena = number_format(intval($cena_num), 0, ',', ' ') . ' €';
-        } elseif (strpos($cena,'€') === false) {
-            $cena .= ' €';
-        }
-    }
+    $cena     = $cena_raw ? pp_price_fmt($cena_raw) : '';
+    $per_m2   = pp_price_per_m2($cena_raw, $plocha);
+    $znizena  = pp_price_num($cena_pov) > pp_price_num($cena_raw) && pp_price_num($cena_raw) > 0;
 
-    $typ_labels = ['predaj'=>'Na predaj','prenajom'=>'Na prenájom','pozemok'=>'Pozemok','rezervovane'=>'Rezervované'];
+    $typ_labels = ['predaj'=>'Na predaj','prenajom'=>'Na prenájom','pozemok'=>'Pozemok'];
     $typ_label  = $typ_labels[$typ] ?? '';
+    $sale       = pp_sale_state($id);
+    $sale_badge = pp_sale_badge($sale);
 
     ob_start(); ?>
-    <div class="zc-prop-card">
+    <div class="zc-prop-card<?php echo $sale === 'predane' ? ' is-sold' : '' ?>">
         <div class="zc-prop-img">
             <?php
             if ($cover_id) echo wp_get_attachment_image($cover_id,'medium',false,['loading'=>'lazy']);
             elseif (has_post_thumbnail()) the_post_thumbnail('medium',['loading'=>'lazy']);
             else echo '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#F5F1EA;color:#ccc;font-size:36px">🏠</div>';
             ?>
-            <?php if ($typ_label): ?>
-            <span class="zc-prop-badge <?php echo esc_attr($typ) ?>"><?php echo $typ_label ?></span>
-            <?php endif; ?>
+            <div class="zc-prop-badges">
+                <?php if ($typ_label): ?><span class="zc-prop-badge <?php echo esc_attr($typ) ?>"><?php echo $typ_label ?></span><?php endif; ?>
+                <?php if (pp_is_new($id) && !$sale): ?><span class="zc-prop-badge is-new">Nové</span><?php endif; ?>
+                <?php if ($znizena && !$sale): ?><span class="zc-prop-badge is-reduced">Znížená cena</span><?php endif; ?>
+                <?php if ($sale_badge): ?><span class="zc-prop-badge" style="background:<?php echo $sale_badge['bg'] ?>;color:<?php echo $sale_badge['fg'] ?>"><?php echo $sale_badge['label'] ?></span><?php endif; ?>
+            </div>
             <button class="zc-fav-btn" data-id="<?php echo $id ?>" title="Pridať do obľúbených" onclick="zcToggleFav(this,<?php echo $id ?>)">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
             </button>
@@ -289,7 +290,11 @@ function render_property_card() {
                 <?php if ($kupelne): ?><span>🚿 <?php echo esc_html($kupelne) ?></span><?php endif; ?>
             </div>
             <?php endif; ?>
-            <div class="zc-prop-price<?php echo $cena ? '' : ' zc-prop-price--nego' ?>"><?php echo esc_html($cena ?: 'Cena dohodou') ?></div>
+            <div class="zc-prop-price<?php echo $cena ? '' : ' zc-prop-price--nego' ?>">
+                <?php if ($znizena): ?><span class="zc-prop-price-old"><?php echo esc_html(pp_price_fmt($cena_pov)) ?></span> <?php endif; ?>
+                <?php echo esc_html($cena ?: 'Cena dohodou') ?>
+                <?php if ($per_m2): ?><small class="zc-prop-perm2"><?php echo esc_html($per_m2) ?></small><?php endif; ?>
+            </div>
             <a href="<?php the_permalink() ?>" class="zc-prop-btn">Zobraziť ponuku →</a>
         </div>
     </div>

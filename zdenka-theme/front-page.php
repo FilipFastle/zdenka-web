@@ -14,7 +14,7 @@ $title=zc_agent('title','Realitná maklérka');
 .zc-home-hero{height:100vh;min-height:560px;margin-top:calc(-1 * var(--hh,72px));position:sticky;top:0;z-index:0;overflow:hidden;display:flex;align-items:center}
 .zc-home-hero ~ section{position:relative;z-index:2}
 .zc-home-hero ~ footer.zc-footer{position:relative;z-index:2}
-.zc-hero-bg{position:absolute;inset:0;background-size:cover;background-position:67% center;background-repeat:no-repeat;will-change:transform;transform-origin:67% 35%}
+.zc-hero-bg{position:absolute;inset:0;background-size:cover;background-position:67% center;background-repeat:no-repeat;will-change:transform;transform-origin:67% 35%;filter:brightness(1.13)}
 .zc-hero-text{will-change:transform,opacity}
 /* Postupné nabehnutie hero obsahu pri načítaní */
 @media (prefers-reduced-motion: no-preference){
@@ -111,7 +111,7 @@ $title=zc_agent('title','Realitná maklérka');
     function update(){
         var h = hero.offsetHeight || 1;
         var p = Math.min(Math.max(window.scrollY / h, 0), 1); // 0 → 1 kým hero zmizne
-        bg.style.transform = 'scale(' + (1 + p * 0.25).toFixed(4) + ')';
+        bg.style.transform = 'scale(' + (1 + p * 0.15).toFixed(4) + ')';
         if (txt)  { txt.style.opacity = Math.max(1 - p * 1.15, 0).toFixed(3); txt.style.transform = 'translateY(' + (-p * 40).toFixed(1) + 'px)'; }
         if (hint) { hint.style.opacity = Math.max(1 - p * 3, 0).toFixed(3); }
         ticking = false;
