@@ -159,7 +159,12 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     align-items:start;
     grid-template-rows: auto;
 }
-@media(max-width:1080px){ .pp-body { grid-template-columns:1fr; padding:32px 20px 60px; } }
+@media(max-width:1080px){
+    .pp-body { grid-template-columns:1fr; padding:32px 20px 60px; }
+    /* Na mobile cena + maklérka hneď pod hero, nie až úplne dole za všetkými detailmi */
+    .pp-body > aside { order:-1; }
+    .pp-body > main  { order:0; }
+}
 @media(max-width:600px)  { .pp-body { padding:24px 16px 48px; } }
 
 .pp-card {
