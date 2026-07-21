@@ -45,14 +45,22 @@ ul { list-style: none; }
    HEADER
 ══════════════════════════════════════════ */
 .zc-header-wrap {
-    background: var(--white);
-    border-bottom: 1px solid var(--border);
+    /* Liquid glass — rozmazané pozadie, presvitá obsah za hlavičkou */
+    background: rgba(251,247,238,.68);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    backdrop-filter: blur(18px) saturate(180%);
+    border-bottom: 1px solid rgba(224,216,206,.5);
     position: sticky; top: 0; z-index: 1000; height: var(--hh);
-    transition: background .3s var(--ease), border-color .3s, box-shadow .3s;
+    transition: background .35s var(--ease), border-color .35s, box-shadow .35s;
 }
-.zc-header-wrap.scrolled { box-shadow: 0 2px 24px rgba(40,32,20,.08); }
+/* Staršie prehliadače bez backdrop-filter — nech je pozadie čitateľné */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .zc-header-wrap { background: rgba(251,247,238,.96); }
+}
+.zc-header-wrap.scrolled { box-shadow: 0 4px 30px rgba(40,32,20,.10); }
 .zc-header-wrap.transparent {
     background: transparent; border-bottom-color: transparent; box-shadow: none;
+    -webkit-backdrop-filter: none; backdrop-filter: none;
 }
 .zc-header-wrap.transparent .zc-logo        { color: #fff; }
 .zc-header-wrap.transparent .zc-logo small   { color: rgba(184,164,122,.9); }

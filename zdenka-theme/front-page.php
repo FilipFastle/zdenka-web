@@ -58,7 +58,7 @@ $title=zc_agent('title','Realitná maklérka');
     if(!hdr)return;
     hdr.classList.add('transparent');
     // Sticky hero má rect.bottom vždy = výška viewportu – meriame preto scrollY
-    function u(){var h=document.getElementById('zcHomeHero');if(!h)return;hdr.classList.toggle('transparent',window.scrollY < h.offsetHeight - 60);}
+    function u(){if(!document.getElementById('zcHomeHero'))return;hdr.classList.toggle('transparent',window.scrollY < 24);}
     window.addEventListener('scroll',u,{passive:true});
 })();
 </script>

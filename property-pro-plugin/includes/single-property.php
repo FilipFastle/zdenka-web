@@ -338,14 +338,9 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     var hdr = document.getElementById('zcHeader');
     if (!hdr) return;
     hdr.classList.add('transparent');
+    // Priehľadný len na vrchu; hneď pri prvom scrollnutí → liquid glass
     window.addEventListener('scroll', function() {
-        var hero = document.getElementById('ppHero');
-        var heroBottom = hero ? hero.getBoundingClientRect().bottom : 0;
-        if (heroBottom <= 0) {
-            hdr.classList.remove('transparent');
-        } else {
-            hdr.classList.add('transparent');
-        }
+        hdr.classList.toggle('transparent', window.scrollY < 24);
     }, { passive: true });
 })();
 
