@@ -42,13 +42,15 @@ $title=zc_agent('title','Realitná maklérka');
 <?php if ($zc_hero_portrait): ?>
 /* Mobil: hero = vertikálny portrét – tvár je vycentrovaná z podstaty fotky */
 @media(max-width:768px){
-    .zc-hero-bg{background-image:url('<?php echo esc_url($zc_hero_portrait); ?>') !important;background-position:center 22% !important;transform-origin:center 25%}
+    /* fotka na mobile stmavená, aby nezanikal text */
+    .zc-hero-bg{background-image:url('<?php echo esc_url($zc_hero_portrait); ?>') !important;background-position:center 22% !important;transform-origin:center 25%;filter:brightness(.82) !important}
     .zc-home-hero{align-items:flex-end}
     .zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 88px}
-    .zc-hero-overlay{background:linear-gradient(180deg,rgba(20,18,15,.28) 0%,rgba(20,18,15,.34) 34%,rgba(20,18,15,.86) 72%)}
+    /* silnejší gradient zdola hore – text dole je vždy čitateľný */
+    .zc-hero-overlay{background:linear-gradient(to top,rgba(18,15,12,.94) 0%,rgba(18,15,12,.82) 24%,rgba(18,15,12,.5) 52%,rgba(18,15,12,.24) 78%,rgba(18,15,12,.14) 100%)}
 }
 <?php else: ?>
-@media(max-width:768px){.zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 48px}.zc-hero-overlay{background:rgba(20,18,15,.8)}.zc-hero-bg{background-position:73% 28%}}
+@media(max-width:768px){.zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 48px}.zc-hero-overlay{background:linear-gradient(to top,rgba(18,15,12,.92) 0%,rgba(18,15,12,.72) 40%,rgba(18,15,12,.4) 100%)}.zc-hero-bg{background-position:73% 28%;filter:brightness(.85) !important}}
 <?php endif; ?>
 </style>
 
@@ -106,13 +108,15 @@ $title=zc_agent('title','Realitná maklérka');
     var bg   = document.getElementById('zcHeroBg');
     var txt  = document.querySelector('.zc-hero-text');
     var hint = document.querySelector('.zc-hero-scroll');
-    if (!hero || !bg || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!hero || !bg) return;
+    // Reduced-motion iba stlmí pohyb textu; zoom fotky beží aj tak (PC aj mobil)
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var ticking = false;
     function update(){
         var h = hero.offsetHeight || 1;
         var p = Math.min(Math.max(window.scrollY / h, 0), 1); // 0 → 1 kým hero zmizne
         bg.style.transform = 'scale(' + (1 + p * 0.15).toFixed(4) + ')';
-        if (txt)  { txt.style.opacity = Math.max(1 - p * 1.15, 0).toFixed(3); txt.style.transform = 'translateY(' + (-p * 40).toFixed(1) + 'px)'; }
+        if (txt)  { txt.style.opacity = Math.max(1 - p * 1.15, 0).toFixed(3); txt.style.transform = reduce ? 'none' : 'translateY(' + (-p * 40).toFixed(1) + 'px)'; }
         if (hint) { hint.style.opacity = Math.max(1 - p * 3, 0).toFixed(3); }
         ticking = false;
     }
