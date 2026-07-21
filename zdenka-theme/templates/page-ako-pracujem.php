@@ -6,11 +6,14 @@ if (have_posts()) { while (have_posts()) { the_post(); } }
 // Photos + video from Customizer
 $foto_1 = get_theme_mod('zc_apfoto1','');
 $foto_2 = get_theme_mod('zc_apfoto2','');
-$video  = get_theme_mod('zc_apvideo','');
-
-$video_data = function_exists('zc_video_embed') ? zc_video_embed($video) : [];
-$embed      = $video_data['url'] ?? '';
-$embed_vert = !empty($video_data['vertical']);
+// Až 3 videá — zobrazí sa toľko, koľko je vyplnených
+$ap_videos = [];
+foreach (['zc_apvideo','zc_apvideo2','zc_apvideo3'] as $vk) {
+    $raw = get_theme_mod($vk,'');
+    $d   = ($raw && function_exists('zc_video_embed')) ? zc_video_embed($raw) : [];
+    if (!empty($d['url'])) $ap_videos[] = $d;
+}
+$ap_vcount = count($ap_videos);
 ?>
 
 <style>
@@ -58,15 +61,24 @@ $embed_vert = !empty($video_data['vertical']);
     border-radius:16px;display:flex;align-items:center;justify-content:center;
     flex-direction:column;gap:10px;border:2px dashed var(--border);color:var(--muted)}
 
-/* ── Video ── */
-.ap-video-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;
-    border-radius:16px;box-shadow:var(--sh-lg)}
-.ap-video-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
-/* Zvislý formát pre YouTube Shorts (9:16), vycentrovaný a s rozumnou šírkou */
-.ap-video-wrap.vertical{max-width:360px;margin:0 auto;padding-bottom:177.78%}
-.ap-video-placeholder{aspect-ratio:16/9;background:var(--section);border:2px dashed var(--border);border-radius:16px;
+/* ── Video showcase — celoobrazovková sekcia (100vh) ── */
+.ap-video-section{min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+    padding:48px 0;background:var(--white)}
+.ap-videos{display:flex;gap:22px;justify-content:center;align-items:center;flex-wrap:wrap;
+    /* --vcap = výška videí, aby sa aj 3 zmestili do jednej obrazovky */
+    --vcap:64vh}
+.ap-vid{border-radius:16px;overflow:hidden;box-shadow:var(--sh-lg);background:#000;flex-shrink:0}
+.ap-vid.vertical{aspect-ratio:9/16;height:var(--vcap);max-height:640px}
+.ap-vid.horizontal{aspect-ratio:16/9;height:calc(var(--vcap) * .62);max-height:420px;width:auto}
+.ap-vid iframe{width:100%;height:100%;border:none;display:block}
+.ap-video-placeholder{aspect-ratio:16/9;width:min(100%,640px);margin:0 auto;background:var(--section);border:2px dashed var(--border);border-radius:16px;
     display:flex;align-items:center;justify-content:center;flex-direction:column;
     gap:12px;color:var(--muted)}
+@media(max-width:768px){
+    .ap-video-section{min-height:auto;padding:56px 0}
+    .ap-videos{--vcap:70vh}
+    .ap-vid.vertical{max-height:none}
+}
 
 /* ── Process steps ── */
 .ap-step{display:flex;gap:20px;align-items:flex-start;padding:20px 0;
@@ -139,25 +151,32 @@ $embed_vert = !empty($video_data['vertical']);
 </div>
 </section>
 
-<!-- VIDEO SECTION -->
-<?php if ($embed || current_user_can('manage_options')): ?>
-<section style="padding:72px 0;background:var(--white)">
-<div class="zc-container" style="max-width:900px">
+<!-- VIDEO SECTION — 100vh showcase, 1–3 videá -->
+<?php if ($ap_vcount || current_user_can('manage_options')): ?>
+<section class="ap-video-section">
+<div class="zc-container">
     <div style="text-align:center;margin-bottom:40px">
         <div class="zc-eyebrow" style="justify-content:center">Ukážka práce</div>
         <h2 style="font-family:var(--serif)">Video <em>prehliadka</em></h2>
         <p style="color:var(--muted);max-width:520px;margin:12px auto 0">Pozrite si, ako vyzerá naša video prezentácia nehnuteľnosti.</p>
     </div>
-    <?php if ($embed): ?>
-    <div class="ap-video-wrap<?php echo $embed_vert ? ' vertical' : '' ?>">
-        <iframe src="<?php echo esc_url($embed) ?>" title="Video prehliadka"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
-            allowfullscreen loading="lazy"></iframe>
+    <?php if ($ap_vcount):
+        // Menej videí = väčšie; tri sa ešte zmestia do jednej obrazovky
+        $vcap = $ap_vcount >= 3 ? '56vh' : ($ap_vcount === 2 ? '62vh' : '68vh');
+    ?>
+    <div class="ap-videos" style="--vcap:<?php echo $vcap ?>">
+        <?php foreach ($ap_videos as $v): ?>
+        <div class="ap-vid <?php echo !empty($v['vertical']) ? 'vertical' : 'horizontal' ?>">
+            <iframe src="<?php echo esc_url($v['url']) ?>" title="Video prehliadka"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
+                allowfullscreen loading="lazy"></iframe>
+        </div>
+        <?php endforeach; ?>
     </div>
     <?php elseif (current_user_can('manage_options')): ?>
     <div class="ap-video-placeholder">
         <div style="font-size:40px">🎬</div>
-        <div style="font-size:14px">Nastav video: <strong>Vzhľad → Prispôsobiť → Ako pracujem → Video URL</strong><br><small style="opacity:.7">Funguje bežné video aj YouTube Shorts.</small></div>
+        <div style="font-size:14px">Nastav videá: <strong>Vzhľad → Prispôsobiť → 🎬 Ako pracujem → médiá</strong><br><small style="opacity:.7">Môžeš pridať 1 až 3 videá alebo YouTube Shorts.</small></div>
     </div>
     <?php endif; ?>
 </div>

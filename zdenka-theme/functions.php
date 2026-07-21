@@ -3,7 +3,7 @@ defined('ABSPATH') || exit;
 
 add_action('wp_enqueue_scripts', function() {
     wp_enqueue_style('zdenka-fonts','https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,700&display=swap',[],null);
-    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'2.6');
+    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'2.6.1');
     wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],null,true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.svg']);
 });
@@ -107,8 +107,14 @@ add_action('customize_register',function($wpc) {
         $wpc->add_setting($id,['default'=>'','sanitize_callback'=>'esc_url_raw']);
         $wpc->add_control(new WP_Customize_Image_Control($wpc,$id,['label'=>$lbl,'section'=>'zc_ap']));
     }
-    $wpc->add_setting('zc_apvideo',['default'=>'','sanitize_callback'=>'esc_url_raw']);
-    $wpc->add_control('zc_apvideo',['label'=>'Video URL (YouTube / Vimeo)','section'=>'zc_ap','type'=>'url']);
+    foreach([
+        'zc_apvideo'  => 'Video 1 URL (YouTube, Shorts alebo Vimeo)',
+        'zc_apvideo2' => 'Video 2 URL (voliteľné)',
+        'zc_apvideo3' => 'Video 3 URL (voliteľné)',
+    ] as $id=>$lbl) {
+        $wpc->add_setting($id,['default'=>'','sanitize_callback'=>'esc_url_raw']);
+        $wpc->add_control($id,['label'=>$lbl,'section'=>'zc_ap','type'=>'url']);
+    }
 });
 
 // Fotka maklérky: Customizer má prednosť, inak súbor v téme (assets/images/hero.* / portrait.*)
