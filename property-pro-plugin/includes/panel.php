@@ -538,7 +538,7 @@ function panel_form($pid) {
         <div id="pftab_amenities" class="pf-panel">
             <?php foreach ($all_am as $catkey => $cat): ?>
             <div class="am-cat">
-                <div class="am-cat-hd"><?php echo $cat['label'] ?></div>
+                <div class="am-cat-hd"><?php echo pp_svg($cat['icon'] ?? '', 15) ?><?php echo esc_html($cat['label']) ?></div>
                 <div class="am-items" <?php echo $catkey==='custom' ? 'id="ppCustomItems"' : '' ?>>
                     <?php foreach ($cat['items'] as $k => $lbl): ?>
                     <label class="am-item" <?php echo $catkey==='custom' ? 'data-key="'.esc_attr($k).'"' : '' ?>>

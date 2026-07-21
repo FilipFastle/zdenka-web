@@ -261,12 +261,12 @@ if (isset($_POST['odhad_send']) && wp_verify_nonce($_POST['odhad_nonce'] ?? '', 
         <!-- INFO BOXES -->
         <div class="odhad-info">
             <?php foreach ([
-                ['', 'Bezplatne', 'Odhad je úplne zdarma a nezáväzný. Bez skrytých poplatkov.'],
-                ['', 'Do 24 hodín', 'Ozvem sa vám najneskôr do jedného pracovného dňa.'],
-                ['', 'Odborný odhad', 'Vychádzam z aktuálnych dát trhu a lokality vašej nehnuteľnosti.'],
+                ['home', 'Bezplatne', 'Odhad je úplne zdarma a nezáväzný. Bez skrytých poplatkov.'],
+                ['clock', 'Do 24 hodín', 'Ozvem sa vám najneskôr do jedného pracovného dňa.'],
+                ['chart', 'Odborný odhad', 'Vychádzam z aktuálnych dát trhu a lokality vašej nehnuteľnosti.'],
             ] as [$icon, $title, $text]): ?>
             <div class="odhad-info-box">
-                <div class="odhad-info-icon"><?php echo $icon; ?></div>
+                <div class="odhad-info-icon" style="color:var(--accent-txt);display:flex;justify-content:center"><?php echo zc_svg($icon, 28); ?></div>
                 <div class="odhad-info-title"><?php echo $title; ?></div>
                 <div class="odhad-info-text"><?php echo $text; ?></div>
             </div>

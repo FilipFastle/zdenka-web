@@ -133,12 +133,12 @@ $title=zc_agent('title','Realitná maklérka');
     </div>
     <div class="zc-precoja-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:22px">
     <?php foreach([
-        ['','Záujem','Vaša spokojnosť je môj úspech. Každý prípad riešim osobne.'],
-        ['','Odbornosť','Trh sledujem denne. Znalosti využívam v prospech klienta.'],
-        ['','Rýchlosť','Váš čas je cenný. Komunikujem promptne a procesy urýchľujem.'],
-        ['','Férovosť','Vždy poviem pravdu, aj keď nie je príjemná. Žiadne skryté poplatky.'],
+        ['heart','Záujem','Vaša spokojnosť je môj úspech. Každý prípad riešim osobne.'],
+        ['bulb','Odbornosť','Trh sledujem denne. Znalosti využívam v prospech klienta.'],
+        ['bolt','Rýchlosť','Váš čas je cenný. Komunikujem promptne a procesy urýchľujem.'],
+        ['handshake','Férovosť','Vždy poviem pravdu, aj keď nie je príjemná. Žiadne skryté poplatky.'],
     ] as [$ic,$t,$d]): ?>
-    <div class="zc-card"><div class="zc-card-icon"><?php echo $ic; ?></div><h3 style="font-size:17px;margin-bottom:8px"><?php echo $t; ?></h3><p style="font-size:14px;color:var(--muted);margin:0;line-height:1.7"><?php echo $d; ?></p></div>
+    <div class="zc-card"><div class="zc-card-icon" style="color:var(--accent-txt)"><?php echo zc_svg($ic, 26); ?></div><h3 style="font-size:17px;margin-bottom:8px"><?php echo $t; ?></h3><p style="font-size:14px;color:var(--muted);margin:0;line-height:1.7"><?php echo $d; ?></p></div>
     <?php endforeach; ?>
     </div>
 </div>

@@ -285,9 +285,9 @@ function render_property_card() {
             <?php endif; ?>
             <?php if ($plocha || $spalne || $kupelne): ?>
             <div class="zc-prop-specs">
-                <?php if ($plocha):  ?><span><?php echo esc_html($plocha) ?> m²</span><?php endif; ?>
-                <?php if ($spalne):  ?><span><?php echo esc_html($spalne) ?> izby</span><?php endif; ?>
-                <?php if ($kupelne): ?><span><?php echo esc_html($kupelne) ?></span><?php endif; ?>
+                <?php if ($plocha):  ?><span><?php echo pp_svg('area',14) ?> <?php echo esc_html($plocha) ?> m²</span><?php endif; ?>
+                <?php if ($spalne):  ?><span><?php echo pp_svg('rooms',14) ?> <?php echo esc_html($spalne) ?> izby</span><?php endif; ?>
+                <?php if ($kupelne): ?><span><?php echo pp_svg('bath',14) ?> <?php echo esc_html($kupelne) ?></span><?php endif; ?>
             </div>
             <?php endif; ?>
             <div class="zc-prop-price<?php echo $cena ? '' : ' zc-prop-price--nego' ?>">

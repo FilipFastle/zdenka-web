@@ -139,6 +139,28 @@ function zc_photo($which, $fallback = '') {
 
 function zc_agent($k,$f='') { return get_theme_mod('zc_agent_'.$k,$f)?:$f; }
 
+// Líniové SVG ikony pre tému (náhrada za emoji). Ak je aktívny plugin, použije jeho sadu.
+function zc_svg($name, $size = 24) {
+    if (function_exists('pp_svg')) { $s = pp_svg($name, $size); if ($s) return $s; }
+    $p = [
+        'heart'     => '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 1 0-7.8 7.8l1 1.1L12 21.2l7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8z"/>',
+        'bulb'      => '<path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/>',
+        'bolt'      => '<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>',
+        'handshake' => '<path d="m11 17 2 2a1 1 0 0 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 0 0 3-3l-3.9-3.9a2 2 0 0 0-2.8 0l-.6.6a2 2 0 0 1-2.8 0l-1-1a2 2 0 0 1 0-2.8l1.5-1.5a4 4 0 0 1 3-1.1l3.4.2"/><path d="M3 12v-2a4 4 0 0 1 4-4h1"/>',
+        'camera'    => '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+        'video'     => '<rect x="2" y="5" width="15" height="14" rx="2"/><path d="m17 9 5-3v12l-5-3z"/>',
+        'pen'       => '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+        'megaphone' => '<path d="m3 11 18-5v12L3 13z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+        'scale'     => '<path d="M12 3v18M5 7l-3 6h6zM19 7l-3 6h6zM5 7l7-2 7 2M4 21h16"/>',
+        'home'      => '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M9 21v-6h6v6"/>',
+        'chart'     => '<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>',
+        'clock'     => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    ];
+    $b = $p[$name] ?? '';
+    if (!$b) return '';
+    return '<svg class="pp-ic" width="'.$size.'" height="'.$size.'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.$b.'</svg>';
+}
+
 // Iniciálky z mena (fallback namiesto emoji avatara), napr. „Mgr. Zdenka Cibuľová" → „ZC"
 function zc_initials($name) {
     $name = trim(preg_replace('/\b(Mgr|Ing|Bc|PhDr|JUDr|MUDr|Dr)\.?\s*/iu', '', (string)$name));

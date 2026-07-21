@@ -204,7 +204,9 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     transition:background .2s;
 }
 .pp-spec:hover { background:#FCFBF8; }
-.pp-spec-icon { font-size:20px; }
+.pp-spec-icon { color:#B8A47A; display:flex; align-items:center; justify-content:center; }
+.pp-hero-meta .pp-ic { vertical-align:-3px; margin-right:5px; opacity:.9; }
+.pp-hero-meta span { display:inline-flex; align-items:center; gap:5px; }
 .pp-spec-value { font-size:19px; font-weight:800; color:#1C1A18; line-height:1; font-family:var(--serif,serif); }
 .pp-spec-label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:#6B6560; }
 
@@ -387,9 +389,9 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
         <h1 class="pp-hero-title"><?php the_title() ?></h1>
         <?php if ($lokalita || $plocha || $spalne): ?>
         <div class="pp-hero-meta">
-            <?php if ($lokalita): ?><span><?php echo esc_html($lokalita) ?></span><?php endif; ?>
-            <?php if ($plocha): ?><span><?php echo esc_html($plocha) ?> m²</span><?php endif; ?>
-            <?php if ($spalne): ?><span><?php echo esc_html($spalne) ?> izby</span><?php endif; ?>
+            <?php if ($lokalita): ?><span><?php echo pp_svg('pin',16) ?> <?php echo esc_html($lokalita) ?></span><?php endif; ?>
+            <?php if ($plocha): ?><span><?php echo pp_svg('area',16) ?> <?php echo esc_html($plocha) ?> m²</span><?php endif; ?>
+            <?php if ($spalne): ?><span><?php echo pp_svg('rooms',16) ?> <?php echo esc_html($spalne) ?> izby</span><?php endif; ?>
         </div>
         <?php endif; ?>
     </div>
@@ -423,11 +425,11 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     <div class="pp-card">
         <div class="pp-sec-title">Parametre nehnuteľnosti</div>
         <div class="pp-specs">
-            <?php $specs=[['','Úžitk. plocha','m²',$plocha],['','Pozemok','m²',$pozemok],['','Izby','',$spalne],['','Kúpeľne','',$kupelne],['','WC','',$wc],['','Poschodie','',$poschodie],['','Ročník','',$rocnik],['','Stav','',$stav]];
+            <?php $specs=[['area','Úžitk. plocha','m²',$plocha],['land','Pozemok','m²',$pozemok],['rooms','Izby','',$spalne],['bath','Kúpeľne','',$kupelne],['wc','WC','',$wc],['floor','Poschodie','',$poschodie],['year','Ročník','',$rocnik],['condition','Stav','',$stav]];
             foreach($specs as [$icon,$lbl,$unit,$val]):
                 if(!$val) continue; ?>
             <div class="pp-spec">
-                <span class="pp-spec-icon"><?php echo $icon ?></span>
+                <span class="pp-spec-icon"><?php echo pp_svg($icon, 20) ?></span>
                 <span class="pp-spec-value" <?php if(strlen((string)$val)>5)echo 'style="font-size:13px"' ?>><?php echo esc_html($val) ?><?php if($unit)echo '<small style="font-size:10px;color:#888;margin-left:2px">'.$unit.'</small>' ?></span>
                 <span class="pp-spec-label"><?php echo $lbl ?></span>
             </div>
@@ -461,7 +463,7 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
             $cat_items = array_intersect_key($cat['items'], array_flip($amenities));
             if (!$cat_items) continue; ?>
         <div class="am-group">
-            <div class="am-group-hd"><?php echo $cat['label'] ?></div>
+            <div class="am-group-hd"><?php echo pp_svg($cat['icon'] ?? '', 16) ?><?php echo esc_html($cat['label']) ?></div>
             <div class="am-tags">
                 <?php foreach ($cat_items as $label): ?>
                 <span class="am-tag"><?php echo esc_html($label) ?></span>

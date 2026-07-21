@@ -176,7 +176,7 @@ function render_amenities_meta_box($post) {
     </style>
     <?php foreach ($all as $cat): ?>
     <div class="am-cat">
-        <div class="am-cat-title"><?php echo $cat['label'] ?></div>
+        <div class="am-cat-title"><?php echo pp_svg($cat['icon'] ?? '', 15) ?><?php echo esc_html($cat['label']) ?></div>
         <div class="am-grid">
             <?php foreach ($cat['items'] as $key => $label): ?>
             <label class="am-item">

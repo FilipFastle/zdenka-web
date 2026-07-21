@@ -119,27 +119,30 @@ $ap_vcount = count($ap_videos);
 
         <?php
         $services = [
-            ['','Profesionálne fotografie',
+            ['camera','Profesionálne fotografie',
              'Prvý dojem rozhoduje. Vašu nehnuteľnosť zachytíme tak, aby vynikla medzi ostatnými ponukami. Spolupracujem s profesionálnym fotografom, ktorý dokáže vyzdvihnúť jej priestor, atmosféru a potenciál.',
              $foto_1],
-            ['','Video prehliadka',
+            ['video','Video prehliadka',
              'Video dokáže preniesť emóciu aj atmosféru priestoru. Pripravíme modernú video prezentáciu, ktorá nehnuteľnosť predstaví prirodzene, atraktívne a pomôže osloviť širší okruh záujemcov.',
              ''],
-            ['','Copywriting',
+            ['pen','Copywriting',
              'Každá nehnuteľnosť má svoj príbeh. Vytvorím profesionálny text inzerátu, ktorý jasne vyzdvihne výhody nehnuteľnosti, osloví správnych kupujúcich a podporí výsledok predaja.',
              ''],
-            ['','Moderný marketing a inzercia',
+            ['megaphone','Moderný marketing a inzercia',
              'Vašu nehnuteľnosť prezentujem cielene a efektívne – na realitných portáloch, sociálnych sieťach, v online reklame aj medzi overenými kontaktmi z databázy. Cieľom nie je len zobrazenie, ale oslovenie správneho kupujúceho.',
              $foto_2],
-            ['','Právne služby a katastrálny servis',
+            ['scale','Právne služby a katastrálny servis',
              'Zabezpečím kompletný právny servis spojený s prevodom nehnuteľnosti – prípravu zmluvnej dokumentácie, katastrálny servis aj koordináciu jednotlivých krokov až po úspešné odovzdanie. Chránim záujmy všetkých zúčastnených strán.',
              ''],
         ];
         foreach ($services as $i => [$icon, $title, $text, $foto]):
         ?>
         <div class="ap-card zc-card">
-            <div class="ap-card-num"><?php echo $i+1 ?></div>
-            <div class="ap-card-title"><span class="ap-card-icon"><?php echo $icon ?></span> <?php echo $title ?></div>
+            <div style="display:flex;align-items:center;gap:12px">
+                <div class="ap-card-num"><?php echo $i+1 ?></div>
+                <span class="ap-card-icon" style="color:var(--accent-txt);display:inline-flex"><?php echo zc_svg($icon, 24) ?></span>
+            </div>
+            <div class="ap-card-title"><?php echo $title ?></div>
             <div class="ap-card-text"><?php echo esc_html($text) ?></div>
             <?php if ($foto): ?>
             <img src="<?php echo esc_url($foto) ?>" alt="<?php echo esc_attr($title) ?>" class="ap-card-img" loading="lazy">

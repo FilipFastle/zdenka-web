@@ -790,3 +790,9 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 /* Po odstránení emoji: skry prázdne ikonové kontajnery (žiadne prázdne boxy) */
 .zc-card-icon:empty, .ap-card-icon:empty, .odhad-info-icon:empty,
 .pp-spec-icon:empty, .zc-testimonial-avatar:empty { display: none; }
+
+/* Líniové ikony (pp_svg) — zarovnanie v texte a farby */
+.pp-ic { display:inline-block; vertical-align:-3px; flex-shrink:0; }
+.zc-prop-specs span, .zc-prop-location { display:inline-flex; align-items:center; gap:5px; }
+.zc-prop-specs .pp-ic, .zc-prop-location .pp-ic { color:var(--accent); }
+.am-group-hd .pp-ic, .am-cat-hd .pp-ic, .am-cat-title .pp-ic { color:var(--accent); vertical-align:-4px; margin-right:6px; }
