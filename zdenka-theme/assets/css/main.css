@@ -697,11 +697,8 @@ html { scroll-behavior: smooth; }
 .zc-omne-hero img { transition: transform .6s var(--ease), box-shadow .6s var(--ease); }
 .zc-omne-hero img:hover { transform: scale(1.015); box-shadow: 0 24px 72px rgba(40,32,20,.2); }
 
-/* Menší pohyb pre citlivých na animácie */
-@media (prefers-reduced-motion: reduce) {
-    .zc-card, .zc-testimonial, .zc-prop-card, .zc-btn, .odhad-info-box { transition: none !important; }
-    .zc-btn-primary::after { display: none; }
-}
+/* Animácie bežia vždy (aj pri systémovom „obmedziť pohyb") – sú jemné.
+   Nechávame ich zapnuté zámerne na želanie majiteľky webu. */
 
 /* Ponuka bez ceny – decentné „Cena dohodou" namiesto prázdneho miesta */
 .zc-prop-price--nego { font-size: 15px; color: var(--muted); font-weight: 600; letter-spacing: .3px; }
@@ -767,13 +764,11 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 /* Jemný horný predel medzi striedajúcimi sa sekciami */
 .bg-white + .bg-section, .bg-section + .bg-white { position: relative; }
 
-/* Plynulé nabehnutie obsahu po načítaní stránky (rešpektuje reduced-motion) */
-@media (prefers-reduced-motion: no-preference) {
-    @keyframes zcFadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-    .zc-footer-grid > * { animation: zcFadeUp .6s var(--ease) both; }
-    .zc-footer-grid > *:nth-child(2) { animation-delay: .08s; }
-    .zc-footer-grid > *:nth-child(3) { animation-delay: .16s; }
-}
+/* Plynulé nabehnutie obsahu po načítaní stránky (beží vždy, aj na PC) */
+@keyframes zcFadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.zc-footer-grid > * { animation: zcFadeUp .6s var(--ease) both; }
+.zc-footer-grid > *:nth-child(2) { animation-delay: .08s; }
+.zc-footer-grid > *:nth-child(3) { animation-delay: .16s; }
 
 /* ── Ponuky: štítky NOVÉ / ZNÍŽENÉ / stav + cena za m² ── */
 .zc-prop-badges { position:absolute; top:12px; left:12px; display:flex; flex-direction:column; gap:6px; align-items:flex-start; z-index:3; }
