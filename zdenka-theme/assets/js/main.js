@@ -332,6 +332,14 @@ if ('IntersectionObserver' in window) {
 })();
 
 
+/* ══ Jemné objavenie obrázkov ponúk po načítaní ══════════════════════ */
+(function(){
+    document.querySelectorAll('.zc-prop-img img,.pp-gal-item img').forEach(function(img){
+        if(img.complete){ img.classList.add('zc-loaded'); }
+        else { img.addEventListener('load',function(){img.classList.add('zc-loaded')}); img.addEventListener('error',function(){img.classList.add('zc-loaded')}); }
+    });
+})();
+
 /* ══ VIDEO — štartovacia hlasitosť (aby po spustení nehúkalo) ══════════ */
 (function () {
     var vids = document.querySelectorAll('iframe[data-zc-vol]');

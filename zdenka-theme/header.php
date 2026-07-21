@@ -10,8 +10,9 @@
 </head>
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
+<a class="zc-skip" href="#zc-obsah">Preskočiť na obsah</a>
 
-<div class="zc-header-wrap" id="zcHeader">
+<div class="zc-header-wrap" id="zcHeader" role="banner">
     <div class="zc-header">
 
         <!-- Logo -->
@@ -65,3 +66,4 @@
         <?php endforeach; ?>
     </nav>
 </div>
+<span id="zc-obsah" tabindex="-1"></span>

@@ -37,6 +37,20 @@ function zcn_handle_send() {
         wp_send_json_success(['message' => $ok ? "Testovací e-mail odoslaný na {$test}" : 'Odoslanie zlyhalo.']);
     }
 
+    // Naplánované odoslanie — uloží do fronty a spustí cez WP-Cron
+    $schedule_at = sanitize_text_field($_POST['schedule_at'] ?? '');
+    if ($schedule_at) {
+        $ts = strtotime($schedule_at);
+        if (!$ts || $ts < time() + 60) wp_send_json_error(['message' => 'Zvoľte čas aspoň o pár minút v budúcnosti.']);
+        $ts -= (int) (get_option('gmt_offset') * HOUR_IN_SECONDS); // datetime-local je v lokálnom čase
+        $queue = get_option('zcn_scheduled', []);
+        $key   = 'sch_' . time() . '_' . wp_rand(100, 999);
+        $queue[$key] = ['subject' => $subject, 'body' => $body_html, 'created' => current_time('mysql'), 'at' => $schedule_at];
+        update_option('zcn_scheduled', $queue);
+        wp_schedule_single_event($ts, 'zcn_do_scheduled', [$key]);
+        wp_send_json_success(['message' => 'Newsletter naplánovaný na ' . esc_html($schedule_at) . '.']);
+    }
+
     global $wpdb;
     $subscribers = $wpdb->get_results("SELECT * FROM " . zcn_table() . " WHERE status='active'");
     if (empty($subscribers)) {
@@ -65,6 +79,36 @@ function zcn_handle_send() {
 
     wp_send_json_success(['message' => "Odoslané: {$sent}" . ($failed ? " | Zlyhalo: {$failed}" : '')]);
 }
+
+// Cron: odoslanie naplánovaného newslettera
+add_action('zcn_do_scheduled', function($key) {
+    $queue = get_option('zcn_scheduled', []);
+    if (empty($queue[$key])) return;
+    $item = $queue[$key];
+    unset($queue[$key]);
+    update_option('zcn_scheduled', $queue);
+
+    global $wpdb;
+    $subscribers = $wpdb->get_results("SELECT * FROM " . zcn_table() . " WHERE status='active'");
+    if (empty($subscribers)) return;
+
+    $from_name  = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : get_bloginfo('name');
+    $from_email = get_theme_mod('zc_email_from', '') ?: get_option('admin_email');
+    $headers    = ['Content-Type: text/html; charset=UTF-8', "From: {$from_name} <{$from_email}>"];
+
+    $sent = 0; $failed = 0;
+    foreach ($subscribers as $sub) {
+        $vars   = ['meno' => $sub->name ?: '', 'email' => $sub->email];
+        $s_subj = function_exists('zcn_apply_vars') ? zcn_apply_vars($item['subject'], $vars) : $item['subject'];
+        $s_body = function_exists('zcn_apply_vars') ? zcn_apply_vars($item['body'], $vars) : $item['body'];
+        $html   = zcn_build_newsletter_email($s_subj, $s_body, $sub->token, $sub->name);
+        wp_mail($sub->email, $s_subj, $html, $headers) ? $sent++ : $failed++;
+        usleep(150000);
+    }
+    $log = get_option('zcn_send_log', []);
+    array_unshift($log, ['date' => current_time('mysql'), 'subject' => '[naplánované] ' . $item['subject'], 'sent' => $sent, 'failed' => $failed]);
+    update_option('zcn_send_log', array_slice($log, 0, 30));
+}, 10, 1);
 
 function zcn_build_newsletter_email($subject, $body_html, $token, $name = '') {
     $unsub    = zcn_unsubscribe_url($token);

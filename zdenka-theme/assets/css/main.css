@@ -796,3 +796,10 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 .zc-prop-specs span, .zc-prop-location { display:inline-flex; align-items:center; gap:5px; }
 .zc-prop-specs .pp-ic, .zc-prop-location .pp-ic { color:var(--accent); }
 .am-group-hd .pp-ic, .am-cat-hd .pp-ic, .am-cat-title .pp-ic { color:var(--accent); vertical-align:-4px; margin-right:6px; }
+
+/* ── Prístupnosť: skip-link ── */
+.zc-skip{position:absolute;left:-9999px;top:0;z-index:100000;background:var(--dark);color:#fff;padding:12px 20px;border-radius:0 0 8px 0;font-size:13px;font-weight:700}
+.zc-skip:focus{left:0;color:#fff}
+/* Jemné objavenie obrázkov ponúk po načítaní */
+.zc-prop-img img,.pp-gal-item img{opacity:0;transition:opacity .5s ease}
+.zc-prop-img img.zc-loaded,.pp-gal-item img.zc-loaded,.zc-prop-img img[data-noanim]{opacity:1}

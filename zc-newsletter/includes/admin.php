@@ -212,6 +212,13 @@ function zcn_admin_page() {
             </div>
             <button onclick="zcnSend(true)" class="button" style="white-space:nowrap;padding:8px 14px">Odoslať test</button>
         </div>
+        <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:end;flex-wrap:wrap">
+            <div>
+                <label style="display:block;font-size:11px;font-weight:700;color:#666;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Naplánovať odoslanie (voliteľné)</label>
+                <input type="datetime-local" id="zcnScheduleAt" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:7px;font-size:13px">
+            </div>
+            <button onclick="zcnSend(false,true)" class="button">Naplánovať</button>
+        </div>
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
             <span style="font-size:13px;color:#666">Odošle sa <strong><?php echo $stats['active'] ?></strong> aktívnym odberateľom</span>
             <div style="display:flex;gap:8px">
@@ -248,17 +255,21 @@ function zcn_admin_page() {
         var ta = document.getElementById('zcnBody');
         return ta ? ta.value : '';
     }
-    function zcnSend(isTest) {
+    function zcnSend(isTest, isSchedule) {
         var s = document.getElementById('zcnSubject').value.trim();
         var b = zcnGetBody().trim();
         var t = document.getElementById('zcnTestEmail').value.trim();
+        var sch = document.getElementById('zcnScheduleAt') ? document.getElementById('zcnScheduleAt').value : '';
         if (!s||!b) { alert('Vyplňte predmet aj obsah.'); return; }
-        if (!isTest && !confirm('Odoslať newsletter <?php echo $stats['active'] ?> odberateľom?')) return;
+        if (isSchedule && !sch) { alert('Zvoľte dátum a čas odoslania.'); return; }
+        if (isSchedule && !confirm('Naplánovať newsletter na ' + sch + '?')) return;
+        if (!isTest && !isSchedule && !confirm('Odoslať newsletter <?php echo $stats['active'] ?> odberateľom?')) return;
         var data = new FormData();
         data.append('action','zcn_send_newsletter');
         data.append('nonce','<?php echo wp_create_nonce("zcn_send_nonce") ?>');
         data.append('subject',s); data.append('body',b); data.append('is_html','1');
         if (isTest && t) data.append('test_email',t);
+        if (isSchedule && sch) data.append('schedule_at',sch);
         fetch(ajaxurl,{method:'POST',body:data})
         .then(r=>r.json()).then(res=>{ zcnMsg(res.data.message, res.success); });
     }
