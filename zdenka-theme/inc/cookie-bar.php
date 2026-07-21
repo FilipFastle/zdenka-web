@@ -36,10 +36,21 @@ add_action('wp_footer', function() {
     (function(){
         var bar=document.getElementById('zcCookie');
         if(!bar)return;
-        try{ if(localStorage.getItem('zc_cookie_consent')){return;} }catch(e){}
+        var KEY='zc_cookie_consent';
+        function hasConsent(){
+            // Cookie má prednosť (prežije aj vymazanie localStorage), potom localStorage
+            if(document.cookie.indexOf(KEY+'=')!==-1)return true;
+            try{ if(localStorage.getItem(KEY))return true; }catch(e){}
+            return false;
+        }
+        if(hasConsent())return;               // už rozhodnuté → lištu vôbec nezobraz
         bar.hidden=false;
         window.zcCookieSet=function(v){
-            try{localStorage.setItem('zc_cookie_consent',v?'accepted':'declined');}catch(e){}
+            var val=v?'accepted':'declined';
+            try{localStorage.setItem(KEY,val);}catch(e){}
+            // cookie na 180 dní
+            var d=new Date();d.setTime(d.getTime()+180*24*60*60*1000);
+            document.cookie=KEY+'='+val+';expires='+d.toUTCString()+';path=/;SameSite=Lax';
             bar.style.display='none';
             document.dispatchEvent(new CustomEvent('zc-cookie-consent',{detail:{accepted:!!v}}));
         };

@@ -579,10 +579,18 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
         $ptxt = rawurlencode(get_the_title());
         ?>
         <div class="pp-share-btns">
-            <a class="pp-share-btn" style="background:#1877F2" target="_blank" rel="noopener" title="Facebook" href="https://www.facebook.com/sharer/sharer.php?u=<?php echo $purl ?>">f</a>
-            <a class="pp-share-btn" style="background:#22c55e" target="_blank" rel="noopener" title="WhatsApp" href="https://wa.me/?text=<?php echo $ptxt ?>%20<?php echo $purl ?>"></a>
-            <a class="pp-share-btn" style="background:#B8A47A;color:#1C1A18" title="E-mail" href="mailto:?subject=<?php echo $ptxt ?>&body=<?php echo $purl ?>"></a>
-            <button type="button" class="pp-share-btn" style="background:#2C2C2C" title="Kopírovať odkaz" onclick="ppCopyLink(this)"></button>
+            <a class="pp-share-btn" style="background:#1877F2" target="_blank" rel="noopener" title="Zdieľať na Facebooku" aria-label="Facebook" href="https://www.facebook.com/sharer/sharer.php?u=<?php echo $purl ?>">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg>
+            </a>
+            <a class="pp-share-btn" style="background:#22c55e" target="_blank" rel="noopener" title="Zdieľať cez WhatsApp" aria-label="WhatsApp" href="https://wa.me/?text=<?php echo $ptxt ?>%20<?php echo $purl ?>">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884"/></svg>
+            </a>
+            <a class="pp-share-btn" style="background:#B8A47A;color:#1C1A18" title="Poslať e-mailom" aria-label="E-mail" href="mailto:?subject=<?php echo $ptxt ?>&body=<?php echo $purl ?>">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+            </a>
+            <button type="button" class="pp-share-btn" style="background:#2C2C2C" title="Kopírovať odkaz" aria-label="Kopírovať odkaz" onclick="ppCopyLink(this)">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
+            </button>
         </div>
     </div>
 </div>
@@ -594,13 +602,14 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
 .pp-share-lbl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#6B6560}
 .pp-views{font-size:12px;color:#9A8660;font-weight:600}
 .pp-share-btns{display:flex;gap:8px}
-.pp-share-btn{flex:1;height:40px;border:none;border-radius:9px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;transition:transform .15s,filter .15s;font-family:Georgia,serif}
+.pp-share-btn{flex:1;height:40px;border:none;border-radius:9px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;transition:transform .15s,filter .15s}
 .pp-share-btn:hover{transform:translateY(-2px);filter:brightness(1.08)}
+.pp-share-btn.copied{background:#16a34a !important}
 </style>
 <script>
 function ppCopyLink(btn){
     var url=<?php echo wp_json_encode(get_permalink()) ?>;
-    var done=function(){var o=btn.textContent;btn.textContent='✓';setTimeout(function(){btn.textContent=o},1400)};
+    var done=function(){btn.classList.add('copied');btn.title='Skopírované!';setTimeout(function(){btn.classList.remove('copied');btn.title='Kopírovať odkaz'},1400)};
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(done,function(){prompt('Skopíruj odkaz:',url)})}
     else{prompt('Skopíruj odkaz:',url)}
 }
