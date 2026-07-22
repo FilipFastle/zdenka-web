@@ -695,8 +695,8 @@ if(hero&&total>1){
     setInterval(function(){ppNext()},7000);
 }
 
-/* Zoom hero fotky pri scrolle (ako na úvodnej stránke) */
-if(hero && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+/* Zoom hero fotky pri scrolle (beží vždy – aj na PC, nezávisle od OS nastavenia) */
+if(hero){
     var zoomImgs=hero.querySelectorAll('.pp-hero-slide img');
     var zTick=false;
     function ppZoom(){

@@ -99,8 +99,7 @@ $title=zc_agent('title','Realitná maklérka');
 
 <script>
 /* Hero zoom pri scrolle: obsah stránky sa nasúva na prilepený hero
-   a fotka sa plynulo približuje; text jemne mizne. Vypnuté pri
-   prefers-reduced-motion. */
+   a fotka sa plynulo približuje; text jemne mizne. Beží vždy (PC aj mobil). */
 (function(){
     var hero = document.getElementById('zcHomeHero');
     var bg   = document.getElementById('zcHeroBg');
