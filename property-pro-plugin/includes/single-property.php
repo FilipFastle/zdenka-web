@@ -247,6 +247,7 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
     color:#2C2C2C; font-size:14px; font-family:var(--sans,sans-serif); transition:border .2s, box-shadow .2s;
 }
 .pp-cta-input::placeholder { color:#B0A898; }
+textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
 .pp-cta-input:focus { outline:none; border-color:#B8A47A; background:#fff; box-shadow:0 0 0 3px rgba(184,164,122,.12); }
 .pp-cta-btn {
     padding:13px; border-radius:9px; background:#B8A47A; color:#1C1A18;
@@ -552,12 +553,23 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
             <?php if ($znizena): ?>
             <div style="font-size:15px;color:#9A8660;text-decoration:line-through;margin-bottom:2px"><?php echo esc_html(pp_price_fmt($cena_pov)) ?></div>
             <?php endif; ?>
-            <?php $cena_num_val = pp_price_num($cena_raw); $czk_rate = (float) (function_exists('get_theme_mod') ? get_theme_mod('zc_czk_rate', 25.2) : 25.2); ?>
-            <div class="pp-price-val" id="ppPriceVal" data-eur="<?php echo esc_attr($cena_num_val) ?>" data-rate="<?php echo esc_attr($czk_rate) ?>"<?php if ($cena_num_val === 0) echo ' style="font-size:20px;letter-spacing:0"'; ?>><?php echo esc_html($cena_fmt); ?></div>
+            <?php
+            $cena_num_val = pp_price_num($cena_raw);
+            $fx = function_exists('pp_fx_rates') ? pp_fx_rates() : ['CZK'=>25.2,'USD'=>1.08,'date'=>'','live'=>false];
+            ?>
+            <div class="pp-price-val" id="ppPriceVal" data-eur="<?php echo esc_attr($cena_num_val) ?>" data-czk="<?php echo esc_attr($fx['CZK']) ?>" data-usd="<?php echo esc_attr($fx['USD']) ?>"<?php if ($cena_num_val === 0) echo ' style="font-size:20px;letter-spacing:0"'; ?>><?php echo esc_html($cena_fmt); ?></div>
             <?php if ($cena_num_val > 0): ?>
             <div class="pp-cur" role="group" aria-label="Mena">
                 <button type="button" class="pp-cur-btn active" data-cur="EUR" onclick="ppSetCur(this,'EUR')">€ EUR</button>
                 <button type="button" class="pp-cur-btn" data-cur="CZK" onclick="ppSetCur(this,'CZK')">Kč CZK</button>
+                <button type="button" class="pp-cur-btn" data-cur="USD" onclick="ppSetCur(this,'USD')">$ USD</button>
+            </div>
+            <div class="pp-fx-note">
+                <?php if (!empty($fx['live'])): ?>
+                    Prepočet podľa aktuálneho kurzu ECB<?php if(!empty($fx['date'])):?> (<?php echo esc_html($fx['date']) ?>)<?php endif; ?>: 1&nbsp;€ = <?php echo esc_html(number_format($fx['CZK'],2,',',' ')) ?>&nbsp;Kč · <?php echo esc_html(number_format($fx['USD'],3,',',' ')) ?>&nbsp;$
+                <?php else: ?>
+                    Orientačný prepočet: 1&nbsp;€ ≈ <?php echo esc_html(number_format($fx['CZK'],2,',',' ')) ?>&nbsp;Kč
+                <?php endif; ?>
             </div>
             <?php endif; ?>
             <?php if ($per_m2): ?><div style="font-size:12px;color:#6B6560;margin-top:4px"><?php echo esc_html($per_m2) ?></div><?php endif; ?>
@@ -629,21 +641,29 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
 .pp-views{font-size:12px;color:#9A8660;font-weight:600}
 .pp-share-btns{display:flex;gap:8px}
 .pp-share-btn{flex:1;height:40px;border:none;border-radius:9px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;transition:transform .15s,filter .15s}
-.pp-share-btn:hover{transform:translateY(-2px);filter:brightness(1.08)}
-.pp-share-btn.copied{background:#16a34a !important}
+.pp-share-btn:hover{transform:translateY(-2px);filter:brightness(1.08);color:#fff}
+.pp-share-btn[href^="mailto"],.pp-share-btn[href^="mailto"]:hover{color:#1C1A18}
+.pp-share-btn.copied,.pp-share-btn.copied:hover{background:#16a34a !important;color:#fff}
 .pp-pdf-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;padding:11px;border-radius:9px;border:1.5px solid #E2DACE;background:#F5F1EA;color:#2C2C2C;font-size:13px;font-weight:700;text-decoration:none;transition:all .2s}
 .pp-pdf-btn:hover{border-color:#B8A47A;background:#fff;color:#7C5E33}
-.pp-cur{display:inline-flex;gap:0;margin-top:8px;border:1.5px solid rgba(255,255,255,.25);border-radius:8px;overflow:hidden}
-.pp-cur-btn{background:transparent;color:rgba(255,255,255,.7);border:none;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans,sans-serif);transition:all .2s}
+.pp-cur{display:inline-flex;gap:0;margin-top:8px;border:1.5px solid #E2DACE;border-radius:8px;overflow:hidden}
+.pp-cur-btn{background:transparent;color:#6B6560;border:none;padding:6px 13px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans,sans-serif);transition:all .2s}
+.pp-cur-btn+.pp-cur-btn{border-left:1px solid #E2DACE}
+.pp-cur-btn:hover{background:#F5F1EA;color:#1C1A18}
 .pp-cur-btn.active{background:#B8A47A;color:#1C1A18}
+.pp-fx-note{font-size:11px;color:#8A8072;margin-top:7px;line-height:1.5;max-width:280px}
 </style>
 <script>
 function ppSetCur(btn,cur){
     var el=document.getElementById('ppPriceVal'); if(!el)return;
     document.querySelectorAll('.pp-cur-btn').forEach(function(b){b.classList.toggle('active',b===btn)});
-    var eur=parseFloat(el.getAttribute('data-eur'))||0, rate=parseFloat(el.getAttribute('data-rate'))||25.2;
+    var eur=parseFloat(el.getAttribute('data-eur'))||0;
+    var czk=parseFloat(el.getAttribute('data-czk'))||25.2;
+    var usd=parseFloat(el.getAttribute('data-usd'))||1.08;
     function fmt(n){return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ')}
-    el.textContent = cur==='CZK' ? (fmt(eur*rate)+' Kč') : (fmt(eur)+' €');
+    if(cur==='CZK')      el.textContent = fmt(eur*czk)+' Kč';
+    else if(cur==='USD') el.textContent = '$ '+fmt(eur*usd);
+    else                 el.textContent = fmt(eur)+' €';
 }
 function ppCopyLink(btn){
     var url=<?php echo wp_json_encode(get_permalink()) ?>;

@@ -239,6 +239,10 @@ if ('IntersectionObserver' in window) {
                 e.target.style.opacity = '1';
                 e.target.style.transform = 'translateY(0)';
                 obs.unobserve(e.target);
+                // Po dobehnutí revealu zmažeme inline transform/transition,
+                // aby CSS :hover efekty (napr. zdvih karty ponuky) opäť fungovali
+                var el = e.target;
+                setTimeout(function () { el.style.transform = ''; el.style.transition = ''; }, 650);
             }
         });
     }, { threshold: 0.08 });

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Property Manager Pro
  * Description: Profesionálny real estate plugin na správu nehnuteľností
- * Version: 5.5
+ * Version: 5.6
  * Author: Filip
  */
 
@@ -34,6 +34,15 @@ require_once PROPERTY_PRO_PATH . 'includes/shortcodes.php';
 require_once PROPERTY_PRO_PATH . 'includes/meta-boxes.php';
 require_once PROPERTY_PRO_PATH . 'includes/single-template.php';
 require_once PROPERTY_PRO_PATH . 'includes/panel.php';
+
+// Realitný panel beží na vlastnej šablóne — bez hlavičky/pätičky témy
+add_filter('template_include', function ($template) {
+    if (is_page('realitny-panel')) {
+        $tpl = PROPERTY_PRO_PATH . 'templates/panel-standalone.php';
+        if (file_exists($tpl)) return $tpl;
+    }
+    return $template;
+});
 
 // Auto-vytvorenie stránky porovnania (raz)
 add_action('admin_init', function () {

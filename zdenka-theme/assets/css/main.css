@@ -530,7 +530,7 @@ ul { list-style: none; }
     transform: translateY(-1px);
     box-shadow: 0 4px 20px rgba(184,164,122,.15);
 }
-.zc-form-field textarea { min-height: 130px; line-height: 1.7; }
+.zc-form-field textarea { min-height: 130px; line-height: 1.7; resize: vertical; max-height: 340px; }
 .zc-form-field label { font-size: 10px; letter-spacing: 1.2px; margin-bottom: 8px; }
 
 /* Dark form (CTA section) */

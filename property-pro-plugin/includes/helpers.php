@@ -39,6 +39,39 @@ function pp_svg($name, $size = 18) {
     return '<svg class="pp-ic" width="'.$size.'" height="'.$size.'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.$body.'</svg>';
 }
 
+// ── Živý kurz mien (EUR → CZK, USD) ─────────────────────────────────────
+// Načíta sa raz za 12 h a uloží do transientu; fallback na rozumné hodnoty.
+function pp_fx_rates() {
+    $cached = get_transient('pp_fx_rates');
+    if (is_array($cached) && !empty($cached['CZK'])) return $cached;
+
+    $fallback = [
+        'CZK'  => (float) (function_exists('get_theme_mod') ? get_theme_mod('zc_czk_rate', 25.2) : 25.2),
+        'USD'  => 1.08,
+        'date' => '',
+        'live' => false,
+    ];
+
+    $resp = wp_remote_get('https://api.frankfurter.app/latest?from=EUR&to=CZK,USD', ['timeout' => 6]);
+    if (is_wp_error($resp) || wp_remote_retrieve_response_code($resp) !== 200) {
+        set_transient('pp_fx_rates', $fallback, 2 * HOUR_IN_SECONDS); // skús znova o 2 h
+        return $fallback;
+    }
+    $data = json_decode(wp_remote_retrieve_body($resp), true);
+    if (empty($data['rates']['CZK'])) {
+        set_transient('pp_fx_rates', $fallback, 2 * HOUR_IN_SECONDS);
+        return $fallback;
+    }
+    $rates = [
+        'CZK'  => (float) $data['rates']['CZK'],
+        'USD'  => (float) ($data['rates']['USD'] ?? $fallback['USD']),
+        'date' => sanitize_text_field($data['date'] ?? ''),
+        'live' => true,
+    ];
+    set_transient('pp_fx_rates', $rates, 12 * HOUR_IN_SECONDS);
+    return $rates;
+}
+
 // ── Zdieľané pomocné funkcie pre ponuky ─────────────────────────────────
 
 // Stav predaja (nad rámec typu predaj/prenájom): aktívne / rezervované / predané

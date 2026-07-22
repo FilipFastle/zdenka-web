@@ -58,10 +58,6 @@ function panel_dashboard() {
     $logout = wp_logout_url(home_url());
     ob_start();
     ?>
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
@@ -75,21 +71,23 @@ function panel_dashboard() {
 body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
 
 /* HEADER */
-.ph{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 12px rgba(60,50,30,.06)}
-.ph-logo{font-family:var(--serif);font-size:17px;font-weight:700;color:var(--dark);display:flex;align-items:center;gap:10px}
-.ph-logo-icon{width:36px;height:36px;background:var(--section);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
-.ph-logo small{font-family:var(--sans);font-size:10px;font-weight:400;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent-txt);display:block}
-.ph-nav{display:flex;gap:6px}
-.ph-nav a{padding:8px 16px;border-radius:var(--r-sm);font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;text-decoration:none;color:var(--muted);transition:all .2s}
+.ph{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:66px;display:flex;align-items:center;gap:24px;position:sticky;top:0;z-index:100;box-shadow:0 1px 12px rgba(60,50,30,.06)}
+.ph-logo{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--dark);display:flex;align-items:center;gap:11px;flex-shrink:0}
+.ph-logo-icon{width:38px;height:38px;background:var(--section);border-radius:11px;display:flex;align-items:center;justify-content:center}
+.ph-logo small{font-family:var(--sans);font-size:10px;font-weight:500;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent-txt);display:block;margin-top:1px}
+.ph-nav{display:flex;gap:3px;align-items:center;margin:0 auto 0 8px}
+.ph-nav a{position:relative;padding:9px 15px;border-radius:9px;font-size:13.5px;font-weight:600;letter-spacing:.1px;text-decoration:none;color:var(--muted);transition:color .18s,background .18s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
 .ph-nav a:hover{background:var(--section);color:var(--dark)}
-.ph-nav a.active{background:var(--accent);color:var(--dark)}
-.ph-right{display:flex;align-items:center;gap:12px}
-.ph-user{font-size:13px;color:var(--muted)}
-.ph-logout{padding:8px 16px;background:var(--section);border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;color:var(--text);font-family:var(--sans);transition:all .2s}
+.ph-nav a.active{color:var(--dark)}
+.ph-nav a.active::after{content:'';position:absolute;left:15px;right:15px;bottom:-1px;height:2.5px;border-radius:3px;background:var(--accent)}
+.ph-right{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.ph-user{font-size:13px;color:var(--muted);font-weight:600}
+.ph-logout{padding:9px 16px;background:var(--section);border:1.5px solid var(--border);border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--text);font-family:var(--sans);transition:all .2s}
 .ph-logout:hover{background:#e8e0d5;border-color:#ccc}
 
 /* CONTENT */
-.pc{max-width:1200px;margin:0 auto;padding:32px 24px}
+.pc{max-width:1200px;margin:0 auto;padding:32px 24px;min-height:calc(100vh - 66px)}
+.pc--home{display:flex;flex-direction:column}
 
 /* PROPERTY LIST */
 .prop-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
@@ -347,6 +345,9 @@ a.pnl-stat:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(60,50,30,
         <a href="?action=reviews" class="<?php echo $action==='reviews'?'active':'' ?>">Recenzie</a>
         <?php endif; ?>
         <a href="?action=import" class="<?php echo $action==='import'?'active':'' ?>">Import/Export</a>
+        <?php if (current_user_can('manage_options')): ?>
+        <a href="?action=settings" class="<?php echo $action==='settings'?'active':'' ?>">Nastavenia</a>
+        <?php endif; ?>
         <div class="ph-nav-foot">
             <span class="ph-nav-user"><?php echo esc_html($user->display_name) ?></span>
             <button class="ph-logout" onclick="window.location='<?php echo esc_url($logout) ?>'">Odhlásiť</button>
@@ -358,7 +359,7 @@ a.pnl-stat:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(60,50,30,
     </div>
 </div>
 
-<div class="pc">
+<div class="pc<?php echo $action==='home'?' pc--home':'' ?>">
     <?php if(isset($_GET['saved'])): $saved_pid = intval($_GET['pid'] ?? 0); ?>
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;padding:12px 16px;border-radius:var(--r-sm);margin-bottom:20px;font-size:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
         <span>Nehnuteľnosť uložená!</span>
@@ -372,6 +373,7 @@ a.pnl-stat:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(60,50,30,
     elseif ($action==='list') panel_list();
     elseif ($action==='leads') echo panel_leads();
     elseif ($action==='import') echo panel_import_export();
+    elseif ($action==='settings' && current_user_can('manage_options')) echo panel_settings();
     elseif ($action==='newsletter' && function_exists('zcn_table')) panel_newsletter();
     elseif ($action==='reviews'    && function_exists('zcr_table'))  panel_reviews();
     else panel_home();
