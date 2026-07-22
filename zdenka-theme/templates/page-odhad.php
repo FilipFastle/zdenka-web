@@ -89,37 +89,31 @@ if (isset($_POST['odhad_send']) && wp_verify_nonce($_POST['odhad_nonce'] ?? '', 
 
 /* ── FIELDS ── */
 .odhad-fields { padding: 24px 36px 0; }
-.odhad-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+.odhad-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .odhad-field {
     display: flex; flex-direction: column;
-    padding: 16px 0; border-bottom: 1px solid var(--border,#E2DACE);
+    padding: 8px 0;
 }
-.odhad-row .odhad-field:nth-child(odd)  { padding-right: 28px; border-right: 1px solid var(--border,#E2DACE); }
-.odhad-row .odhad-field:nth-child(even) { padding-left: 28px; }
-.odhad-field.full { grid-column: 1/-1; padding-right: 0 !important; border-right: none !important; }
+.odhad-field.full { grid-column: 1/-1; }
 .odhad-field-label {
     font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
     text-transform: uppercase; color: var(--muted,#6B6560);
     margin-bottom: 8px; font-family: var(--sans,'DM Sans',sans-serif);
 }
-.odhad-field-input {
-    border: none; border-bottom: 1.5px solid var(--border,#E2DACE);
-    padding: 8px 0; background: transparent;
-    font-family: var(--sans,'DM Sans',sans-serif);
-    font-size: 15px; color: var(--text,#2C2C2C);
-    outline: none; transition: border-color .2s; width: 100%;
-}
-.odhad-field-input:focus { border-bottom-color: var(--accent,#B8A47A); }
-.odhad-field-input::placeholder { color: #ccc; }
+/* boxed inputs – rovnaký štýl ako kontaktný formulár na domovskej */
+.odhad-field-input,
 .odhad-textarea {
-    border: none; border-bottom: 1.5px solid var(--border,#E2DACE);
-    padding: 8px 0; background: transparent;
+    border: 1.5px solid var(--border,#E2DACE); border-radius: 10px;
+    padding: 13px 15px; background: #FCFBF8;
     font-family: var(--sans,'DM Sans',sans-serif);
     font-size: 15px; color: var(--text,#2C2C2C);
-    outline: none; resize: none; width: 100%;
-    min-height: 110px; transition: border-color .2s;
+    outline: none; transition: border-color .2s, box-shadow .2s; width: 100%;
 }
-.odhad-textarea:focus { border-bottom-color: var(--accent,#B8A47A); }
+.odhad-textarea { resize: vertical; min-height: 110px; max-height: 300px; line-height: 1.6; }
+.odhad-field-input:focus,
+.odhad-textarea:focus { border-color: var(--accent,#B8A47A); background:#fff; box-shadow:0 0 0 3px rgba(184,164,122,.12); }
+.odhad-field-input::placeholder,
+.odhad-textarea::placeholder { color: #B0A898; }
 
 /* ── FOOTER ── */
 .odhad-form-footer {
@@ -165,10 +159,10 @@ if (isset($_POST['odhad_send']) && wp_verify_nonce($_POST['odhad_nonce'] ?? '', 
     .odhad-card { padding: 0 16px; }
     .odhad-toggles { padding: 20px 20px 0; gap: 12px; }
     .odhad-toggle-btn { padding: 10px 14px; font-size: 11px; }
-    .odhad-fields { padding: 16px 20px 0; }
-    .odhad-row { grid-template-columns: 1fr; }
-    .odhad-row .odhad-field:nth-child(odd) { padding-right: 0; border-right: none; }
-    .odhad-row .odhad-field:nth-child(even) { padding-left: 0; }
+    .odhad-fields { padding: 16px 16px 0; }
+    .odhad-row { grid-template-columns: 1fr; gap: 11px; }
+    .odhad-field-input, .odhad-textarea { font-size: 16px; padding: 12px 14px; } /* 16px = žiadny auto-zoom na iOS */
+    .odhad-textarea { min-height: 92px; }
     .odhad-form-footer { padding: 20px; flex-direction: column; align-items: stretch; }
     .odhad-submit { width: 100%; text-align: center; justify-content: center; }
     .odhad-info { grid-template-columns: 1fr; }

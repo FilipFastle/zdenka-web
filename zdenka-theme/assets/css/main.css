@@ -579,9 +579,16 @@ form textarea[style*="rgba(255,255,255,.08)"]:focus {
     .zc-hero-btns .zc-btn { padding: 12px 22px; font-size: 11px; }
     .zc-hero-name-card { margin-top: 36px; }
 
-    /* Contact form mobile */
+    /* Contact form mobile – kompaktnejšie, nech nepôsobí obrovsky */
+    .zc-form-field { margin-bottom: 13px; }
     .zc-form-field input,
-    .zc-form-field textarea { font-size: 16px; padding: 15px 16px; }
+    .zc-form-field select,
+    .zc-form-field textarea { font-size: 16px; padding: 12px 14px; border-radius: 9px; }
+    .zc-form-field textarea { min-height: 96px; line-height: 1.6; }
+    .zc-form-field label { margin-bottom: 5px; }
+    .zc-form-field input:focus,
+    .zc-form-field textarea:focus,
+    .zc-form-field select:focus { transform: none; }
 }
 
 /* ── SCROLL-TO-TOP ── */

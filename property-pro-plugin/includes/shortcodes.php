@@ -456,6 +456,8 @@ add_action('wp_footer', function () {
                 b.classList.toggle('active',a.indexOf(parseInt(b.dataset.id))>-1);
             });
             var bar=document.getElementById('zcCmpBar');if(!bar)return;
+            // Na stránke porovnania plávajúcu lištu nezobrazujeme (má vlastné tlačidlá)
+            if(document.getElementById('zcCmpPage')){bar.classList.remove('show');return;}
             document.getElementById('zcCmpN').textContent=a.length;
             bar.classList.toggle('show',a.length>0);
             var th=document.getElementById('zcCmpThumbs');
@@ -613,9 +615,17 @@ add_shortcode('porovnanie', function () {
             <a href="<?php echo home_url('/ponuky/') ?>" class="zc-btn zc-btn-primary" style="margin-top:20px;display:inline-block">Pozrieť ponuky</a>
         </div>
         <div id="zcCmpResult"></div>
+        <div id="zcCmpActions" style="display:none;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:26px">
+            <a href="<?php echo home_url('/ponuky/') ?>" class="zc-cmp-act zc-cmp-act--primary">+ Pridať ďalšiu ponuku</a>
+            <button type="button" class="zc-cmp-act" onclick="zcCmpBack()">← Späť na ponuky</button>
+        </div>
     </div>
     <style>
     .zc-cmp-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .zc-cmp-act{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 22px;border-radius:10px;font-family:var(--sans,sans-serif);font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;border:1.5px solid var(--border,#E2DACE);background:#fff;color:var(--text,#2C2C2C);transition:all .2s}
+    .zc-cmp-act:hover{border-color:var(--accent,#B8A47A);color:var(--dark,#1C1A18)}
+    .zc-cmp-act--primary{background:var(--accent,#B8A47A);border-color:var(--accent,#B8A47A);color:#1C1A18}
+    .zc-cmp-act--primary:hover{background:var(--accent-dk,#9A8660);color:#1C1A18}
     .zc-cmp-table{width:100%;border-collapse:collapse;min-width:520px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 16px rgba(60,50,30,.08)}
     .zc-cmp-table th,.zc-cmp-table td{padding:14px 16px;text-align:center;border-bottom:1px solid #EFEAE0;font-size:14px}
     .zc-cmp-table thead th{background:#F5F1EA;vertical-align:top}
@@ -631,18 +641,22 @@ add_shortcode('porovnanie', function () {
     .zc-cmp-dash{color:#ccc}
     </style>
     <script>
+    window.zcCmpBack=function(){
+        if(document.referrer && document.referrer.indexOf(location.host)>-1 && document.referrer.indexOf('/porovnanie')===-1){history.back();}
+        else{location.href='<?php echo home_url('/ponuky/') ?>';}
+    };
     (function(){
-        var box=document.getElementById('zcCmpResult'),empty=document.getElementById('zcCmpEmpty');
+        var box=document.getElementById('zcCmpResult'),empty=document.getElementById('zcCmpEmpty'),acts=document.getElementById('zcCmpActions');
         function load(){
             var a=(window.zcCompareGet?zcCompareGet():JSON.parse(localStorage.getItem('zc_compare')||'[]'));
-            if(!a.length){box.innerHTML='';empty.style.display='block';return;}
+            if(!a.length){box.innerHTML='';empty.style.display='block';if(acts)acts.style.display='none';return;}
             empty.style.display='none';
             var d=new FormData();d.append('action','pp_compare');d.append('ids',JSON.stringify(a));
             fetch('<?php echo admin_url('admin-ajax.php') ?>',{method:'POST',body:d,credentials:'same-origin'})
             .then(function(r){return r.json();})
             .then(function(res){
-                if(res.success&&res.data.html){box.innerHTML=res.data.html;bindX();}
-                else{box.innerHTML='';empty.style.display='block';}
+                if(res.success&&res.data.html){box.innerHTML=res.data.html;bindX();if(acts)acts.style.display='flex';}
+                else{box.innerHTML='';empty.style.display='block';if(acts)acts.style.display='none';}
             });
         }
         function bindX(){

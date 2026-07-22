@@ -68,7 +68,12 @@ function panel_dashboard() {
     --serif:'Playfair Display',Georgia,serif; --sans:'DM Sans',system-ui,sans-serif;
     --r:12px; --r-sm:8px; --sh:0 2px 12px rgba(60,50,30,.08);
 }
-body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
+html{overflow-x:clip}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:clip;max-width:100vw}
+/* Nič nesmie vytlačiť stránku do šírky */
+.pc,.ph,.pf,.pnl-hero,.pnl-stats,.pnl-quick,.pnl-home-grid{max-width:100%;box-sizing:border-box}
+.pc img,.pc table,.pc pre,.pc iframe{max-width:100%}
+.pc input,.pc select,.pc textarea{max-width:100%}
 
 /* HEADER */
 .ph{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:66px;display:flex;align-items:center;gap:24px;position:sticky;top:0;z-index:100;box-shadow:0 1px 12px rgba(60,50,30,.06)}
@@ -322,6 +327,21 @@ a.pnl-stat:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(60,50,30,
     .prop-item-img{width:100% !important;height:170px !important;border-radius:var(--r) var(--r) 0 0 !important}
     .prop-item-actions .btn{flex:1 1 auto;justify-content:center;text-align:center}
     .pnl-stat-n{font-size:26px}
+    /* široké tabuľky (odberatelia, história, kampane) sa posúvajú vodorovne, nevytláčajú stránku */
+    .pc table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+    /* vnorené grid/flex bloky nech sa zalamujú */
+    .pnl-nl-stats-grid,.ff-row,.ff-row-3,.pnl-rev-grid{grid-template-columns:1fr !important}
+    .pnl-quick{gap:8px}
+    .pnl-quick-btn{flex:1 1 auto;justify-content:center}
+    /* dlhé názvy/e-maily nech sa zalamujú a nepretečú */
+    .lead-contact a,.lead-msg,.pnl-recent-title,.prop-item-title{word-break:break-word;overflow-wrap:anywhere}
+    .lead-contact{gap:8px 14px}
+    #pnlBulkBar{top:60px}
+}
+@media(max-width:600px){
+    .pc{padding:16px 12px}
+    .pnl-hero{flex-direction:column;align-items:flex-start;gap:12px}
+    .pnl-hero .btn{width:100%;text-align:center;justify-content:center}
 }
 </style>
 

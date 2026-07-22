@@ -263,8 +263,9 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
 
 /* Masonry gallery */
 .pp-gallery { columns:3 180px; column-gap:10px; }
-.pp-gal-item { break-inside:avoid; margin-bottom:10px; border-radius:10px; overflow:hidden; cursor:pointer; position:relative; }
-.pp-gal-item img { width:100%; height:auto; display:block; transition:transform .35s; }
+.pp-gal-item { break-inside:avoid; margin-bottom:10px; border-radius:10px; overflow:hidden; cursor:pointer; position:relative; opacity:0; transform:translateY(16px); transition:opacity .55s ease, transform .55s ease; }
+.pp-gal-item.pp-in { opacity:1; transform:none; }
+.pp-gal-item img { width:100%; height:auto; display:block; opacity:1; transition:transform .35s; }
 .pp-gal-item::after { content:''; position:absolute; inset:0; background:rgba(0,0,0,0); transition:background .3s; border-radius:10px; }
 .pp-gal-item:hover img { transform:scale(1.04); }
 .pp-gal-item:hover::after { background:rgba(0,0,0,.15); }
@@ -337,6 +338,7 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
     .pp-price-val { font-size:24px; }
     .pp-btn { padding:11px 12px; font-size:12px; }
     .pp-cta { padding:20px 16px; }
+    .pp-cta-input { font-size:16px; padding:12px 14px; } /* 16px = žiadny auto-zoom na iOS */
     .pp-gallery { columns: 2 100px; }
 }
 @media (max-width: 480px) {
@@ -533,7 +535,7 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
         <div class="pp-sec-title">Galéria</div>
         <div class="pp-gallery">
             <?php foreach ($all_images as $i => $img_id): ?>
-            <div class="pp-gal-item" onclick="ppLbOpen(<?php echo $i ?>)">
+            <div class="pp-gal-item" data-i="<?php echo $i ?>" onclick="ppLbOpen(<?php echo $i ?>)">
                 <?php echo wp_get_attachment_image($img_id,'medium',false,['loading'=>'lazy']) ?>
             </div>
             <?php endforeach; ?>
@@ -729,6 +731,26 @@ if(hero){
     window.addEventListener('scroll',function(){if(!zTick){requestAnimationFrame(ppZoom);zTick=true}},{passive:true});
     ppZoom();
 }
+
+/* GALÉRIA – postupné objavenie fotiek pri scrolle (aj na PC) */
+(function(){
+    var items=document.querySelectorAll('.pp-gal-item');
+    if(!items.length)return;
+    if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+            es.forEach(function(e){
+                if(e.isIntersecting){
+                    var el=e.target, d=parseInt(el.getAttribute('data-i')||'0',10);
+                    setTimeout(function(){el.classList.add('pp-in')}, Math.min(d,6)*70);
+                    io.unobserve(el);
+                }
+            });
+        },{threshold:.08,rootMargin:'0px 0px -40px 0px'});
+        items.forEach(function(el){io.observe(el)});
+    } else {
+        items.forEach(function(el){el.classList.add('pp-in')});
+    }
+})();
 
 /* LIGHTBOX */
 var imgs=<?php echo json_encode($images_json) ?>;

@@ -50,11 +50,11 @@ function zcr_card($r) {
         <div class="zc-stars"><?php echo $stars ?></div>
         <div class="zc-testimonial-quote"><?php echo esc_html($r->body) ?></div>
         <div class="zc-testimonial-author">
+            <?php if ($r->avatar_url): ?>
             <div class="zc-testimonial-avatar">
-                <?php if ($r->avatar_url): ?>
                 <img src="<?php echo esc_url($r->avatar_url) ?>" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover">
-                <?php else: ?><?php endif; ?>
             </div>
+            <?php endif; ?>
             <div>
                 <div class="zc-testimonial-name"><?php echo esc_html($r->author_name) ?></div>
                 <?php if ($r->author_role): ?>
