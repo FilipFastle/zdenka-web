@@ -5,15 +5,11 @@
 
 // Version injected by PHP (see functions.php)
 var CACHE_VER = self.CACHE_VERSION || 'v1';
-var CACHE_NAME = 'zdenka-' + CACHE_VER;
+// suffix „s2" vynúti prečistenie starej cache (ktorá mohla obsahovať HTML s tokenmi)
+var CACHE_NAME = 'zdenka-' + CACHE_VER + '-s2';
 
-// Assets to pre-cache on install
-var PRECACHE = [
-    '/',
-    '/ponuky/',
-    '/kontakt/',
-    '/odhad/',
-];
+// Nič HTML sa neprecachuje (kvôli časovým tokenom vo formulároch)
+var PRECACHE = [];
 
 // Cache-first patterns (static assets)
 var CACHE_FIRST = [
@@ -60,42 +56,38 @@ self.addEventListener('activate', function (e) {
 });
 
 // ── FETCH ──
+// DÔLEŽITÉ: HTML stránky NIKDY neukladáme do cache ani neservírujeme z cache.
+// Obsahujú časovo obmedzené bezpečnostné tokeny (nonce, anti-spam) – zastaraná
+// verzia zo cache by rozbila odosielanie formulárov. Cachujeme len statické súbory.
 self.addEventListener('fetch', function (e) {
     var url = e.request.url;
+    var req = e.request;
 
-    // Skip non-GET, admin, ajax
-    if (e.request.method !== 'GET') return;
+    // Len GET; POST a pod. idú vždy priamo na sieť
+    if (req.method !== 'GET') return;
+
+    // Navigácie (HTML stránky) → vždy zo siete, bez cache
+    var accept = req.headers.get('accept') || '';
+    if (req.mode === 'navigate' || accept.indexOf('text/html') !== -1) return;
+
+    // Admin / AJAX / REST → priamo na sieť
     for (var i = 0; i < NETWORK_FIRST.length; i++) {
         if (NETWORK_FIRST[i].test(url)) return;
     }
 
-    // Cache-first for static assets
+    // Cache-first len pre statické assety (css/js/fonty/obrázky)
     var isCacheFirst = CACHE_FIRST.some(function (r) { return r.test(url); });
-    if (isCacheFirst) {
-        e.respondWith(
-            caches.match(e.request).then(function (cached) {
-                if (cached) return cached;
-                return fetch(e.request).then(function (res) {
-                    var clone = res.clone();
-                    caches.open(CACHE_NAME).then(function (c) { c.put(e.request, clone); });
-                    return res;
-                });
-            })
-        );
-        return;
-    }
+    if (!isCacheFirst) return; // ostatné nechaj na prehliadač (bez SW zásahu)
 
-    // Network-first for HTML pages
     e.respondWith(
-        fetch(e.request).then(function (res) {
-            if (res.ok) {
-                var clone = res.clone();
-                caches.open(CACHE_NAME).then(function (c) { c.put(e.request, clone); });
-            }
-            return res;
-        }).catch(function () {
-            return caches.match(e.request).then(function (cached) {
-                return cached || caches.match('/');
+        caches.match(req).then(function (cached) {
+            if (cached) return cached;
+            return fetch(req).then(function (res) {
+                if (res && res.ok) {
+                    var clone = res.clone();
+                    caches.open(CACHE_NAME).then(function (c) { c.put(req, clone); });
+                }
+                return res;
             });
         })
     );

@@ -6,8 +6,12 @@ if (have_posts()) { while (have_posts()) { the_post(); } }
 $sent  = false;
 $error = '';
 
-if (isset($_POST['odhad_send']) && wp_verify_nonce($_POST['odhad_nonce'] ?? '', 'odhad_form')
-    && (!function_exists('zc_check_spam') || zc_check_spam() === true)) {
+$odhad_spam = (isset($_POST['odhad_send']) && function_exists('zc_check_spam')) ? (zc_check_spam() !== true) : false;
+if (isset($_POST['odhad_send']) && !wp_verify_nonce($_POST['odhad_nonce'] ?? '', 'odhad_form')) {
+    $error = 'Platnosť formulára vypršala. Obnovte stránku (Ctrl+F5) a skúste znova.';
+} elseif (isset($_POST['odhad_send']) && $odhad_spam) {
+    $error = 'Správu sa nepodarilo overiť. Obnovte stránku (Ctrl+F5) a skúste znova.';
+} elseif (isset($_POST['odhad_send'])) {
     $typ_ponuky = sanitize_text_field($_POST['typ_ponuky'] ?? 'Predaj');
     $typ_nehnut = sanitize_text_field($_POST['typ_nehnut'] ?? 'Byt');
     $meno       = sanitize_text_field($_POST['meno']       ?? '');
@@ -48,6 +52,17 @@ if (isset($_POST['odhad_send']) && wp_verify_nonce($_POST['odhad_nonce'] ?? '', 
 
     $sent = wp_mail($to, $subject, $html, $headers);
     if (!$sent) $error = 'Správu sa nepodarilo odoslať. Kontaktujte nás priamo.';
+
+    // Zápis do databázy klientov (CRM)
+    if ($sent && function_exists('pp_capture_lead')) {
+        pp_capture_lead([
+            'name'    => trim("{$meno} {$priezvisko}"),
+            'email'   => $email_od,
+            'phone'   => $telefon,
+            'message' => "Odhad ({$typ_ponuky} / {$typ_nehnut}): {$popis}",
+            'source'  => 'odhad',
+        ]);
+    }
 
     // Newsletter opt-in
     if ($sent && !empty($_POST['newsletter']) && $email_od && function_exists('zcn_subscribe_forced')) {

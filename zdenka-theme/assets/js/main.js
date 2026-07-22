@@ -218,6 +218,16 @@ if (form) {
             }
             if (res.success) form.reset();
             btn.textContent = orig; btn.disabled = false;
+        })
+        .catch(function () {
+            if (fmsg) {
+                fmsg.style.cssText = 'display:block;padding:14px 18px;border-radius:10px;margin-bottom:14px;font-size:14px;border:1px solid;';
+                fmsg.style.background = 'rgba(239,68,68,.1)';
+                fmsg.style.color = '#dc2626';
+                fmsg.style.borderColor = 'rgba(239,68,68,.25)';
+                fmsg.textContent = 'Správu sa nepodarilo odoslať. Obnovte stránku (Ctrl+F5) a skúste znova.';
+            }
+            btn.textContent = orig; btn.disabled = false;
         });
     });
 }
