@@ -52,7 +52,7 @@ function panel_login_page() {
 }
 
 function panel_dashboard() {
-    $action = sanitize_text_field($_GET['action'] ?? 'list');
+    $action = sanitize_text_field($_GET['action'] ?? 'home');
     $pid    = intval($_GET['id'] ?? 0);
     $user   = wp_get_current_user();
     $logout = wp_logout_url(home_url());
@@ -248,19 +248,98 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
     .am-items{grid-template-columns:1fr}
     .gp{grid-template-columns:repeat(2,1fr) !important}
 }
+
+/* ═══ HEADER v2: hamburger + dropdown ═══════════════════════ */
+.ph-burger{display:none;flex-direction:column;justify-content:center;gap:5px;width:42px;height:42px;border:1.5px solid var(--border);border-radius:10px;background:var(--white);cursor:pointer;padding:0}
+.ph-burger span{display:block;width:20px;height:2px;background:var(--dark);margin:0 auto;border-radius:2px;transition:transform .25s,opacity .2s}
+.ph-burger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.ph-burger.open span:nth-child(2){opacity:0}
+.ph-burger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.ph-badge{background:var(--accent);color:var(--dark);border-radius:50px;padding:1px 7px;font-size:10px;font-weight:800}
+.ph-nav-foot{display:none}
+
+/* ═══ ÚVOD dashboard ════════════════════════════════════════ */
+.pnl-hero{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.pnl-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:22px}
+.pnl-stat{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:18px 16px;display:flex;flex-direction:column;gap:2px;text-decoration:none;transition:all .2s;box-shadow:var(--sh)}
+a.pnl-stat:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(60,50,30,.1);border-color:transparent}
+.pnl-stat-ic{margin-bottom:6px}
+.pnl-stat-n{font-family:var(--serif);font-size:30px;font-weight:800;line-height:1}
+.pnl-stat-l{font-size:12px;color:var(--muted)}
+.pnl-quick{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:30px}
+.pnl-quick-btn{display:inline-flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--border);border-radius:50px;padding:9px 16px;font-size:13px;font-weight:600;color:var(--text);text-decoration:none;transition:all .2s}
+.pnl-quick-btn:hover{background:var(--section);border-color:var(--accent);color:var(--dark)}
+.pnl-quick-btn .pp-ic{color:var(--accent-txt)}
+.pnl-home-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:24px;align-items:start}
+.pnl-sec-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+.pnl-sec-hd h2{font-family:var(--serif);font-size:18px;color:var(--dark)}
+.pnl-sec-link{font-size:12px;color:var(--accent-txt);text-decoration:none;font-weight:600}
+.pnl-sec-link:hover{text-decoration:underline}
+.pnl-card-flat{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+.pnl-recent{display:flex;flex-direction:column;gap:10px}
+.pnl-recent-item{display:flex;align-items:center;gap:14px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;text-decoration:none;transition:all .2s;box-shadow:var(--sh)}
+.pnl-recent-item:hover{transform:translateX(3px);border-color:var(--accent)}
+.pnl-recent-img{width:58px;height:46px;border-radius:8px;overflow:hidden;background:var(--section);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.pnl-recent-img img{width:100%;height:100%;object-fit:cover}
+.pnl-recent-body{flex:1;min-width:0}
+.pnl-recent-title{font-family:var(--serif);font-size:14px;font-weight:700;color:var(--dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pnl-recent-price{font-size:13px;font-weight:700;color:var(--accent-txt);margin-top:2px}
+.pnl-recent-badge{flex-shrink:0;color:#fff;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:4px 9px;border-radius:50px}
+.pnl-activity{padding:6px 0;max-height:420px;overflow-y:auto}
+.pnl-act-row{display:flex;gap:10px;padding:9px 16px;align-items:flex-start}
+.pnl-act-row+.pnl-act-row{border-top:1px solid var(--border)}
+.pnl-act-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);margin-top:6px;flex-shrink:0}
+.pnl-act-txt{font-size:13px;color:var(--dark);font-weight:600;line-height:1.4}
+.pnl-act-time{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ═══ Karty ponúk – tlačidlá sa už neorezávajú ═══════════════ */
+.prop-item-actions{display:flex;gap:6px;flex-wrap:wrap}
+.prop-item-actions .btn{flex:0 0 auto}
+
+@media(max-width:960px){
+    .pnl-home-grid{grid-template-columns:1fr}
+}
+/* Hamburger namiesto natlačeného menu už od stredných obrazoviek */
+@media(max-width:900px){
+    .ph{position:relative}
+    .ph-burger{display:flex}
+    .ph-right{display:none}
+    .ph-nav{
+        position:absolute;top:calc(100% + 1px);left:0;right:0;
+        flex-direction:column;gap:2px;background:var(--white);
+        border-bottom:1px solid var(--border);box-shadow:0 12px 30px rgba(60,50,30,.14);
+        padding:10px;display:none;z-index:200;max-height:80vh;overflow-y:auto
+    }
+    .ph-nav.open{display:flex}
+    .ph-nav a{padding:13px 16px;font-size:14px;border-radius:10px;width:100%;text-transform:none;letter-spacing:0;justify-content:flex-start;display:flex;align-items:center;gap:8px}
+    .ph-nav a.active{background:var(--accent);color:var(--dark)}
+    .ph-nav-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding:12px 8px 4px;border-top:1px solid var(--border)}
+    .ph-nav-user{font-size:13px;color:var(--muted);font-weight:600}
+    .ph-nav-foot .ph-logout{padding:9px 16px}
+}
+@media(max-width:768px){
+    /* karty ponúk – celá karta vertikálne, fotka hore (viac miesta pre tlačidlá) */
+    .prop-list{grid-template-columns:1fr !important}
+    .prop-item{display:block !important}
+    .prop-item-img{width:100% !important;height:170px !important;border-radius:var(--r) var(--r) 0 0 !important}
+    .prop-item-actions .btn{flex:1 1 auto;justify-content:center;text-align:center}
+    .pnl-stat-n{font-size:26px}
+}
 </style>
 
 <div>
 <div class="ph">
-    <div class="ph-logo">
-        <div class="ph-logo-icon"></div>
-        <div>Realitný Panel<small>Správa nehnuteľností</small></div>
-    </div>
-    <nav class="ph-nav">
+    <a href="?action=home" class="ph-logo" style="text-decoration:none">
+        <div class="ph-logo-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="color:var(--accent-txt)"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+        <div style="color:var(--dark)">Realitný Panel<small>Správa nehnuteľností</small></div>
+    </a>
+    <button class="ph-burger" id="phBurger" aria-label="Menu" aria-expanded="false" onclick="phToggleNav()"><span></span><span></span><span></span></button>
+    <nav class="ph-nav" id="phNav">
+        <?php $lead_cnt = (int) wp_count_posts('pp_lead')->publish; ?>
+        <a href="?action=home" class="<?php echo $action==='home'?'active':'' ?>">Úvod</a>
         <a href="?action=list" class="<?php echo $action==='list'?'active':'' ?>">Ponuky</a>
         <a href="?action=add" class="<?php echo ($action==='add'||$action==='edit')?'active':'' ?>">+ Nová ponuka</a>
-        <?php $lead_cnt = (int) wp_count_posts('pp_lead')->publish; ?>
-        <a href="?action=leads" class="<?php echo $action==='leads'?'active':'' ?>">Dopyty<?php if ($lead_cnt): ?> <span style="background:var(--accent);color:var(--dark);border-radius:50px;padding:1px 7px;font-size:10px"><?php echo $lead_cnt ?></span><?php endif; ?></a>
+        <a href="?action=leads" class="<?php echo $action==='leads'?'active':'' ?>">Dopyty<?php if ($lead_cnt): ?> <span class="ph-badge"><?php echo $lead_cnt ?></span><?php endif; ?></a>
         <?php if (function_exists('zcn_table')): ?>
         <a href="?action=newsletter" class="<?php echo $action==='newsletter'?'active':'' ?>">Newsletter</a>
         <?php endif; ?>
@@ -268,6 +347,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
         <a href="?action=reviews" class="<?php echo $action==='reviews'?'active':'' ?>">Recenzie</a>
         <?php endif; ?>
         <a href="?action=import" class="<?php echo $action==='import'?'active':'' ?>">Import/Export</a>
+        <div class="ph-nav-foot">
+            <span class="ph-nav-user"><?php echo esc_html($user->display_name) ?></span>
+            <button class="ph-logout" onclick="window.location='<?php echo esc_url($logout) ?>'">Odhlásiť</button>
+        </div>
     </nav>
     <div class="ph-right">
         <span class="ph-user"><?php echo esc_html($user->display_name) ?></span>
@@ -286,17 +369,30 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
     <?php endif; ?>
     <?php
     if ($action==='add'||$action==='edit') panel_form($pid);
+    elseif ($action==='list') panel_list();
     elseif ($action==='leads') echo panel_leads();
     elseif ($action==='import') echo panel_import_export();
     elseif ($action==='newsletter' && function_exists('zcn_table')) panel_newsletter();
     elseif ($action==='reviews'    && function_exists('zcr_table'))  panel_reviews();
-    else panel_list();
+    else panel_home();
     ?>
 </div>
 <div class="toast" id="toast"></div>
 </div>
 
 <script>
+function phToggleNav(){
+    var n=document.getElementById('phNav'), b=document.getElementById('phBurger');
+    var open=n.classList.toggle('open');
+    b.classList.toggle('open',open);
+    b.setAttribute('aria-expanded',open?'true':'false');
+}
+// Zavri mobilné menu po kliku mimo neho
+document.addEventListener('click',function(e){
+    var n=document.getElementById('phNav'), b=document.getElementById('phBurger');
+    if(!n||!b||!n.classList.contains('open'))return;
+    if(!n.contains(e.target)&&!b.contains(e.target)){n.classList.remove('open');b.classList.remove('open');b.setAttribute('aria-expanded','false');}
+});
 function showTab(name,btn){
     document.querySelectorAll('.pf-panel').forEach(function(p){p.classList.remove('active')});
     document.querySelectorAll('.pf-tab').forEach(function(t){t.classList.remove('active')});
@@ -377,31 +473,128 @@ function pnlBlast(id, btn){
     return ob_get_clean();
 }
 
-function panel_list() {
+// ── ÚVOD (dashboard) ───────────────────────────────────────────────────────
+function panel_home() {
+    $user  = wp_get_current_user();
     $props = get_posts(['post_type'=>'property','posts_per_page'=>-1,'orderby'=>'date','order'=>'DESC']);
     $typ_labels = ['predaj'=>'Na predaj','prenajom'=>'Na prenájom','pozemok'=>'Pozemok'];
 
-    // Štatistiky pre dashboard
     $st_active=0;$st_rez=0;$st_sold=0;$views_total=0;
     foreach($props as $pp){
         $sp=get_post_meta($pp->ID,'_property_stav_predaja',true);
         if($sp==='predane')$st_sold++;elseif($sp==='rezervovane')$st_rez++;else $st_active++;
         $views_total+=(int)get_post_meta($pp->ID,'_property_views',true);
     }
+    $lead_cnt = (int) wp_count_posts('pp_lead')->publish;
+    $lead_new = 0;
+    if ($lead_cnt) {
+        $lq = new WP_Query(['post_type'=>'pp_lead','posts_per_page'=>-1,'fields'=>'ids','meta_query'=>[['key'=>'_lead_status','value'=>'novy']]]);
+        $lead_new = $lq->found_posts; wp_reset_postdata();
+    }
+    $hour = (int) current_time('G');
+    $greet = $hour < 10 ? 'Dobré ráno' : ($hour < 18 ? 'Dobrý deň' : 'Dobrý večer');
+    $first = trim(preg_replace('/^(Mgr\.|Ing\.|Bc\.|JUDr\.|MUDr\.|PhDr\.)\s*/u','',$user->display_name));
+    $first = explode(' ', $first)[0];
     ?>
-    <div class="pnl-dash" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px">
-        <?php foreach([
-            ['Aktívne ponuky',$st_active,'#16a34a'],
-            ['Rezervované',$st_rez,'#C6902B'],
-            ['Predané',$st_sold,'#7A7068'],
-            ['Zobrazenia spolu',$views_total,'#7C5E33'],
-        ] as [$l,$n,$c]): ?>
-        <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center">
-            <div style="font-family:var(--serif);font-size:26px;font-weight:800;color:<?php echo $c ?>"><?php echo number_format($n,0,',',' ') ?></div>
-            <div style="font-size:11px;color:var(--muted);margin-top:3px"><?php echo $l ?></div>
+    <div class="pnl-hero">
+        <div>
+            <h1 style="font-family:var(--serif);font-size:clamp(22px,3vw,30px);color:var(--dark)"><?php echo esc_html($greet) ?>, <?php echo esc_html($first ?: $user->display_name) ?></h1>
+            <p style="font-size:13px;color:var(--muted);margin-top:4px"><?php echo esc_html(date_i18n('l j. F Y', current_time('timestamp'))) ?></p>
         </div>
+        <a href="?action=add" class="btn btn-primary" style="padding:12px 24px">+ Nová ponuka</a>
+    </div>
+
+    <div class="pnl-stats">
+        <?php
+        $cards = [
+            ['Aktívne ponuky', $st_active, '#16a34a', 'home', '?action=list'],
+            ['Rezervované',     $st_rez,    '#C6902B', 'clock', '?action=list'],
+            ['Predané',         $st_sold,   '#7A7068', 'star', '?action=list'],
+            ['Zobrazenia spolu',$views_total,'#7C5E33','chart', ''],
+        ];
+        if (function_exists('panel_leads')) $cards[] = ['Nové dopyty', $lead_new, '#4338CA', 'megaphone', '?action=leads'];
+        foreach ($cards as [$l,$n,$c,$ic,$href]):
+            $tag = $href ? 'a' : 'div'; ?>
+        <<?php echo $tag ?> class="pnl-stat"<?php echo $href?' href="'.esc_attr($href).'"':'' ?>>
+            <span class="pnl-stat-ic" style="color:<?php echo $c ?>"><?php echo pp_svg($ic,20) ?></span>
+            <span class="pnl-stat-n" style="color:<?php echo $c ?>"><?php echo number_format($n,0,',',' ') ?></span>
+            <span class="pnl-stat-l"><?php echo esc_html($l) ?></span>
+        </<?php echo $tag ?>>
         <?php endforeach; ?>
     </div>
+
+    <!-- Rýchle akcie -->
+    <div class="pnl-quick">
+        <a href="?action=add" class="pnl-quick-btn"><?php echo pp_svg('home',18) ?> Pridať ponuku</a>
+        <a href="?action=list" class="pnl-quick-btn"><?php echo pp_svg('building',18) ?> Všetky ponuky</a>
+        <a href="?action=leads" class="pnl-quick-btn"><?php echo pp_svg('megaphone',18) ?> Dopyty<?php if($lead_new):?> (<?php echo $lead_new ?>)<?php endif; ?></a>
+        <?php if (function_exists('zcn_table')): ?><a href="?action=newsletter" class="pnl-quick-btn"><?php echo pp_svg('email',18) ?> Newsletter</a><?php endif; ?>
+        <a href="?action=import" class="pnl-quick-btn"><?php echo pp_svg('chart',18) ?> Import/Export</a>
+        <a href="<?php echo home_url('/') ?>" target="_blank" class="pnl-quick-btn"><?php echo pp_svg('pin',18) ?> Otvoriť web</a>
+    </div>
+
+    <div class="pnl-home-grid">
+        <!-- Najnovšie ponuky -->
+        <div>
+            <div class="pnl-sec-hd">
+                <h2>Najnovšie ponuky</h2>
+                <a href="?action=list" class="pnl-sec-link">Všetky →</a>
+            </div>
+            <?php if (empty($props)): ?>
+            <div class="pnl-card-flat" style="text-align:center;padding:36px 20px;color:var(--muted)">
+                <div style="color:var(--accent);margin-bottom:10px"><?php echo pp_svg('home',36) ?></div>
+                Zatiaľ žiadne ponuky.<br><a href="?action=add" class="btn btn-primary" style="margin-top:14px">Pridať prvú</a>
+            </div>
+            <?php else: ?>
+            <div class="pnl-recent">
+                <?php foreach (array_slice($props,0,5) as $p):
+                    $cid = get_post_meta($p->ID,'_property_cover_id',true);
+                    $cena= get_post_meta($p->ID,'_property_cena',true);
+                    $typ = get_post_meta($p->ID,'_property_typ',true);
+                    $sp  = get_post_meta($p->ID,'_property_stav_predaja',true);
+                    if ($cena && strpos($cena,'€')===false) $cena.=' €';
+                    $badge = $sp==='predane'?['Predané','#7A7068']:($sp==='rezervovane'?['Rezervované','#C6902B']:[$typ_labels[$typ]??'Aktívna','#16a34a']);
+                ?>
+                <a href="?action=edit&id=<?php echo $p->ID ?>" class="pnl-recent-item">
+                    <div class="pnl-recent-img"><?php echo $cid ? wp_get_attachment_image($cid,'thumbnail') : '<span class="pnl-recent-noimg">'.pp_svg('home',22).'</span>' ?></div>
+                    <div class="pnl-recent-body">
+                        <div class="pnl-recent-title"><?php echo esc_html($p->post_title) ?></div>
+                        <div class="pnl-recent-price"><?php echo esc_html($cena ?: 'Cena dohodou') ?></div>
+                    </div>
+                    <span class="pnl-recent-badge" style="background:<?php echo $badge[1] ?>"><?php echo esc_html($badge[0]) ?></span>
+                </a>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- Aktivita -->
+        <div>
+            <div class="pnl-sec-hd"><h2>Posledná aktivita</h2></div>
+            <?php $log = get_option('pp_activity_log', []); if (is_array($log) && $log): ?>
+            <div class="pnl-card-flat pnl-activity">
+                <?php foreach (array_slice($log,0,10) as $l): ?>
+                <div class="pnl-act-row">
+                    <span class="pnl-act-dot"></span>
+                    <div style="min-width:0">
+                        <div class="pnl-act-txt"><?php echo esc_html($l['action']) ?><?php if(!empty($l['title'])):?> <span style="color:var(--muted)">— <?php echo esc_html($l['title']) ?></span><?php endif; ?></div>
+                        <div class="pnl-act-time"><?php echo esc_html(date('d.m.Y H:i', strtotime($l['time']))) ?> · <?php echo esc_html($l['user']) ?></div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php else: ?>
+            <div class="pnl-card-flat" style="padding:28px 20px;text-align:center;color:var(--muted);font-size:13px">Zatiaľ žiadna aktivita.</div>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php
+}
+
+function panel_list() {
+    $props = get_posts(['post_type'=>'property','posts_per_page'=>-1,'orderby'=>'date','order'=>'DESC']);
+    $typ_labels = ['predaj'=>'Na predaj','prenajom'=>'Na prenájom','pozemok'=>'Pozemok'];
+    ?>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:14px">
         <div>
             <h1 style="font-family:var(--serif);font-size:22px;color:var(--dark)">Nehnuteľnosti</h1>
@@ -411,7 +604,7 @@ function panel_list() {
     </div>
     <?php if (empty($props)): ?>
     <div class="empty">
-        <div class="empty-icon"></div>
+        <div class="empty-icon" style="color:var(--accent)"><?php echo pp_svg('home',48) ?></div>
         <p style="font-size:16px;font-weight:600;margin-bottom:8px;color:var(--dark)">Žiadne ponuky</p>
         <p style="font-size:14px;margin-bottom:24px">Pridajte prvú nehnuteľnosť</p>
         <a href="?action=add" class="btn btn-primary" style="padding:12px 28px">Pridať ponuku</a>
@@ -469,23 +662,6 @@ function panel_list() {
         </div>
     <?php endforeach; ?>
     </div>
-
-    <!-- Log aktivity -->
-    <?php $log = get_option('pp_activity_log', []); if (is_array($log) && $log): ?>
-    <div style="margin-top:36px">
-        <h2 style="font-family:var(--serif);font-size:18px;color:var(--dark);margin-bottom:12px">Posledná aktivita</h2>
-        <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
-            <?php foreach (array_slice($log, 0, 12) as $l): ?>
-            <div style="display:flex;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px">
-                <span style="color:var(--muted);font-size:12px;white-space:nowrap;min-width:110px"><?php echo esc_html(date('d.m.Y H:i', strtotime($l['time']))) ?></span>
-                <span style="color:var(--dark);font-weight:600"><?php echo esc_html($l['action']) ?></span>
-                <?php if (!empty($l['title'])): ?><span style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">— <?php echo esc_html($l['title']) ?></span><?php endif; ?>
-                <span style="margin-left:auto;color:var(--accent-txt);font-size:12px"><?php echo esc_html($l['user']) ?></span>
-            </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
-    <?php endif; ?>
 
     <script>
     var pnlBulkNonce='<?php echo wp_create_nonce('pp_bulk') ?>';
