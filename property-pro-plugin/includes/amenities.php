@@ -132,13 +132,35 @@ function get_property_amenities() {
         ],
     ];
 
-    // Vlastné položky pridané v Realitnom paneli
+    // Vlastné položky pridané v Realitnom paneli – zaradia sa do zvolenej kategórie
+    // alebo do kategórie „Iné". Podporuje aj starý formát (key => "Label").
     $custom = get_option('pp_custom_amenities', []);
     if (is_array($custom) && $custom) {
-        $amenities['custom'] = ['label' => 'Vlastné vybavenie', 'icon' => 'star', 'items' => $custom];
+        foreach ($custom as $key => $val) {
+            if (is_array($val)) { $label = $val['label'] ?? ''; $cat = $val['cat'] ?? ''; }
+            else                { $label = (string) $val; $cat = ''; }
+            if ($label === '') continue;
+            if ($cat && isset($amenities[$cat])) {
+                $amenities[$cat]['items'][$key] = $label;   // do existujúcej kategórie
+            } else {
+                if (!isset($amenities['ine'])) $amenities['ine'] = ['label' => 'Iné', 'icon' => 'star', 'items' => []];
+                $amenities['ine']['items'][$key] = $label;  // do kategórie „Iné"
+            }
+        }
     }
 
     return $amenities;
+}
+
+// Základné kategórie (bez vlastných) – pre výber pri pridávaní vlastnej položky
+function pp_amenity_category_options() {
+    $out = [];
+    foreach (get_property_amenities() as $key => $cat) {
+        if ($key === 'ine') continue;
+        // vynechať kategórie, ktoré vznikli len z vlastných položiek? – necháme základné
+        $out[$key] = $cat['label'];
+    }
+    return $out;
 }
 
 // ── Vlastné vybavenie – pridanie / mazanie (Realitný panel) ─────────────
@@ -151,11 +173,15 @@ add_action('wp_ajax_pp_amenity_add', function() {
     }
     $key = 'custom_' . sanitize_title($label);
     if (!$key || $key === 'custom_') wp_send_json_error(['message' => 'Neplatný názov.']);
+    // Zvolená kategória (musí byť z existujúcich, inak → „Iné")
+    $cat = sanitize_key($_POST['cat'] ?? '');
+    $valid = array_keys(pp_amenity_category_options());
+    if (!in_array($cat, $valid, true)) $cat = '';
     $custom = get_option('pp_custom_amenities', []);
     if (isset($custom[$key])) wp_send_json_error(['message' => 'Táto položka už existuje.']);
-    $custom[$key] = $label;
+    $custom[$key] = ['label' => $label, 'cat' => $cat];
     update_option('pp_custom_amenities', $custom);
-    wp_send_json_success(['key' => $key, 'label' => $label]);
+    wp_send_json_success(['key' => $key, 'label' => $label, 'cat' => $cat]);
 });
 
 add_action('wp_ajax_pp_amenity_del', function() {

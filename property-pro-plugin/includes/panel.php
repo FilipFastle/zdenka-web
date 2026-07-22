@@ -69,7 +69,7 @@ function panel_dashboard() {
     --r:12px; --r-sm:8px; --sh:0 2px 12px rgba(60,50,30,.08);
 }
 html{overflow-x:clip}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:clip;max-width:100vw}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:clip;max-width:100%}
 /* Nič nesmie vytlačiť stránku do šírky */
 .pc,.ph,.pf,.pnl-hero,.pnl-stats,.pnl-quick,.pnl-home-grid{max-width:100%;box-sizing:border-box}
 .pc img,.pc table,.pc pre,.pc iframe{max-width:100%}
@@ -91,20 +91,22 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .ph-logout:hover{background:#e8e0d5;border-color:#ccc}
 
 /* CONTENT */
-.pc{max-width:1200px;margin:0 auto;padding:32px 24px;min-height:calc(100vh - 66px)}
+.pc{max-width:1440px;margin:0 auto;padding:32px 40px;min-height:calc(100vh - 66px)}
 .pc--home{display:flex;flex-direction:column}
+/* Grid deti musia môcť zmenšiť pod obsah – inak dlhé texty vytláčajú stránku */
+.pnl-home-grid>*,.pnl-stats>*,.prop-list>*{min-width:0}
 
 /* PROPERTY LIST */
-.prop-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
-.prop-item{background:var(--white);border-radius:var(--r);overflow:hidden;border:1px solid var(--border);box-shadow:var(--sh);transition:all .2s}
+.prop-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:20px}
+.prop-item{background:var(--white);border-radius:var(--r);overflow:hidden;border:1px solid var(--border);box-shadow:var(--sh);transition:all .2s;display:flex;flex-direction:column}
 .prop-item:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(60,50,30,.1);border-color:transparent}
-.prop-item-img{height:170px;background:var(--section);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:28px;overflow:hidden;position:relative}
+.prop-item-img{height:190px;background:var(--section);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:28px;overflow:hidden;position:relative;flex-shrink:0}
 .prop-item-img img{width:100%;height:100%;object-fit:cover}
 .prop-item-badge{position:absolute;bottom:10px;left:10px;background:var(--accent);color:var(--dark);font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:50px}
-.prop-item-body{padding:14px 16px}
-.prop-item-title{font-family:var(--serif);font-size:14px;font-weight:700;color:var(--dark);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.prop-item-price{font-size:16px;font-weight:800;color:var(--accent-txt);font-family:var(--serif);margin-bottom:10px}
-.prop-item-actions{display:flex;gap:6px}
+.prop-item-body{padding:15px 16px;display:flex;flex-direction:column;flex:1}
+.prop-item-title{font-family:var(--serif);font-size:15px;font-weight:700;color:var(--dark);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prop-item-price{font-size:17px;font-weight:800;color:var(--accent-txt);font-family:var(--serif);margin-bottom:10px}
+.prop-item-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 14px;border-radius:var(--r-sm);font-size:11px;font-weight:700;border:none;cursor:pointer;text-decoration:none;font-family:var(--sans);letter-spacing:.3px;transition:all .2s}
 .btn-primary{background:var(--accent);color:var(--dark)}
 .btn-primary:hover{background:var(--accent-dk)}
@@ -120,7 +122,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .empty-icon{font-size:52px;margin-bottom:16px;opacity:.4}
 
 /* FORM */
-.pf{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh);overflow:hidden;max-width:900px}
+.pf{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh);overflow:hidden;max-width:1120px;margin:0 auto}
 .pf-head{padding:22px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--section)}
 .pf-head h2{font-family:var(--serif);font-size:18px;color:var(--dark)}
 .pf-tabs{display:flex;background:var(--white);border-bottom:1px solid var(--border)}
@@ -551,6 +553,7 @@ function panel_home() {
         <a href="?action=list" class="pnl-quick-btn"><?php echo pp_svg('building',18) ?> Všetky ponuky</a>
         <a href="?action=leads" class="pnl-quick-btn"><?php echo pp_svg('megaphone',18) ?> Dopyty<?php if($lead_new):?> (<?php echo $lead_new ?>)<?php endif; ?></a>
         <?php if (function_exists('zcn_table')): ?><a href="?action=newsletter" class="pnl-quick-btn"><?php echo pp_svg('email',18) ?> Newsletter</a><?php endif; ?>
+        <?php if (function_exists('zcr_table')): ?><a href="?action=reviews&new_review=1" class="pnl-quick-btn"><?php echo pp_svg('star',18) ?> Pridať recenziu</a><?php endif; ?>
         <a href="?action=import" class="pnl-quick-btn"><?php echo pp_svg('chart',18) ?> Import/Export</a>
         <a href="<?php echo home_url('/') ?>" target="_blank" class="pnl-quick-btn"><?php echo pp_svg('pin',18) ?> Otvoriť web</a>
     </div>
@@ -832,16 +835,16 @@ function panel_form($pid) {
             </div>
         </div>
 
-        <div id="pftab_amenities" class="pf-panel">
+        <div id="pftab_amenities" class="pf-panel" data-amtab>
             <?php foreach ($all_am as $catkey => $cat): ?>
-            <div class="am-cat">
+            <div class="am-cat" data-amcat="<?php echo esc_attr($catkey) ?>">
                 <div class="am-cat-hd"><?php echo pp_svg($cat['icon'] ?? '', 15) ?><?php echo esc_html($cat['label']) ?></div>
-                <div class="am-items" <?php echo $catkey==='custom' ? 'id="ppCustomItems"' : '' ?>>
-                    <?php foreach ($cat['items'] as $k => $lbl): ?>
-                    <label class="am-item" <?php echo $catkey==='custom' ? 'data-key="'.esc_attr($k).'"' : '' ?>>
+                <div class="am-items" id="amItems-<?php echo esc_attr($catkey) ?>">
+                    <?php foreach ($cat['items'] as $k => $lbl): $is_custom = strpos($k,'custom_')===0; ?>
+                    <label class="am-item" <?php echo $is_custom ? 'data-key="'.esc_attr($k).'"' : '' ?>>
                         <input type="checkbox" name="amenities[]" value="<?php echo esc_attr($k) ?>" <?php checked(in_array($k,$ams_sel)) ?>>
                         <?php echo esc_html($lbl) ?>
-                        <?php if ($catkey==='custom'): ?>
+                        <?php if ($is_custom): ?>
                         <button type="button" class="pp-am-del" onclick="ppDelAm('<?php echo esc_js($k) ?>',this)" title="Zmazať položku"
                             style="margin-left:auto;width:20px;height:20px;border:none;border-radius:50%;background:#fef2f2;color:#dc2626;font-size:11px;cursor:pointer;line-height:1;flex-shrink:0">✕</button>
                         <?php endif; ?>
@@ -852,34 +855,51 @@ function panel_form($pid) {
             <?php endforeach; ?>
 
             <!-- Správa vlastného vybavenia -->
-            <div class="am-cat" style="background:var(--section);border-radius:var(--r-sm);padding:16px">
+            <div class="am-cat" id="ppAddAmBox" style="background:var(--section);border-radius:var(--r-sm);padding:16px">
                 <div class="am-cat-hd" style="background:var(--white)">Pridať vlastné vybavenie</div>
-                <?php if (empty($all_am['custom'])): ?>
-                <div class="am-items" id="ppCustomItems" style="margin-bottom:10px"></div>
-                <?php endif; ?>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
                     <input type="text" id="ppNewAm" placeholder="Napr. Vínna pivnica" maxlength="60"
-                        style="flex:1;min-width:200px;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:13px"
+                        style="flex:2;min-width:180px;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:13px"
                         onkeydown="if(event.key==='Enter'){event.preventDefault();ppAddAm();}">
+                    <select id="ppNewAmCat" title="Do ktorej kategórie" style="flex:1;min-width:150px;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:13px;background:#fff">
+                        <?php foreach (pp_amenity_category_options() as $ck => $cl): ?>
+                        <option value="<?php echo esc_attr($ck) ?>"><?php echo esc_html($cl) ?></option>
+                        <?php endforeach; ?>
+                        <option value="">Iné</option>
+                    </select>
                     <button type="button" class="btn btn-primary" onclick="ppAddAm()">+ Pridať</button>
                 </div>
-                <p style="font-size:11px;color:var(--muted);margin:8px 0 0">Vlastné položky sa uložia natrvalo a budú dostupné pri všetkých nehnuteľnostiach. Mazať ich môžeš krížikom pri položke.</p>
+                <p style="font-size:11px;color:var(--muted);margin:8px 0 0">Vyber kategóriu, do ktorej sa položka zaradí (alebo „Iné"). Po pridaní sa objaví v danej kategórii vyššie. Uloží sa natrvalo pre všetky nehnuteľnosti.</p>
             </div>
 
             <script>
             var ppAmNonce = '<?php echo wp_create_nonce('pp_amenity') ?>';
             function ppAddAm(){
                 var inp = document.getElementById('ppNewAm');
+                var sel = document.getElementById('ppNewAmCat');
                 var label = inp.value.trim();
                 if (!label) { toast('Zadaj názov položky', false); return; }
+                var cat = sel ? sel.value : '';
                 var data = new FormData();
                 data.append('action','pp_amenity_add');
                 data.append('nonce', ppAmNonce);
                 data.append('label', label);
+                data.append('cat', cat);
                 fetch('<?php echo admin_url('admin-ajax.php') ?>',{method:'POST',body:data})
                 .then(function(r){return r.json()}).then(function(res){
                     if (!res.success) { toast((res.data&&res.data.message)||'Chyba', false); return; }
-                    var wrap = document.getElementById('ppCustomItems');
+                    var target = res.data.cat || 'ine';
+                    var wrap = document.getElementById('amItems-' + target);
+                    if (!wrap) {
+                        // kategória „Iné" ešte neexistuje – vytvor ju
+                        var block = document.createElement('div');
+                        block.className = 'am-cat'; block.setAttribute('data-amcat','ine');
+                        block.innerHTML = '<div class="am-cat-hd">Iné</div><div class="am-items" id="amItems-ine"></div>';
+                        var tab = document.querySelector('[data-amtab]');
+                        var addBox = document.getElementById('ppAddAmBox');
+                        tab.insertBefore(block, addBox);
+                        wrap = block.querySelector('#amItems-ine');
+                    }
                     var l = document.createElement('label');
                     l.className = 'am-item';
                     l.dataset.key = res.data.key;
@@ -888,7 +908,7 @@ function panel_form($pid) {
                         '<button type="button" class="pp-am-del" onclick="ppDelAm(\'' + res.data.key + '\',this)" title="Zmazať položku" style="margin-left:auto;width:20px;height:20px;border:none;border-radius:50%;background:#fef2f2;color:#dc2626;font-size:11px;cursor:pointer;line-height:1;flex-shrink:0">✕</button>';
                     wrap.appendChild(l);
                     inp.value = '';
-                    toast('Položka pridaná (označená pre túto ponuku)', true);
+                    toast('Položka pridaná do kategórie „' + (sel && sel.selectedIndex>-1 ? sel.options[sel.selectedIndex].text : 'Iné') + '"', true);
                 });
             }
             function ppDelAm(key, btn){
@@ -1315,105 +1335,123 @@ function panel_reviews() {
     <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#15803d;padding:12px 16px;border-radius:8px;margin-bottom:20px;font-size:14px"><?php echo esc_html($msg) ?></div>
     <?php endif; ?>
 
-    <div class="pnl-rev-grid" style="display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start">
-
+    <div>
         <!-- LIST -->
-        <div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                <h3 style="font-family:var(--serif);font-size:18px;margin:0">Recenzie (<?php echo count($rows) ?>)</h3>
-                <a href="?action=reviews&edit_review=0" class="btn btn-primary" style="font-size:11px;padding:8px 16px">+ Nová recenzia</a>
-            </div>
-            <?php if ($rows): ?>
-            <div style="display:flex;flex-direction:column;gap:10px">
-            <?php foreach ($rows as $r): ?>
-            <div class="pnl-rev-item" style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px">
-                <div style="flex:1;min-width:0">
-                    <div style="font-family:var(--serif);font-weight:700;font-size:15px;color:var(--dark);margin-bottom:2px"><?php echo esc_html($r->author_name) ?></div>
-                    <?php if ($r->author_role): ?><div style="font-size:11px;color:var(--accent-txt);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px"><?php echo esc_html($r->author_role) ?></div><?php endif; ?>
-                    <div style="font-size:13px;color:var(--muted);line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical"><?php echo esc_html($r->body) ?></div>
-                </div>
-                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">
-                    <div style="color:#B8A47A;letter-spacing:2px;font-size:14px"><?php echo str_repeat('★',intval($r->rating)) ?></div>
-                    <?php echo $r->published
-                        ? '<span style="background:#f0fdf4;color:#15803d;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:700">Aktívna</span>'
-                        : '<span style="background:#f1f5f9;color:#94a3b8;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:700">Skrytá</span>'
-                    ?>
-                    <div style="display:flex;gap:6px">
-                        <a href="?action=reviews&edit_review=<?php echo $r->id ?>" style="padding:5px 10px;background:var(--section);border:1px solid var(--border);border-radius:5px;font-size:11px;font-weight:700;color:var(--dark);text-decoration:none">Upraviť</a>
-                        <form method="post" style="display:inline" onsubmit="return confirm('Vymazať?')">
-                            <?php wp_nonce_field('zcr_panel','_zcrnonce') ?>
-                            <input type="hidden" name="zcr_id" value="<?php echo $r->id ?>">
-                            <button name="zcr_panel_delete" value="1" style="padding:5px 8px;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:5px;font-size:11px;cursor:pointer;font-family:var(--sans)"></button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            <?php endforeach; ?>
-            </div>
-            <?php else: ?>
-            <div style="padding:48px;text-align:center;color:var(--muted);background:var(--white);border-radius:var(--r);border:1px solid var(--border)">
-                Zatiaľ žiadne recenzie. Pridajte prvú!
-            </div>
-            <?php endif; ?>
-            <p style="font-size:11px;color:var(--muted);margin-top:12px">Shortcode: <code style="background:var(--section);padding:2px 6px;border-radius:4px">[zc_reviews]</code> alebo <code style="background:var(--section);padding:2px 6px;border-radius:4px">[zc_reviews limit="3" cols="3"]</code></p>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+            <h3 style="font-family:var(--serif);font-size:22px;margin:0">Recenzie (<?php echo count($rows) ?>)</h3>
+            <button type="button" class="btn btn-primary" style="padding:10px 18px" onclick="zcrOpen()"><?php echo pp_svg('plus',15) ?> Nová recenzia</button>
         </div>
-
-        <!-- FORM -->
-        <div style="position:sticky;top:calc(var(--hh,72px) + 20px)">
-            <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:24px">
-                <h3 style="font-family:var(--serif);font-size:17px;margin:0 0 18px"><?php echo $edit_r ? 'Upraviť recenziu' : 'Nová recenzia' ?></h3>
-                <form method="post">
-                    <?php wp_nonce_field('zcr_panel','_zcrnonce') ?>
-                    <input type="hidden" name="zcr_id" value="<?php echo $edit_r ? $edit_r->id : 0 ?>">
-                    <div style="margin-bottom:12px">
-                        <label style="display:block;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Meno klienta *</label>
-                        <input type="text" name="author_name" required value="<?php echo esc_attr($edit_r->author_name??'') ?>"
-                            style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px" placeholder="Jana Nováková">
-                    </div>
-                    <div style="margin-bottom:12px">
-                        <label style="display:block;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Rola / Typ</label>
-                        <input type="text" name="author_role" value="<?php echo esc_attr($edit_r->author_role??'') ?>"
-                            style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px" placeholder="Predaj bytu">
-                    </div>
-                    <div style="margin-bottom:12px">
-                        <label style="display:block;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Text recenzie *</label>
-                        <textarea name="body" rows="4" required style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px;resize:vertical" placeholder="Zdenka nám pomohla..."><?php echo esc_textarea($edit_r->body??'') ?></textarea>
-                    </div>
-                    <div style="margin-bottom:12px">
-                        <label style="display:block;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Hodnotenie</label>
-                        <?php $rating = intval($edit_r->rating ?? 5); ?>
-                        <div style="display:flex;gap:4px" id="pnlStars">
-                        <?php for($i=1;$i<=5;$i++): ?>
-                        <span onclick="pnlSetRating(<?php echo $i ?>)"
-                            style="font-size:26px;cursor:pointer;color:<?php echo $i<=$rating?'#B8A47A':'#E0D8CE' ?>;transition:color .15s"
-                            data-v="<?php echo $i ?>">★</span>
-                        <?php endfor; ?>
-                        </div>
-                        <input type="hidden" name="rating" id="pnlRating" value="<?php echo $rating ?>">
-                    </div>
-                    <div style="margin-bottom:12px">
-                        <label style="display:block;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Foto klienta (URL)</label>
-                        <input type="text" name="avatar_url" value="<?php echo esc_attr($edit_r->avatar_url??'') ?>"
-                            style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:13px" placeholder="https://...">
-                    </div>
-                    <div style="margin-bottom:16px">
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-                            <input type="checkbox" name="published" value="1" <?php echo ($edit_r->published??1)?'checked':'' ?> style="accent-color:#B8A47A;width:16px;height:16px">
-                            <span style="font-size:13px;color:var(--dark)">Zobrazená na webe</span>
-                        </label>
-                    </div>
-                    <button type="submit" name="zcr_panel_save" value="1" class="btn btn-primary" style="width:100%;justify-content:center">
-                        Uložiť recenziu
-                    </button>
-                    <?php if ($edit_r): ?>
-                    <a href="?action=reviews" style="display:block;text-align:center;margin-top:10px;font-size:12px;color:var(--muted)">Zrušiť úpravu</a>
-                    <?php endif; ?>
-                </form>
+        <?php if ($rows): ?>
+        <div style="display:flex;flex-direction:column;gap:10px">
+        <?php foreach ($rows as $r): ?>
+        <div class="pnl-rev-item" style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px">
+            <div style="flex:1;min-width:0">
+                <div style="font-family:var(--serif);font-weight:700;font-size:15px;color:var(--dark);margin-bottom:2px"><?php echo esc_html($r->author_name) ?></div>
+                <?php if ($r->author_role): ?><div style="font-size:11px;color:var(--accent-txt);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px"><?php echo esc_html($r->author_role) ?></div><?php endif; ?>
+                <div style="font-size:13px;color:var(--muted);line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical"><?php echo esc_html($r->body) ?></div>
             </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">
+                <div style="color:#B8A47A;letter-spacing:2px;font-size:14px"><?php echo str_repeat('★',intval($r->rating)) ?></div>
+                <?php echo $r->published
+                    ? '<span style="background:#f0fdf4;color:#15803d;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:700">Aktívna</span>'
+                    : '<span style="background:#f1f5f9;color:#94a3b8;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:700">Skrytá</span>'
+                ?>
+                <div style="display:flex;gap:6px">
+                    <button type="button" class="btn btn-ghost" style="padding:6px 12px" onclick="zcrEdit(<?php echo $r->id ?>)"><?php echo pp_svg('pen',13) ?> Upraviť</button>
+                    <form method="post" style="display:inline" onsubmit="return confirm('Naozaj vymazať túto recenziu?')">
+                        <?php wp_nonce_field('zcr_panel','_zcrnonce') ?>
+                        <input type="hidden" name="zcr_id" value="<?php echo $r->id ?>">
+                        <button name="zcr_panel_delete" value="1" class="btn btn-danger" style="padding:6px 10px" title="Zmazať recenziu"><?php echo pp_svg('trash',13) ?></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <?php endforeach; ?>
+        </div>
+        <?php else: ?>
+        <div style="padding:48px;text-align:center;color:var(--muted);background:var(--white);border-radius:var(--r);border:1px solid var(--border)">
+            Zatiaľ žiadne recenzie. Pridajte prvú!
+        </div>
+        <?php endif; ?>
+        <p style="font-size:11px;color:var(--muted);margin-top:12px">Shortcode: <code style="background:var(--section);padding:2px 6px;border-radius:4px">[zc_reviews]</code> alebo <code style="background:var(--section);padding:2px 6px;border-radius:4px">[zc_reviews limit="3" cols="3"]</code></p>
+    </div>
+
+    <!-- MODAL: pridať / upraviť recenziu -->
+    <div id="zcrModal" style="display:none;position:fixed;inset:0;background:rgba(20,16,12,.55);z-index:9999;overflow:auto;padding:20px">
+        <div style="max-width:480px;margin:40px auto;background:#fff;border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.3);overflow:hidden">
+            <div style="padding:16px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+                <h3 style="font-family:var(--serif);font-size:18px;margin:0" id="zcrModalTitle">Nová recenzia</h3>
+                <button type="button" onclick="zcrClose()" style="background:var(--section);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--muted);font-size:15px">✕</button>
+            </div>
+            <form method="post" style="padding:22px">
+                <?php wp_nonce_field('zcr_panel','_zcrnonce') ?>
+                <input type="hidden" name="zcr_id" id="zcrId" value="0">
+                <div style="margin-bottom:12px">
+                    <label style="display:block;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Meno klienta *</label>
+                    <input type="text" name="author_name" id="zcrName" required style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px" placeholder="Jana Nováková">
+                </div>
+                <div style="margin-bottom:12px">
+                    <label style="display:block;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Rola / Typ</label>
+                    <input type="text" name="author_role" id="zcrRole" style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px" placeholder="Predaj bytu">
+                </div>
+                <div style="margin-bottom:12px">
+                    <label style="display:block;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Text recenzie *</label>
+                    <textarea name="body" id="zcrBody" rows="4" required style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px;resize:vertical" placeholder="Zdenka nám pomohla..."></textarea>
+                </div>
+                <div style="margin-bottom:12px">
+                    <label style="display:block;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Hodnotenie</label>
+                    <div style="display:flex;gap:4px" id="pnlStars">
+                    <?php for($i=1;$i<=5;$i++): ?>
+                    <span onclick="pnlSetRating(<?php echo $i ?>)" style="font-size:28px;cursor:pointer;color:#E0D8CE;transition:color .15s" data-v="<?php echo $i ?>">★</span>
+                    <?php endfor; ?>
+                    </div>
+                    <input type="hidden" name="rating" id="pnlRating" value="5">
+                </div>
+                <div style="margin-bottom:12px">
+                    <label style="display:block;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Foto klienta (URL) — nepovinné</label>
+                    <input type="text" name="avatar_url" id="zcrAvatar" style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:13px" placeholder="https://...">
+                </div>
+                <div style="margin-bottom:18px">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                        <input type="checkbox" name="published" id="zcrPub" value="1" checked style="accent-color:#B8A47A;width:16px;height:16px">
+                        <span style="font-size:13px;color:var(--dark)">Zobrazená na webe</span>
+                    </label>
+                </div>
+                <button type="submit" name="zcr_panel_save" value="1" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px">Uložiť recenziu</button>
+            </form>
         </div>
     </div>
 
     <script>
+    var zcrData = <?php echo wp_json_encode(array_map(function($r){return ['id'=>(int)$r->id,'author_name'=>$r->author_name,'author_role'=>$r->author_role,'body'=>$r->body,'rating'=>(int)$r->rating,'avatar_url'=>$r->avatar_url,'published'=>(int)$r->published];}, $rows)); ?>;
+    function zcrFillStars(v){document.querySelectorAll('#pnlStars span').forEach(function(s){s.style.color=parseInt(s.dataset.v)<=v?'#B8A47A':'#E0D8CE';});}
+    function zcrOpen(){
+        document.getElementById('zcrModalTitle').textContent='Nová recenzia';
+        document.getElementById('zcrId').value='0';
+        document.getElementById('zcrName').value='';
+        document.getElementById('zcrRole').value='';
+        document.getElementById('zcrBody').value='';
+        document.getElementById('zcrAvatar').value='';
+        document.getElementById('zcrPub').checked=true;
+        document.getElementById('pnlRating').value='5';zcrFillStars(5);
+        document.getElementById('zcrModal').style.display='block';
+    }
+    function zcrEdit(id){
+        var r=zcrData.filter(function(x){return x.id===id;})[0]; if(!r)return;
+        document.getElementById('zcrModalTitle').textContent='Upraviť recenziu';
+        document.getElementById('zcrId').value=r.id;
+        document.getElementById('zcrName').value=r.author_name||'';
+        document.getElementById('zcrRole').value=r.author_role||'';
+        document.getElementById('zcrBody').value=r.body||'';
+        document.getElementById('zcrAvatar').value=r.avatar_url||'';
+        document.getElementById('zcrPub').checked=!!r.published;
+        document.getElementById('pnlRating').value=r.rating;zcrFillStars(r.rating);
+        document.getElementById('zcrModal').style.display='block';
+    }
+    function zcrClose(){document.getElementById('zcrModal').style.display='none';}
+    document.getElementById('zcrModal').addEventListener('click',function(e){if(e.target===this)zcrClose();});
+    <?php if ($edit_r): ?>zcrEdit(<?php echo (int)$edit_r->id ?>);<?php endif; ?>
+    <?php if (isset($_GET['new_review'])): ?>zcrOpen();<?php endif; ?>
     function pnlSetRating(v) {
         document.getElementById('pnlRating').value = v;
         document.querySelectorAll('#pnlStars span').forEach(function(s) {
