@@ -802,6 +802,8 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 /* ── Prístupnosť: skip-link ── */
 .zc-skip{position:absolute;left:-9999px;top:0;z-index:100000;background:var(--dark);color:#fff;padding:12px 20px;border-radius:0 0 8px 0;font-size:13px;font-weight:700}
 .zc-skip:focus{left:0;color:#fff}
-/* Jemné objavenie obrázkov ponúk po načítaní */
-.zc-prop-img img,.pp-gal-item img{opacity:0;transition:opacity .5s ease}
-.zc-prop-img img.zc-loaded,.pp-gal-item img.zc-loaded,.zc-prop-img img[data-noanim]{opacity:1}
+/* Objavenie obrázkov ponúk pri scrolle – jemné priblíženie + fade (všade, aj na PC) */
+.zc-prop-img img,.pp-gal-item img{opacity:0;transform:scale(1.07);transition:opacity .7s ease,transform 1.1s cubic-bezier(.16,.84,.28,1)}
+.zc-prop-img img.zc-loaded,.pp-gal-item img.zc-loaded,.zc-prop-img img[data-noanim]{opacity:1;transform:scale(1)}
+/* hover priblíženie ostáva funkčné aj po odhalení */
+.zc-prop-card:hover .zc-prop-img img.zc-loaded{transform:scale(1.06)}

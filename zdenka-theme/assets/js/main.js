@@ -336,12 +336,71 @@ if ('IntersectionObserver' in window) {
 })();
 
 
-/* ══ Jemné objavenie obrázkov ponúk po načítaní ══════════════════════ */
+/* ══ Objavenie obrázkov ponúk pri scrolle (fade + jemné priblíženie) ══════ */
 (function(){
-    document.querySelectorAll('.zc-prop-img img,.pp-gal-item img').forEach(function(img){
-        if(img.complete){ img.classList.add('zc-loaded'); }
-        else { img.addEventListener('load',function(){img.classList.add('zc-loaded')}); img.addEventListener('error',function(){img.classList.add('zc-loaded')}); }
-    });
+    var reveal = function(img){ img.classList.add('zc-loaded'); };
+    var io = ('IntersectionObserver' in window) ? new IntersectionObserver(function(entries){
+        entries.forEach(function(e){ if(e.isIntersecting){ reveal(e.target); io.unobserve(e.target); } });
+    }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' }) : null;
+
+    window.zcRevealImages = function(root){
+        (root || document).querySelectorAll('.zc-prop-img img:not(.zc-loaded),.pp-gal-item img:not(.zc-loaded)').forEach(function(img){
+            if(img.dataset.zcObserved) return;
+            img.dataset.zcObserved = '1';
+            if(io){
+                io.observe(img);
+                // poistka: keby observer nezabral do 2 s, aj tak odhaliť
+                setTimeout(function(){ reveal(img); }, 2000);
+            } else {
+                reveal(img);
+            }
+        });
+    };
+    window.zcRevealImages();
+})();
+
+/* ══ Jemný plynulejší scroll na PC (myš) – nie na dotykových zariadeniach ══ */
+(function(){
+    var coarse = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
+    if (coarse || 'ontouchstart' in window) return;          // mobil/tablet → natívny scroll
+    var EASE = 0.16, target = window.scrollY, running = false;
+
+    function maxScroll(){ return Math.max(0, document.documentElement.scrollHeight - window.innerHeight); }
+    function clamp(v){ return Math.max(0, Math.min(v, maxScroll())); }
+
+    // Ak je kurzor nad vnútorným posúvateľným prvkom (modal, tabuľka…), nechaj natívny scroll
+    function innerScrollable(node, dir){
+        while (node && node.nodeType === 1 && node !== document.body) {
+            var s = getComputedStyle(node), oy = s.overflowY;
+            if ((oy === 'auto' || oy === 'scroll') && node.scrollHeight > node.clientHeight + 2) {
+                if (dir > 0 && node.scrollTop + node.clientHeight < node.scrollHeight - 1) return true;
+                if (dir < 0 && node.scrollTop > 1) return true;
+            }
+            node = node.parentNode;
+        }
+        return false;
+    }
+
+    function step(){
+        var cur = window.scrollY, diff = target - cur;
+        if (Math.abs(diff) < 0.5) { window.scrollTo(0, target); running = false; return; }
+        window.scrollTo(0, cur + diff * EASE);
+        requestAnimationFrame(step);
+    }
+
+    window.addEventListener('wheel', function(e){
+        if (e.ctrlKey || e.defaultPrevented) return;                 // zoom / iné
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;         // horizontálne
+        if (e.deltaMode === 0 && Math.abs(e.deltaY) < 50) return;    // touchpad → natívne (už je hladké)
+        if (innerScrollable(e.target, e.deltaY)) return;             // vnútorný scroll (modal, tabuľka)
+        e.preventDefault();
+        if (!running) target = window.scrollY;
+        target = clamp(target + e.deltaY * (e.deltaMode === 1 ? 22 : 1));
+        if (!running) { running = true; requestAnimationFrame(step); }
+    }, { passive: false });
+
+    // Resync pri inom spôsobe posúvania (klávesnica, scrollbar)
+    window.addEventListener('scroll', function(){ if (!running) target = window.scrollY; }, { passive: true });
 })();
 
 /* ══ VIDEO — štartovacia hlasitosť (aby po spustení nehúkalo) ══════════ */

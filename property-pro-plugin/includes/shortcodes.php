@@ -212,6 +212,8 @@ add_shortcode('property_grid', function($atts) {
                         c.style.animationDelay = (i * 45) + 'ms';
                     });
                     if (window.zcMarkFavs) window.zcMarkFavs();
+                    if (window.zcRevealImages) window.zcRevealImages(grid);
+                    if (window.zcCmpSync) window.zcCmpSync();
                 }
                 grid.classList.remove('zc-grid-loading');
             })
