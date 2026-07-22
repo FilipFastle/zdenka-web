@@ -1023,6 +1023,17 @@ function panel_newsletter() {
     if (isset($_POST['pnl_ndel']) && wp_verify_nonce($_POST['_pnlnonce'],'pnl_nl')) {
         $wpdb->delete($table, ['id'=>intval($_POST['pnl_ndel'])]);
     }
+    // Uloženie šablóny „Nová ponuka"
+    $blast_saved = false;
+    if (isset($_POST['pnl_blast_save']) && wp_verify_nonce($_POST['_pnlnonce'] ?? '', 'pnl_nl')) {
+        update_option('zcn_blast_tpl', [
+            'subject_prefix' => sanitize_text_field($_POST['blast_subject'] ?? 'Nová ponuka: '),
+            'intro'          => sanitize_textarea_field($_POST['blast_intro'] ?? ''),
+            'outro'          => sanitize_textarea_field($_POST['blast_outro'] ?? ''),
+            'show_contact'   => empty($_POST['blast_contact']) ? 0 : 1,
+        ]);
+        $blast_saved = true;
+    }
 
     $stats = [
         'active'  => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status='active'"),
@@ -1047,7 +1058,7 @@ function panel_newsletter() {
 
     <!-- Sub-tabs -->
     <div class="pnl-nl-subtabs" style="display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:20px">
-    <?php foreach(['send'=>'Odoslať','subscribers'=>'Odberatelia','log'=>'História'] as $st=>$sl): ?>
+    <?php foreach(['send'=>'Odoslať','blast'=>'Šablóna novej ponuky','subscribers'=>'Odberatelia','log'=>'História'] as $st=>$sl): ?>
     <a href="?action=newsletter&sub=<?php echo $st ?>"
        style="padding:9px 16px;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:.4px;
               text-transform:uppercase;border-radius:8px 8px 0 0;margin-bottom:-2px;
@@ -1059,6 +1070,74 @@ function panel_newsletter() {
     </a>
     <?php endforeach; ?>
     </div>
+
+    <?php if ($subtab === 'blast'):
+        $bcfg = function_exists('zcn_blast_settings') ? zcn_blast_settings() : ['subject_prefix'=>'Nová ponuka: ','intro'=>'','outro'=>'','show_contact'=>1];
+        $sample = get_posts(['post_type'=>'property','posts_per_page'=>1,'post_status'=>'publish','fields'=>'ids']);
+        $sample_id = $sample[0] ?? 0;
+    ?>
+    <div style="max-width:720px">
+        <?php if (!empty($blast_saved)): ?>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;padding:12px 16px;border-radius:8px;margin-bottom:18px;font-size:14px">Šablóna uložená.</div>
+        <?php endif; ?>
+        <p style="color:var(--muted);font-size:14px;margin-bottom:18px;line-height:1.6">Takto vyzerá e-mail, ktorý sa odošle odberateľom po kliknutí na <strong>„Poslať odberateľom newslettera"</strong> pri ponuke. Uprav si úvodný text, záver aj kontakt. Môžeš použiť premennú <code style="background:var(--section);padding:1px 6px;border-radius:4px">{meno}</code>.</p>
+        <form method="post">
+            <?php wp_nonce_field('pnl_nl','_pnlnonce') ?>
+            <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:24px">
+                <div style="margin-bottom:16px">
+                    <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Predmet e-mailu (pred názvom ponuky)</label>
+                    <input type="text" name="blast_subject" value="<?php echo esc_attr($bcfg['subject_prefix']) ?>" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px">
+                    <div style="font-size:11px;color:var(--muted);margin-top:5px">Napr. „Nová ponuka: " → výsledok: <em>Nová ponuka: 3-izbový byt…</em></div>
+                </div>
+                <div style="margin-bottom:16px">
+                    <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Úvodný text (pred ponukou)</label>
+                    <textarea name="blast_intro" rows="4" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px;resize:vertical;line-height:1.6"><?php echo esc_textarea($bcfg['intro']) ?></textarea>
+                </div>
+                <div style="margin-bottom:16px">
+                    <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Záverečný text (za ponukou)</label>
+                    <textarea name="blast_outro" rows="3" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px;resize:vertical;line-height:1.6"><?php echo esc_textarea($bcfg['outro']) ?></textarea>
+                </div>
+                <label style="display:flex;align-items:center;gap:9px;cursor:pointer;margin-bottom:20px">
+                    <input type="checkbox" name="blast_contact" value="1" <?php checked(!empty($bcfg['show_contact'])) ?> style="accent-color:#B8A47A;width:16px;height:16px">
+                    <span style="font-size:14px;color:var(--dark)">Pridať na koniec kontakt na makléra (meno, telefón, e-mail z profilu)</span>
+                </label>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    <button type="submit" name="pnl_blast_save" value="1" class="btn btn-primary" style="padding:12px 26px">Uložiť šablónu</button>
+                    <?php if ($sample_id): ?>
+                    <button type="button" class="btn btn-ghost" onclick="pnlBlastPreview()">Ukázať náhľad</button>
+                    <?php endif; ?>
+                </div>
+                <?php if (!$sample_id): ?>
+                <p style="font-size:12px;color:var(--muted);margin-top:12px">Náhľad sa zobrazí, keď budeš mať aspoň jednu publikovanú ponuku.</p>
+                <?php endif; ?>
+            </div>
+        </form>
+    </div>
+    <!-- Preview modal -->
+    <div id="pnlBlastModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;overflow:auto;padding:20px">
+        <div style="max-width:640px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.3)">
+            <div style="padding:12px 18px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;background:#1C1A18">
+                <strong style="color:#fff;font-size:14px">Náhľad e-mailu novej ponuky</strong>
+                <button onclick="document.getElementById('pnlBlastModal').style.display='none'" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:50%;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px">✕</button>
+            </div>
+            <iframe id="pnlBlastFrame" style="width:100%;height:600px;border:none"></iframe>
+        </div>
+    </div>
+    <script>
+    function pnlBlastPreview(){
+        var d=new FormData();
+        d.append('action','zcn_send_property');
+        d.append('nonce','<?php echo wp_create_nonce('zcn_send_nonce') ?>');
+        d.append('property_id','<?php echo (int)$sample_id ?>');
+        d.append('preview','1');
+        fetch('<?php echo admin_url('admin-ajax.php') ?>',{method:'POST',body:d,credentials:'same-origin'})
+        .then(function(r){return r.json();}).then(function(res){
+            if(res.success&&res.data.html){document.getElementById('pnlBlastModal').style.display='block';document.getElementById('pnlBlastFrame').srcdoc=res.data.html;}
+            else{alert((res.data&&res.data.message)||'Náhľad sa nepodaril.');}
+        });
+    }
+    </script>
+    <?php endif; ?>
 
     <?php if ($subtab === 'send'): ?>
     <!-- SEND -->
