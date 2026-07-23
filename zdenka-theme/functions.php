@@ -3,8 +3,8 @@ defined('ABSPATH') || exit;
 
 add_action('wp_enqueue_scripts', function() {
     wp_enqueue_style('zdenka-fonts','https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,700&display=swap',[],null);
-    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'3.8.0');
-    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.8.0',true);
+    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'3.9.0');
+    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.9.0',true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.svg']);
 });
 
@@ -98,6 +98,7 @@ add_action('customize_register',function($wpc) {
     foreach([
         'zc_photo_hero'     => 'Hero fotka (široká / horizontálna)',
         'zc_photo_portrait' => 'Portrét (vertikálna, hlavne tvár)',
+        'zc_photo_card'     => 'Vizitka – fotka do malých kruhov (ak prázdne, použije sa portrét)',
     ] as $id=>$lbl) {
         $wpc->add_setting($id,['default'=>'','sanitize_callback'=>'esc_url_raw']);
         $wpc->add_control(new WP_Customize_Image_Control($wpc,$id,['label'=>$lbl,'section'=>'zc_photos']));
@@ -188,6 +189,20 @@ function zc_social_links() {
         if ($url) $out[$key] = ['url' => $url, 'icon' => $svg];
     }
     return $out;
+}
+
+// Vykreslí ikony sociálnych sietí (znovupoužiteľné – navbar, kontakt, formulár)
+function zc_social_icons_html($extra_class = '') {
+    $socials = zc_social_links();
+    if (!$socials) return '';
+    $titles = ['fb'=>'Facebook','ig'=>'Instagram','linkedin'=>'LinkedIn','youtube'=>'YouTube','google'=>'Google recenzie'];
+    $h = '<div class="zc-socials ' . esc_attr($extra_class) . '">';
+    foreach ($socials as $k => $s) {
+        $lbl = $titles[$k] ?? $k;
+        $h .= '<a href="' . esc_url($s['url']) . '" target="_blank" rel="noopener" class="zc-social-ic" aria-label="' . esc_attr($lbl) . '" title="' . esc_attr($lbl) . '">' . $s['icon'] . '</a>';
+    }
+    $h .= '</div>';
+    return $h;
 }
 
 // Fotka maklérky: Customizer má prednosť, inak súbor v téme (assets/images/hero.* / portrait.*)

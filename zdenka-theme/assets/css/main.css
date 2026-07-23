@@ -42,6 +42,24 @@ p { margin-bottom: 1rem; }
 em { font-style: normal; color: var(--accent-txt); }
 h1 em, h2 em, h3 em, h4 em { font-style: normal; }
 .zc-hero-h1 em { font-style: italic; }
+
+/* ── Ikony sociálnych sietí (navbar, kontakt, formulár, pätička) ── */
+.zc-socials { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.zc-social-ic {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(184,164,122,.15); color: var(--accent-dk, #9A8660);
+    transition: background .2s, color .2s, transform .2s;
+}
+.zc-social-ic:hover { background: var(--accent, #B8A47A); color: var(--dark, #1C1A18); transform: translateY(-2px); }
+/* Navbar varianta – menšie a v riadku s menu */
+.zc-socials--nav { gap: 6px; margin-left: 10px; }
+.zc-socials--nav .zc-social-ic { width: 32px; height: 32px; }
+/* Na priehľadnom (tmavom) navbare nad hero */
+.zc-header-wrap.transparent .zc-socials--nav .zc-social-ic { background: rgba(255,255,255,.14); color: #fff; }
+.zc-header-wrap.transparent .zc-socials--nav .zc-social-ic:hover { background: #fff; color: var(--dark, #1C1A18); }
+/* Skry v navbare na užších obrazovkách (nech sa menu nepretláča) */
+@media (max-width: 1180px) { .zc-socials--nav { display: none; } }
 ul { list-style: none; }
 
 /* ══════════════════════════════════════════

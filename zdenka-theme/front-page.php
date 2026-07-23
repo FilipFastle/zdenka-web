@@ -195,6 +195,10 @@ $title=zc_agent('title','Realitná maklérka');
             <?php echo esc_html($lbl); ?>
         </a>
         <?php endforeach; ?>
+        <?php $zc_cta_soc = function_exists('zc_social_icons_html') ? zc_social_icons_html() : ''; ?>
+        <?php if ($zc_cta_soc): ?>
+        <div style="margin-top:24px"><?php echo $zc_cta_soc; ?></div>
+        <?php endif; ?>
     </div>
     <div class="zc-cta-card" style="background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:40px;box-shadow:var(--sh)">
         <h3 style="font-family:var(--serif);font-size:22px;margin-bottom:24px">Napíšte mi správu</h3>

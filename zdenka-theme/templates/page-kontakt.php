@@ -87,7 +87,7 @@ $email = zc_agent('email', get_option('admin_email'));
         <!-- Contact info -->
         <div class="ko-card">
             <div class="ko-agent">
-                <?php $zc_portrait = function_exists('zc_photo') ? zc_photo('portrait') : ''; ?>
+                <?php $zc_portrait = function_exists('zc_photo') ? (zc_photo('card') ?: zc_photo('portrait')) : ''; ?>
                 <?php if($zc_portrait): ?>
                 <img src="<?php echo esc_url($zc_portrait); ?>" alt="<?php echo esc_attr($name); ?>" class="ko-avatar" style="object-fit:cover;object-position:center 18%">
                 <?php else: ?>
@@ -117,6 +117,13 @@ $email = zc_agent('email', get_option('admin_email'));
                 </div>
             </a>
             <?php endforeach; ?>
+            <?php $zc_ko_soc = function_exists('zc_social_icons_html') ? zc_social_icons_html() : ''; ?>
+            <?php if ($zc_ko_soc): ?>
+            <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border)">
+                <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Sledujte ma</div>
+                <?php echo $zc_ko_soc; ?>
+            </div>
+            <?php endif; ?>
         </div>
 
         <!-- Form -->

@@ -41,6 +41,7 @@
             <?php endforeach; ?>
             <a href="<?php echo home_url('/kontakt/'); ?>" class="zc-nav-cta"
                <?php echo is_page('kontakt') ? 'style="opacity:.85"' : ''; ?>>Kontakt</a>
+            <?php echo zc_social_icons_html('zc-socials--nav'); ?>
         </nav>
 
         <!-- Hamburger -->
@@ -64,6 +65,10 @@
             <?php echo $label; ?>
         </a>
         <?php endforeach; ?>
+        <?php $zc_mnav_soc = function_exists('zc_social_icons_html') ? zc_social_icons_html() : ''; ?>
+        <?php if ($zc_mnav_soc): ?>
+        <div style="display:flex;justify-content:center;margin-top:18px;padding-top:18px;border-top:1px solid rgba(184,164,122,.25)"><?php echo $zc_mnav_soc; ?></div>
+        <?php endif; ?>
     </nav>
 </div>
 <span id="zc-obsah" tabindex="-1"></span>
