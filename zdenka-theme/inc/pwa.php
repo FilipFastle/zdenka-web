@@ -13,11 +13,17 @@ add_action('wp_head', function () {
 <meta name="apple-mobile-web-app-title" content="<?php echo esc_attr(zc_agent('name', 'Mgr. Zdenka Cibuľová')); ?>">
 <link rel="apple-touch-icon" href="<?php echo $theme_uri; ?>/assets/images/zc-logo.svg">
 <script>
+/* Service worker DOČASNE VYPNUTÝ — a aktívne odregistrovaný, aby sa vyčistili
+   staré verzie, ktoré mohli cachovať stránky s neplatnými tokenmi formulárov. */
 if ('serviceWorker' in navigator) {
-    // SW sa servíruje z koreňa (?zcpwa=1) aby platil scope '/' pre celý web
-    navigator.serviceWorker.register('<?php echo esc_url(home_url('/sw.js?zcpwa=1')); ?>', { scope: '/' })
-        .then(function(reg) { reg.update(); })
-        .catch(function(){});
+    navigator.serviceWorker.getRegistrations().then(function (regs) {
+        regs.forEach(function (r) { r.unregister(); });
+    }).catch(function(){});
+    if (window.caches && caches.keys) {
+        caches.keys().then(function (keys) {
+            keys.forEach(function (k) { if (k.indexOf('zdenka-') === 0) caches.delete(k); });
+        }).catch(function(){});
+    }
 }
 </script>
     <?php
