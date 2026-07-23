@@ -482,13 +482,15 @@ ul { list-style: none; }
         display: flex !important;
         flex-direction: column !important;
         gap: 28px !important;
+        align-items: stretch !important; /* deti na plnú šírku (inak ich inline align-items:center zúžil) */
     }
-    /* Kontaktný formulár na home – menší a bližšie ku krajom na mobile */
+    .zc-cta-grid > div { width: 100% !important; }
+    /* Kontaktný formulár na home – na mobile na plnú šírku a kompaktnejší */
     section[style*="padding:100px 0"] { padding: 56px 0 !important; }
-    .zc-cta-card { padding: 22px 18px !important; border-radius: 16px !important; }
-    .zc-cta-card h3 { font-size: 20px !important; margin-bottom: 16px !important; }
-    .zc-cta-card .zc-cta-input { padding: 12px 14px !important; }
-    .zc-cta-card form > div { margin-bottom: 10px !important; }
+    .zc-cta-card { padding: 24px 20px !important; border-radius: 16px !important; }
+    .zc-cta-card h3 { font-size: 21px !important; margin-bottom: 18px !important; }
+    .zc-cta-card .zc-cta-input { padding: 13px 15px !important; }
+    .zc-cta-card form > div { margin-bottom: 11px !important; }
     /* O mne, Ako pracujem 2-col grids */
     div[style*="grid-template-columns:1fr 1fr"] {
         display: flex !important;
