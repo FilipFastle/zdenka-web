@@ -32,6 +32,17 @@
                 <a href="<?php echo $href; ?>" style="width:36px;height:36px;background:rgba(184,164,122,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#6B6053;transition:all .2s" onmouseover="this.style.background='rgba(184,164,122,.35)';this.style.color='#1C1A18'" onmouseout="this.style.background='rgba(184,164,122,.15)';this.style.color='#6B6053'"><?php echo $icon; ?></a>
                 <?php endforeach; ?>
             </div>
+
+            <!-- Sociálne siete -->
+            <?php $zc_socials = function_exists('zc_social_links') ? zc_social_links() : []; ?>
+            <?php if ($zc_socials): ?>
+            <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+                <?php $zc_soc_titles = ['fb'=>'Facebook','ig'=>'Instagram','linkedin'=>'LinkedIn','youtube'=>'YouTube','google'=>'Google recenzie']; ?>
+                <?php foreach ($zc_socials as $k => $s): ?>
+                <a href="<?php echo esc_url($s['url']); ?>" target="_blank" rel="noopener" aria-label="<?php echo esc_attr($zc_soc_titles[$k] ?? $k); ?>" title="<?php echo esc_attr($zc_soc_titles[$k] ?? $k); ?>" style="width:36px;height:36px;background:rgba(184,164,122,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#6B6053;transition:all .2s" onmouseover="this.style.background='rgba(184,164,122,.35)';this.style.color='#1C1A18'" onmouseout="this.style.background='rgba(184,164,122,.15)';this.style.color='#6B6053'"><?php echo $s['icon']; ?></a>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
         </div>
 
         <!-- Menu -->

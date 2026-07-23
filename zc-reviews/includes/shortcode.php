@@ -7,13 +7,18 @@ add_shortcode('zc_reviews', function($atts) {
         "SELECT * FROM ".zcr_table()." WHERE published=1 ORDER BY sort_order ASC,id ASC LIMIT %d",
         intval($atts['limit'])
     ));
-    if (!$rows) return '';
+    // Tlačidlo na Google recenzie (ak je v Customizeri nastavený odkaz)
+    $google = function_exists('get_theme_mod') ? get_theme_mod('zc_social_google', '') : '';
+    $gicon  = '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M21.35 11.1H12v3.83h5.35c-.23 1.4-1.66 4.1-5.35 4.1a5.9 5.9 0 0 1 0-11.8c1.87 0 3.13.8 3.85 1.48l2.62-2.53C16.9 3.6 14.66 2.6 12 2.6A9.4 9.4 0 1 0 21.35 11.1z"/></svg>';
+    $gbtn   = $google ? '<div style="text-align:center;margin-top:34px"><a href="' . esc_url($google) . '" target="_blank" rel="noopener" class="zc-btn zc-btn-primary" style="display:inline-flex;align-items:center;gap:9px">' . $gicon . ' Pozrieť recenzie na Google →</a></div>' : '';
+
+    if (!$rows) return $gbtn ? '<div class="zcr-only-google">' . $gbtn . '</div>' : '';
 
     $count    = count($rows);
     $cols     = max(1, min(4, intval($atts['cols'])));
     $carousel = $atts['carousel'] === 'auto' ? ($count > 3) : ($atts['carousel'] === '1');
 
-    if ($carousel) return zcr_carousel($rows);
+    if ($carousel) return zcr_carousel($rows) . $gbtn;
 
     ob_start(); ?>
     <style>

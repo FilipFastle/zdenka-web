@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ZC Recenzie
  * Description: Správa recenzií a referencií pre zdenkacibulova.sk
- * Version: 1.0.5
+ * Version: 1.0.6
  * Author: Filip
  */
 defined('ABSPATH') || exit;

@@ -3,8 +3,8 @@ defined('ABSPATH') || exit;
 
 add_action('wp_enqueue_scripts', function() {
     wp_enqueue_style('zdenka-fonts','https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,700&display=swap',[],null);
-    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'3.7.0');
-    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.7.0',true);
+    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'3.8.0');
+    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.8.0',true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.svg']);
 });
 
@@ -120,6 +120,20 @@ add_action('customize_register',function($wpc) {
         $wpc->add_setting($id,['default'=>'','sanitize_callback'=>'esc_url_raw']);
         $wpc->add_control($id,['label'=>$lbl,'section'=>'zc_ap','type'=>'url']);
     }
+    // Sociálne siete + Google recenzie
+    $wpc->add_section('zc_social',['title'=>'Sociálne siete & Google','priority'=>33.5,
+        'description'=>'Odkazy sa zobrazia ako ikony v pätičke. Prázdne pole = ikona sa neukáže.']);
+    foreach([
+        'zc_social_fb'       => 'Facebook URL',
+        'zc_social_ig'       => 'Instagram URL',
+        'zc_social_linkedin' => 'LinkedIn URL',
+        'zc_social_youtube'  => 'YouTube URL',
+        'zc_social_google'   => 'Google firma – odkaz na recenzie (Google Maps / profil)',
+    ] as $id=>$lbl) {
+        $wpc->add_setting($id,['default'=>'','sanitize_callback'=>'esc_url_raw']);
+        $wpc->add_control($id,['label'=>$lbl,'section'=>'zc_social','type'=>'url']);
+    }
+
     // Kurz EUR→CZK pre prepínač meny na ponukách
     $wpc->add_section('zc_misc',['title'=>'Ostatné nastavenia','priority'=>34]);
     $wpc->add_setting('zc_czk_rate',['default'=>25.2,'sanitize_callback'=>function($v){return (float)str_replace(',','.',$v);}]);
@@ -158,6 +172,23 @@ add_filter('wp_mail_from_name', function ($name) {
     $n = zc_agent('name', '');
     return $n ?: $name;
 });
+
+// Sociálne siete – vráti pole [názov => [url, svg-ikona]] len pre vyplnené
+function zc_social_links() {
+    $icons = [
+        'fb'       => '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.2c-1.2 0-1.6.8-1.6 1.6V12h2.7l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg>',
+        'ig'       => '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></svg>',
+        'linkedin' => '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5A2.5 2.5 0 1 1 5 8.5a2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.76-2.05C20.5 8.65 21 11 21 14.1V21h-4v-6.1c0-1.45-.03-3.3-2-3.3-2 0-2.3 1.57-2.3 3.2V21H9z"/></svg>',
+        'youtube'  => '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M23 12s0-3.2-.4-4.7a2.5 2.5 0 0 0-1.7-1.8C19.4 5 12 5 12 5s-7.4 0-8.9.5A2.5 2.5 0 0 0 1.4 7.3C1 8.8 1 12 1 12s0 3.2.4 4.7a2.5 2.5 0 0 0 1.7 1.8C4.6 19 12 19 12 19s7.4 0 8.9-.5a2.5 2.5 0 0 0 1.7-1.8C23 15.2 23 12 23 12zM9.8 15.3V8.7l5.7 3.3z"/></svg>',
+        'google'   => '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M21.35 11.1H12v3.83h5.35c-.23 1.4-1.66 4.1-5.35 4.1a5.9 5.9 0 0 1 0-11.8c1.87 0 3.13.8 3.85 1.48l2.62-2.53C16.9 3.6 14.66 2.6 12 2.6A9.4 9.4 0 1 0 21.35 11.1z"/></svg>',
+    ];
+    $out = [];
+    foreach ($icons as $key => $svg) {
+        $url = get_theme_mod('zc_social_' . $key, '');
+        if ($url) $out[$key] = ['url' => $url, 'icon' => $svg];
+    }
+    return $out;
+}
 
 // Fotka maklérky: Customizer má prednosť, inak súbor v téme (assets/images/hero.* / portrait.*)
 function zc_photo($which, $fallback = '') {

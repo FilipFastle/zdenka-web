@@ -81,15 +81,6 @@ $title=zc_agent('title','Realitná maklérka');
             <a href="<?php echo home_url('/ponuky/'); ?>" class="zc-btn zc-btn-primary">Pozrieť ponuky</a>
             <a href="<?php echo home_url('/kontakt/'); ?>" class="zc-btn" style="background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.3)">Bezplatná konzultácia</a>
         </div>
-        <div class="zc-hero-name-card">
-            <?php $zc_portrait = function_exists('zc_photo') ? zc_photo('portrait') : ''; ?>
-            <?php if($zc_portrait): ?>
-            <img src="<?php echo esc_url($zc_portrait); ?>" alt="<?php echo esc_attr($name); ?>" style="width:44px;height:44px;border-radius:50%;border:2px solid var(--accent,#B8A47A);object-fit:cover;object-position:center 18%;flex-shrink:0">
-            <?php else: ?>
-            <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid var(--accent,#B8A47A);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;font-family:var(--serif);flex-shrink:0"><?php echo esc_html(function_exists('zc_initials') ? zc_initials($name) : ''); ?></div>
-            <?php endif; ?>
-            <div><div class="zc-hero-name-card-name"><?php echo esc_html($name); ?></div><div class="zc-hero-name-card-role"><?php echo esc_html($title); ?></div></div>
-        </div>
     </div>
     <div class="zc-hero-scroll">
         <span>Scrolluj</span>
