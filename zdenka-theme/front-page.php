@@ -205,7 +205,7 @@ $title=zc_agent('title','Realitná maklérka');
         </a>
         <?php endforeach; ?>
     </div>
-    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:40px;box-shadow:var(--sh)">
+    <div class="zc-cta-card" style="background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:40px;box-shadow:var(--sh)">
         <h3 style="font-family:var(--serif);font-size:22px;margin-bottom:24px">Napíšte mi správu</h3>
         <form id="zcContactForm">
             <?php foreach([['name','text','Vaše meno *'],['email','email','E-mail *'],['phone','tel','Telefón']] as [$n,$t,$p]): ?>

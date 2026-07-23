@@ -103,7 +103,7 @@ function zcn_handle_property_blast() {
 
     $parts      = zcn_property_email_parts($pid);
     $from_name  = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : get_bloginfo('name');
-    $from_email = get_theme_mod('zc_email_from', '') ?: get_option('admin_email');
+    $from_email = function_exists('zc_mail_from') ? zc_mail_from() : (get_theme_mod('zc_email_from', '') ?: get_option('admin_email'));
     $headers    = ['Content-Type: text/html; charset=UTF-8', "From: {$from_name} <{$from_email}>"];
 
     // Náhľad – vráti hotové HTML bez odoslania

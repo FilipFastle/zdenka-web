@@ -70,7 +70,7 @@ function zcn_send_confirmation($email, $name, $token) {
     $confirm_url = add_query_arg(['zcn_action' => 'confirm', 'token' => $token], home_url('/'));
     $unsub_url   = add_query_arg(['zcn_action' => 'unsubscribe', 'token' => $token], home_url('/'));
     $site        = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : get_bloginfo('name');
-    $from_email  = get_theme_mod('zc_email_from', '') ?: get_option('admin_email');
+    $from_email  = function_exists('zc_mail_from') ? zc_mail_from() : (get_theme_mod('zc_email_from', '') ?: get_option('admin_email'));
     $greeting    = $name ? "Dobrý deň {$name}," : 'Dobrý deň,';
 
     $subject = "Potvrďte prihlásenie na odber – {$site}";
@@ -104,7 +104,7 @@ function zcn_send_confirmation($email, $name, $token) {
 function zcn_send_welcome($email, $name = '') {
     if (!is_email($email)) return;
     $site       = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : get_bloginfo('name');
-    $from_email = get_theme_mod('zc_email_from', '') ?: get_option('admin_email');
+    $from_email = function_exists('zc_mail_from') ? zc_mail_from() : (get_theme_mod('zc_email_from', '') ?: get_option('admin_email'));
     $greeting   = $name ? "Dobrý deň {$name}," : 'Dobrý deň,';
     $subject    = "Vitajte v odbere noviniek — {$site}";
     $body = zcn_email_wrap($subject, "

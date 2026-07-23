@@ -42,7 +42,7 @@ if (isset($_POST['odhad_send']) && !wp_verify_nonce($_POST['odhad_nonce'] ?? '',
 
     $to      = get_theme_mod('zc_email_odhad', '') ?: get_option('admin_email');
     $bcc     = get_theme_mod('zc_email_bcc', '');
-    $from    = get_theme_mod('zc_email_from', '') ?: get_option('admin_email');
+    $from    = function_exists('zc_mail_from') ? zc_mail_from() : (get_theme_mod('zc_email_from', '') ?: get_option('admin_email'));
     $headers = [
         'Content-Type: text/html; charset=UTF-8',
         'From: ' . zc_agent('name', 'Mgr. Zdenka Cibuľová') . " <{$from}>",

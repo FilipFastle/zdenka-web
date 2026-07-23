@@ -1486,10 +1486,7 @@ function panel_reviews() {
                     </div>
                     <input type="hidden" name="rating" id="pnlRating" value="5">
                 </div>
-                <div style="margin-bottom:12px">
-                    <label style="display:block;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Foto klienta (URL) — nepovinné</label>
-                    <input type="text" name="avatar_url" id="zcrAvatar" style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:13px" placeholder="https://...">
-                </div>
+                <input type="hidden" name="avatar_url" id="zcrAvatar" value="">
                 <div style="margin-bottom:18px">
                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
                         <input type="checkbox" name="published" id="zcrPub" value="1" checked style="accent-color:#B8A47A;width:16px;height:16px">

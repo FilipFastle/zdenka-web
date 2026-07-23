@@ -3,8 +3,8 @@ defined('ABSPATH') || exit;
 
 add_action('wp_enqueue_scripts', function() {
     wp_enqueue_style('zdenka-fonts','https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,700&display=swap',[],null);
-    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'3.5.4');
-    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.5.4',true);
+    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'3.6.0');
+    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.6.0',true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.svg']);
 });
 
@@ -46,7 +46,7 @@ function zc_handle_contact() {
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
     $to   = get_theme_mod('zc_email_main', '') ?: get_option('admin_email');
     $bcc  = get_theme_mod('zc_email_bcc', '');
-    $from = get_theme_mod('zc_email_from', '') ?: get_option('admin_email');
+    $from = zc_mail_from();
     $site = zc_agent('name', 'Mgr. Zdenka Cibuľová');
     $headers = [
         "Content-Type: text/html; charset=UTF-8",
@@ -132,6 +132,31 @@ add_action('customize_register',function($wpc) {
         'input_attrs'=>['min'=>0,'max'=>100,'step'=>5],
         'description'=>'Platí pre videá v „Ako pracujem" aj na detaile ponuky.',
     ]);
+});
+
+// From adresa pre odchádzajúce e-maily — VŽDY na doméne webu (kvôli SPF/DKIM,
+// aby e-maily nekončili ako [SPAM]). Ak je v Customizeri nastavená vlastná
+// adresa na doméne, použije sa tá.
+function zc_mail_from() {
+    $set = get_theme_mod('zc_email_from', '');
+    $host = wp_parse_url(home_url(), PHP_URL_HOST);
+    $host = preg_replace('/^www\./', '', (string) $host);
+    // Vlastnú adresu použijeme len ak je na tej istej doméne (inak SPF zlyhá)
+    if ($set && is_email($set) && $host && stripos($set, '@' . $host) !== false) {
+        return $set;
+    }
+    return 'noreply@' . ($host ?: 'localhost');
+}
+
+// Globálny fallback pre všetky wp_mail() (welcome e-mail, atď.)
+add_filter('wp_mail_from', function ($from) {
+    // Predvolenú „wordpress@..." adresu nahradíme peknou on-domain adresou
+    if (!$from || strpos($from, 'wordpress@') === 0) return zc_mail_from();
+    return $from;
+});
+add_filter('wp_mail_from_name', function ($name) {
+    $n = zc_agent('name', '');
+    return $n ?: $name;
 });
 
 // Fotka maklérky: Customizer má prednosť, inak súbor v téme (assets/images/hero.* / portrait.*)

@@ -23,7 +23,7 @@ function zcn_handle_send() {
     }
 
     $from_name  = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : get_bloginfo('name');
-    $from_email = get_theme_mod('zc_email_from', '') ?: get_option('admin_email');
+    $from_email = function_exists('zc_mail_from') ? zc_mail_from() : (get_theme_mod('zc_email_from', '') ?: get_option('admin_email'));
     $headers    = [
         'Content-Type: text/html; charset=UTF-8',
         "From: {$from_name} <{$from_email}>",
@@ -96,7 +96,7 @@ add_action('zcn_do_scheduled', function($key) {
     if (empty($subscribers)) return;
 
     $from_name  = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : get_bloginfo('name');
-    $from_email = get_theme_mod('zc_email_from', '') ?: get_option('admin_email');
+    $from_email = function_exists('zc_mail_from') ? zc_mail_from() : (get_theme_mod('zc_email_from', '') ?: get_option('admin_email'));
     $headers    = ['Content-Type: text/html; charset=UTF-8', "From: {$from_name} <{$from_email}>"];
 
     $cid  = function_exists('zcn_new_campaign') ? zcn_new_campaign($item['subject'], count($subscribers)) : '';
