@@ -480,7 +480,7 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
     <div class="pp-cta">
         <div class="pp-cta-title">Mám záujem o túto nehnuteľnosť</div>
         <div class="pp-cta-sub">Zanechajte kontakt a ozveme sa vám čo najskôr</div>
-        <?php if (isset($_POST['cta_send']) && wp_verify_nonce($_POST['cta_nonce']??'','cta_form') && empty($_POST['cta_web'])):
+        <?php if (isset($_POST['cta_send']) && wp_verify_nonce($_POST['cta_nonce']??'','cta_form') && empty($_POST['cta_hpf'])):
             $cta_name  = sanitize_text_field($_POST['cta_name']  ?? '');
             $cta_phone = sanitize_text_field($_POST['cta_phone'] ?? '');
             $cta_email = sanitize_email($_POST['cta_email']      ?? '');
@@ -499,7 +499,7 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
         <?php else: ?>
         <form method="post" class="pp-cta-form">
             <?php wp_nonce_field('cta_form','cta_nonce') ?>
-            <input type="text" name="cta_web" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px" aria-hidden="true">
+            <input type="text" name="cta_hpf" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px" aria-hidden="true">
             <input name="cta_name" class="pp-cta-input" placeholder="Vaše meno *" required>
             <input name="cta_phone" class="pp-cta-input" placeholder="Telefónne číslo">
             <input type="email" name="cta_email" class="pp-cta-input" placeholder="E-mail">

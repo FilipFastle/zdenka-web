@@ -3,13 +3,15 @@ defined('ABSPATH') || exit;
 // ── Spam Protection – Honeypot + Time Check ───────────────────────────────
 
 // 1. Output honeypot fields (call inside every form)
+// POZN.: názvy polí zámerne NIE sú „website"/„phone" atď., aby ich prehliadač
+// (Chrome autofill) automaticky nevyplnil a nezablokoval reálnych ľudí.
 function zc_honeypot_fields() {
     $token = wp_create_nonce('zc_form_' . floor(time()/300)); // changes every 5 min
     ob_start(); ?>
-    <!-- Honeypot: bots fill these, humans don't see them -->
+    <!-- Honeypot: boti vyplnia, ľudia ich nevidia; autofill ich ignoruje -->
     <div style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
-        <input type="text" name="website" tabindex="-1" autocomplete="off" value="">
-        <input type="text" name="phone_confirm" tabindex="-1" autocomplete="off" value="">
+        <input type="text" name="zc_hpf_a" tabindex="-1" autocomplete="off" value="">
+        <input type="text" name="zc_hpf_b" tabindex="-1" autocomplete="off" value="">
     </div>
     <input type="hidden" name="zc_form_token" value="<?php echo esc_attr($token) ?>">
     <input type="hidden" name="zc_form_time"  value="<?php echo time() ?>">
@@ -21,8 +23,8 @@ function zc_honeypot_fields() {
 function zc_check_spam($post = null) {
     if ($post === null) $post = $_POST;
 
-    // Honeypot check – if filled = bot
-    if (!empty($post['website']) || !empty($post['phone_confirm'])) {
+    // Honeypot check – if filled = bot (len nové názvy, ktoré autofill nevypĺňa)
+    if (!empty($post['zc_hpf_a']) || !empty($post['zc_hpf_b'])) {
         return 'spam_honeypot';
     }
 

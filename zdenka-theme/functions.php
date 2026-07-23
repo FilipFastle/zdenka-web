@@ -3,8 +3,8 @@ defined('ABSPATH') || exit;
 
 add_action('wp_enqueue_scripts', function() {
     wp_enqueue_style('zdenka-fonts','https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,700&display=swap',[],null);
-    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'3.5.3');
-    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.5.3',true);
+    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'3.5.4');
+    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.5.4',true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.svg']);
 });
 
@@ -34,8 +34,8 @@ add_action('wp_ajax_zc_contact','zc_handle_contact');
 add_action('wp_ajax_nopriv_zc_contact','zc_handle_contact');
 function zc_handle_contact() {
     check_ajax_referer('zc_nonce','nonce');
-    // Honeypot – skryté polia vyplní iba bot (formulár na kontakte ich obsahuje)
-    if (!empty($_POST['website']) || !empty($_POST['phone_confirm'])) {
+    // Honeypot – skryté polia vyplní iba bot (autofill-safe názvy)
+    if (!empty($_POST['zc_hpf_a']) || !empty($_POST['zc_hpf_b'])) {
         wp_send_json_error(['message'=>'Správu sa nepodarilo odoslať.']);
     }
     $name  = sanitize_text_field($_POST['name']??'');
