@@ -33,42 +33,33 @@ $email = zc_agent('email', get_option('admin_email'));
 .ko-form-head h2 { font-family: var(--serif); font-size: 22px; margin-bottom: 4px; }
 .ko-form-head p  { font-size: 13px; color: var(--muted); margin: 0 0 8px; }
 .ko-fields { padding: 0 28px; }
-.ko-row    { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
-.ko-field  { display: flex; flex-direction: column; padding: 14px 0; border-bottom: 1px solid var(--border); }
-.ko-row .ko-field:nth-child(odd)  { padding-right: 20px; border-right: 1px solid var(--border); }
-.ko-row .ko-field:nth-child(even) { padding-left: 20px; }
-.ko-field.full { grid-column: 1/-1; padding-right: 0 !important; border-right: none !important; }
-.ko-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; font-family: var(--sans); }
-.ko-input {
-    border: none; border-bottom: 1.5px solid var(--border);
-    padding: 8px 0; background: transparent;
-    font-family: var(--sans); font-size: 15px; color: var(--text);
-    outline: none; transition: border-color .2s; width: 100%;
+/* Rovnaký boxed štýl ako formulár na domovskej stránke */
+.ko-row    { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ko-field  { display: flex; flex-direction: column; }
+.ko-field.full { grid-column: 1/-1; }
+.ko-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; font-family: var(--sans); }
+.ko-input, .ko-textarea {
+    border: 1.5px solid var(--border); border-radius: var(--r-sm);
+    padding: 13px 15px; background: var(--bg);
+    font-family: var(--sans); font-size: 16px; color: var(--text);
+    outline: none; transition: border-color .2s, box-shadow .2s; width: 100%;
 }
-.ko-input:focus { border-bottom-color: var(--accent); }
-.ko-input::placeholder { color: #ccc; }
-.ko-textarea {
-    border: none; border-bottom: 1.5px solid var(--border);
-    padding: 8px 0; background: transparent;
-    font-family: var(--sans); font-size: 15px; color: var(--text);
-    outline: none; resize: none; width: 100%; min-height: 90px;
-    transition: border-color .2s; line-height: 1.6;
-}
-.ko-textarea:focus { border-bottom-color: var(--accent); }
+.ko-textarea { resize: vertical; min-height: 110px; max-height: 320px; line-height: 1.6; }
+.ko-input:focus, .ko-textarea:focus { border-color: var(--accent); background: var(--white); box-shadow: 0 0 0 3px rgba(184,164,122,.12); }
+.ko-input::placeholder, .ko-textarea::placeholder { color: #B0A898; }
 .ko-form-footer {
     padding: 20px 28px 28px;
-    display: flex; justify-content: space-between;
-    align-items: center; flex-wrap: wrap; gap: 12px;
+    display: flex; flex-direction: column; gap: 14px;
 }
 .ko-note { font-size: 13px; color: var(--muted); }
 .ko-submit {
-    padding: 13px 28px;
+    width: 100%; padding: 15px 28px;
     background: var(--accent); color: var(--dark);
     border: none; border-radius: var(--r-sm);
-    font-family: var(--sans); font-size: 11px; font-weight: 700;
+    font-family: var(--sans); font-size: 12px; font-weight: 700;
     letter-spacing: .8px; text-transform: uppercase;
     cursor: pointer; transition: all .22s;
-    box-shadow: 0 3px 14px rgba(184,164,122,.3); white-space: nowrap;
+    box-shadow: 0 3px 14px rgba(184,164,122,.3);
 }
 .ko-submit:hover { background: var(--accent-dk); transform: translateY(-2px); }
 
@@ -168,10 +159,8 @@ $email = zc_agent('email', get_option('admin_email'));
                         <input type="checkbox" name="newsletter" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0">
                         <span>Chcem dostávať novinky a nové ponuky nehnuteľností na e-mail.</span>
                     </label>
-                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-                        <span class="ko-note">Ozvem sa najskôr do <strong>24 hodín</strong></span>
-                        <button type="submit" class="ko-submit">Odoslať správu →</button>
-                    </div>
+                    <button type="submit" class="ko-submit">Odoslať správu →</button>
+                    <span class="ko-note" style="text-align:center">Ozvem sa najskôr do <strong>24 hodín</strong></span>
                 </div>
             </form>
         </div>
