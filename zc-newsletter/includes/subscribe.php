@@ -103,10 +103,17 @@ function zcn_send_confirmation($email, $name, $token) {
 // Uvítací e-mail po potvrdení / priamom prihlásení na odber
 function zcn_send_welcome($email, $name = '') {
     if (!is_email($email)) return;
+    global $wpdb;
     $site       = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : get_bloginfo('name');
     $from_email = function_exists('zc_mail_from') ? zc_mail_from() : (get_theme_mod('zc_email_from', '') ?: get_option('admin_email'));
     $greeting   = $name ? "Dobrý deň {$name}," : 'Dobrý deň,';
     $subject    = "Vitajte v odbere noviniek — {$site}";
+
+    // Token odberateľa → odhlasovací odkaz
+    $token = $wpdb->get_var($wpdb->prepare("SELECT token FROM " . zcn_table() . " WHERE email=%s", $email));
+    $unsub = $token ? zcn_unsubscribe_url($token) : home_url('/');
+    $footer = 'Dostávate tento e-mail, pretože ste sa prihlásili na odber noviniek. · <a href="' . esc_url($unsub) . '" style="color:#9A8660">Odhlásiť sa</a>';
+
     $body = zcn_email_wrap($subject, "
         <p style='font-size:16px;color:#2C2825;margin:0 0 20px'>{$greeting}</p>
         <p style='color:#555;line-height:1.75;margin:0 0 20px'>
@@ -117,11 +124,14 @@ function zcn_send_welcome($email, $name = '') {
             Ak by ste čokoľvek potrebovali, pokojne mi napíšte alebo zavolajte.
         </p>
         <p style='color:#2C2825;margin:20px 0 0'>S pozdravom,<br><strong>{$site}</strong></p>
-    ");
-    wp_mail($email, $subject, $body, [
+    ", $footer);
+
+    $headers = [
         'Content-Type: text/html; charset=UTF-8',
         "From: {$site} <{$from_email}>",
-    ]);
+    ];
+    if ($token) $headers[] = 'List-Unsubscribe: <' . esc_url_raw($unsub) . '>';
+    wp_mail($email, $subject, $body, $headers);
 }
 
 // Forced subscription - direct active (no confirmation email, used from form opt-in)

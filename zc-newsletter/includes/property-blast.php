@@ -131,7 +131,8 @@ function zcn_handle_property_blast() {
         $subj = zcn_apply_vars($parts['subject'], $vars);
         $body = zcn_apply_vars($parts['body'], $vars);
         $html = zcn_build_newsletter_email($subj, $body, $sub->token, $sub->name);
-        wp_mail($sub->email, $subj, $html, $headers) ? $sent++ : $failed++;
+        $hdr = array_merge($headers, ['List-Unsubscribe: <' . esc_url_raw(zcn_unsubscribe_url($sub->token)) . '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click']);
+        wp_mail($sub->email, $subj, $html, $hdr) ? $sent++ : $failed++;
         usleep(150000);
     }
 

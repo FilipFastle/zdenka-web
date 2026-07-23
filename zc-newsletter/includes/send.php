@@ -66,7 +66,8 @@ function zcn_handle_send() {
         $s_body = function_exists('zcn_apply_vars') ? zcn_apply_vars($body_html, $vars) : $body_html;
         $html = zcn_build_newsletter_email($s_subj, $s_body, $sub->token, $sub->name);
         if ($cid && function_exists('zcn_apply_tracking')) $html = zcn_apply_tracking($html, $cid, $sub->email);
-        wp_mail($sub->email, $s_subj, $html, $headers) ? $sent++ : $failed++;
+        $hdr = array_merge($headers, ['List-Unsubscribe: <' . esc_url_raw(zcn_unsubscribe_url($sub->token)) . '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click']);
+        wp_mail($sub->email, $s_subj, $html, $hdr) ? $sent++ : $failed++;
         usleep(150000);
     }
     if ($cid && function_exists('zcn_campaign_set_sent')) zcn_campaign_set_sent($cid, $sent);
@@ -107,7 +108,8 @@ add_action('zcn_do_scheduled', function($key) {
         $s_body = function_exists('zcn_apply_vars') ? zcn_apply_vars($item['body'], $vars) : $item['body'];
         $html   = zcn_build_newsletter_email($s_subj, $s_body, $sub->token, $sub->name);
         if ($cid && function_exists('zcn_apply_tracking')) $html = zcn_apply_tracking($html, $cid, $sub->email);
-        wp_mail($sub->email, $s_subj, $html, $headers) ? $sent++ : $failed++;
+        $hdr = array_merge($headers, ['List-Unsubscribe: <' . esc_url_raw(zcn_unsubscribe_url($sub->token)) . '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click']);
+        wp_mail($sub->email, $s_subj, $html, $hdr) ? $sent++ : $failed++;
         usleep(150000);
     }
     if ($cid && function_exists('zcn_campaign_set_sent')) zcn_campaign_set_sent($cid, $sent);
