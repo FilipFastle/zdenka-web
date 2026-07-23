@@ -49,12 +49,24 @@ h1 em, h2 em, h3 em, h4 em { font-style: normal; }
     width: 36px; height: 36px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     background: rgba(184,164,122,.15); color: var(--accent-dk, #9A8660);
-    transition: background .2s, color .2s, transform .2s;
+    padding: 0; text-decoration: none;
+    transition: background .3s cubic-bezier(.4,0,.2,1),
+                color .3s cubic-bezier(.4,0,.2,1),
+                transform .35s cubic-bezier(.34,1.56,.64,1),
+                box-shadow .3s ease;
 }
-.zc-social-ic:hover { background: var(--accent, #B8A47A); color: var(--dark, #1C1A18); transform: translateY(-2px); }
+.zc-social-ic svg { transition: transform .35s cubic-bezier(.34,1.56,.64,1); }
+.zc-social-ic:hover {
+    background: var(--accent, #B8A47A); color: var(--dark, #1C1A18);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(184,164,122,.4);
+}
+.zc-social-ic:hover svg { transform: scale(1.12); }
+/* žiadne podčiarknutie z navbaru pod ikonami */
+.zc-social-ic::after { content: none !important; display: none !important; }
 /* Navbar varianta – menšie a v riadku s menu */
 .zc-socials--nav { gap: 6px; margin-left: 10px; }
-.zc-socials--nav .zc-social-ic { width: 32px; height: 32px; }
+.zc-socials--nav .zc-social-ic { width: 32px; height: 32px; padding-bottom: 0; }
 /* Na priehľadnom (tmavom) navbare nad hero */
 .zc-header-wrap.transparent .zc-socials--nav .zc-social-ic { background: rgba(255,255,255,.14); color: #fff; }
 .zc-header-wrap.transparent .zc-socials--nav .zc-social-ic:hover { background: #fff; color: var(--dark, #1C1A18); }
@@ -97,7 +109,7 @@ ul { list-style: none; }
 .zc-header-wrap.menu-open .zc-hamburger span { background: var(--dark) !important; }
 
 .zc-header {
-    max-width: 1320px; margin: 0 auto; padding: 0 36px;
+    max-width: 1560px; margin: 0 auto; padding: 0 44px;
     height: var(--hh); display: flex; align-items: center; justify-content: space-between;
 }
 .zc-logo {
