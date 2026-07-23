@@ -40,15 +40,15 @@ $title=zc_agent('title','Realitná maklérka');
 <?php if ($zc_hero_portrait): ?>
 /* Mobil: hero = vertikálny portrét – tvár je vycentrovaná z podstaty fotky */
 @media(max-width:768px){
-    /* fotka na mobile stmavená, aby nezanikal text */
-    .zc-hero-bg{background-image:url('<?php echo esc_url($zc_hero_portrait); ?>') !important;background-position:center 22% !important;transform-origin:center 25%;filter:brightness(.82) !important}
+    /* fotka je pripravená vo Photoshope – žiadne umelé stmavenie */
+    .zc-hero-bg{background-image:url('<?php echo esc_url($zc_hero_portrait); ?>') !important;background-position:center 22% !important;transform-origin:center 25%}
     .zc-home-hero{align-items:flex-end}
     .zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 88px}
-    /* silnejší gradient zdola hore – text dole je vždy čitateľný */
-    .zc-hero-overlay{background:linear-gradient(to top,rgba(18,15,12,.94) 0%,rgba(18,15,12,.82) 24%,rgba(18,15,12,.5) 52%,rgba(18,15,12,.24) 78%,rgba(18,15,12,.14) 100%)}
+    /* jemný gradient len na spodku pre čitateľnosť textu */
+    .zc-hero-overlay{background:linear-gradient(to top,rgba(18,15,12,.55) 0%,rgba(18,15,12,.28) 30%,rgba(18,15,12,.08) 60%,rgba(18,15,12,0) 100%)}
 }
 <?php else: ?>
-@media(max-width:768px){.zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 48px}.zc-hero-overlay{background:linear-gradient(to top,rgba(18,15,12,.92) 0%,rgba(18,15,12,.72) 40%,rgba(18,15,12,.4) 100%)}.zc-hero-bg{background-position:73% 28%;filter:brightness(.85) !important}}
+@media(max-width:768px){.zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 48px}.zc-hero-overlay{background:linear-gradient(to top,rgba(18,15,12,.6) 0%,rgba(18,15,12,.35) 40%,rgba(18,15,12,.1) 100%)}.zc-hero-bg{background-position:73% 28%}}
 <?php endif; ?>
 </style>
 
@@ -114,6 +114,9 @@ $title=zc_agent('title','Realitná maklérka');
     update();
 })();
 </script>
+
+<?php /* PDF ebook lead-magnet – zobrazí sa len keď je zapnutý v paneli → Ebook */ ?>
+<?php echo do_shortcode('[zc_ebook]'); ?>
 
 <!-- MOJE HODNOTY -->
 <section class="zc-section bg-section">

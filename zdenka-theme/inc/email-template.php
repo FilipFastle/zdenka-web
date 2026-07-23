@@ -9,6 +9,8 @@ function zc_email_template($data) {
     $subject = $data['subject'] ?? 'Správa z webu';
     $ip      = $data['ip']      ?? '';
     $extra   = $data['extra']   ?? [];
+    $body_html = $data['body_html'] ?? ''; // vlastný obsah namiesto tabuľky detailov
+    $heading   = $data['heading']   ?? 'Nová správa z webu';
     $agent   = zc_agent('name', 'Mgr. Zdenka Cibuľová');
     $site    = zc_agent('name', 'Mgr. Zdenka Cibuľová');
     $url     = home_url();
@@ -56,10 +58,14 @@ function zc_email_template($data) {
     <!-- Hlavička – značková, svetlá -->
     <tr><td style="padding:26px 30px 20px;border-bottom:1px solid #EFE9DE">
         <div style="font-family:Georgia,'Times New Roman',serif;font-size:19px;font-weight:700;color:#1C1A18;letter-spacing:.2px"><?php echo esc_html($agent); ?></div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#B8A47A;margin-top:4px">Nová správa z webu</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#B8A47A;margin-top:4px"><?php echo esc_html($heading); ?></div>
     </td></tr>
     <tr><td style="height:3px;background:#B8A47A;line-height:3px;font-size:0">&nbsp;</td></tr>
 
+    <?php if ($body_html): ?>
+    <!-- Vlastný obsah -->
+    <tr><td style="padding:26px 30px 22px;font-size:15px;color:#2C2825;line-height:1.6"><?php echo $body_html; ?></td></tr>
+    <?php else: ?>
     <!-- Detaily -->
     <tr><td style="padding:24px 30px 8px">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
@@ -73,6 +79,7 @@ function zc_email_template($data) {
             Odpovedať môžete priamo na tento e-mail<?php if ($phone): ?>, alebo zavolať na <a href="tel:<?php echo esc_attr(preg_replace('#[^0-9+]#','', $phone)); ?>" style="color:#7C5E33;font-weight:600"><?php echo esc_html($phone); ?></a><?php endif; ?>.
         </p>
     </td></tr>
+    <?php endif; ?>
 
     <!-- Pätička + LOG (IP, dátum) -->
     <tr><td style="padding:16px 30px;background:#FAF7F1;border-top:1px solid #EFE9DE">

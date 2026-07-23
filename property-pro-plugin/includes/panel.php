@@ -359,12 +359,15 @@ a.pnl-stat:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(60,50,30,
         <a href="?action=home" class="<?php echo $action==='home'?'active':'' ?>">Úvod</a>
         <a href="?action=list" class="<?php echo $action==='list'?'active':'' ?>">Ponuky</a>
         <a href="?action=add" class="<?php echo ($action==='add'||$action==='edit')?'active':'' ?>">+ Nová ponuka</a>
-        <a href="?action=leads" class="<?php echo $action==='leads'?'active':'' ?>">Dopyty<?php if ($lead_cnt): ?> <span class="ph-badge"><?php echo $lead_cnt ?></span><?php endif; ?></a>
+        <a href="?action=leads" class="<?php echo $action==='leads'?'active':'' ?>">Formuláre<?php if ($lead_cnt): ?> <span class="ph-badge"><?php echo $lead_cnt ?></span><?php endif; ?></a>
         <?php if (function_exists('zcn_table')): ?>
         <a href="?action=newsletter" class="<?php echo $action==='newsletter'?'active':'' ?>">Newsletter</a>
         <?php endif; ?>
         <?php if (function_exists('zcr_table')): ?>
         <a href="?action=reviews" class="<?php echo $action==='reviews'?'active':'' ?>">Recenzie</a>
+        <?php endif; ?>
+        <?php if (function_exists('panel_ebook') && current_user_can('manage_options')): ?>
+        <a href="?action=ebook" class="<?php echo $action==='ebook'?'active':'' ?>">Ebook</a>
         <?php endif; ?>
         <a href="?action=import" class="<?php echo $action==='import'?'active':'' ?>">Import/Export</a>
         <?php if (current_user_can('manage_options')): ?>
@@ -396,6 +399,7 @@ a.pnl-stat:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(60,50,30,
     elseif ($action==='leads') echo panel_leads();
     elseif ($action==='import') echo panel_import_export();
     elseif ($action==='settings' && current_user_can('manage_options')) echo panel_settings();
+    elseif ($action==='ebook'    && current_user_can('manage_options') && function_exists('panel_ebook')) echo panel_ebook();
     elseif ($action==='newsletter' && function_exists('zcn_table')) panel_newsletter();
     elseif ($action==='reviews'    && function_exists('zcr_table'))  panel_reviews();
     else panel_home();

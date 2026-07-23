@@ -53,6 +53,8 @@ function pp_capture_lead($a) {
     update_post_meta($lead_id, '_lead_message', sanitize_textarea_field($a['message'] ?? ''));
     update_post_meta($lead_id, '_lead_property', $pid);
     update_post_meta($lead_id, '_lead_source',  sanitize_text_field($a['source'] ?? 'web'));
+    $ip = $a['ip'] ?? ($_SERVER['REMOTE_ADDR'] ?? '');
+    update_post_meta($lead_id, '_lead_ip',      sanitize_text_field($ip));
     update_post_meta($lead_id, '_lead_status',  'novy');
 
     if (function_exists('pp_log')) pp_log('lead_new', $pid, $name ?: $email);
@@ -202,6 +204,151 @@ function panel_settings() {
     return ob_get_clean();
 }
 
+// ── Panel: PDF ebook (lead-magnet) ─────────────────────────────────────────
+function pp_ebook_defaults() {
+    if (function_exists('zc_ebook_defaults')) return zc_ebook_defaults();
+    return [
+        'enable'   => '', 'title' => 'Ako predať nehnuteľnosť za najlepšiu cenu',
+        'headline' => 'Stiahnite si PDF sprievodcu ZDARMA', 'button' => 'Stiahnuť PDF ZDARMA',
+        'question' => 'Chystáte sa v tomto roku predávať nehnuteľnosť?',
+        'subtext'  => 'Praktický sprievodca s tipmi, ako predať nehnuteľnosť rýchlo a za najlepšiu cenu.',
+        'options'  => "Áno, do 3 mesiacov\nÁno, tento rok\nZatiaľ len zvažujem\nNie, len ma to zaujíma",
+        'pdf' => '', 'cover' => '',
+    ];
+}
+function pp_ebook_get($key) {
+    if (function_exists('zc_ebook_get')) return zc_ebook_get($key);
+    $d = pp_ebook_defaults();
+    return get_option('zc_ebook_' . $key, $d[$key] ?? '');
+}
+
+function panel_ebook() {
+    if (!current_user_can('manage_options')) return '<p style="padding:40px;text-align:center;color:#e74c3c">Nemáš prístup k tejto sekcii.</p>';
+
+    $saved = false;
+    if (isset($_POST['pp_save_ebook']) && check_admin_referer('pp_ebook', 'pp_ebook_nonce')) {
+        update_option('zc_ebook_enable',   empty($_POST['eb_enable']) ? '' : '1');
+        update_option('zc_ebook_title',    sanitize_text_field($_POST['eb_title'] ?? ''));
+        update_option('zc_ebook_headline', sanitize_text_field($_POST['eb_headline'] ?? ''));
+        update_option('zc_ebook_button',   sanitize_text_field($_POST['eb_button'] ?? ''));
+        update_option('zc_ebook_question', sanitize_text_field($_POST['eb_question'] ?? ''));
+        update_option('zc_ebook_subtext',  sanitize_textarea_field($_POST['eb_subtext'] ?? ''));
+        update_option('zc_ebook_options',  sanitize_textarea_field($_POST['eb_options'] ?? ''));
+        update_option('zc_ebook_pdf',      esc_url_raw(trim($_POST['eb_pdf'] ?? '')));
+        update_option('zc_ebook_cover',    esc_url_raw(trim($_POST['eb_cover'] ?? '')));
+        $saved = true;
+    }
+
+    $on       = (bool) pp_ebook_get('enable');
+    $title    = pp_ebook_get('title');
+    $headline = pp_ebook_get('headline');
+    $button   = pp_ebook_get('button');
+    $question = pp_ebook_get('question');
+    $subtext  = pp_ebook_get('subtext');
+    $options  = pp_ebook_get('options');
+    $pdf      = pp_ebook_get('pdf');
+    $cover    = pp_ebook_get('cover');
+
+    ob_start(); ?>
+    <div style="max-width:760px">
+        <h2 style="font-family:var(--serif);font-size:22px;color:var(--dark);margin-bottom:6px">PDF ebook</h2>
+        <p style="color:var(--muted);font-size:14px;margin-bottom:22px">Lead-magnet: pás „<?php echo esc_html($button ?: 'Stiahnuť PDF ZDARMA') ?>" otvorí formulár. Návštevník dostane PDF na e-mail, zapíše sa medzi Formuláre a (voliteľne) do newslettera. Zobrazíte ho shortcodom <code style="background:var(--section);padding:2px 6px;border-radius:4px">[zc_ebook]</code> na ľubovoľnej stránke.</p>
+
+        <?php if ($saved): ?>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;padding:12px 16px;border-radius:var(--r-sm);margin-bottom:20px;font-size:14px">Ebook uložený.</div>
+        <?php endif; ?>
+
+        <form method="post">
+            <?php wp_nonce_field('pp_ebook', 'pp_ebook_nonce') ?>
+
+            <div class="pp-set-card">
+                <div class="pp-set-row">
+                    <div>
+                        <div class="pp-set-title">Zobraziť ebook</div>
+                        <div class="pp-set-sub">Zapnite, keď má byť ebook aktívny. Pás sa zobrazí len tam, kde je shortcode <code>[zc_ebook]</code>.</div>
+                    </div>
+                    <label class="pp-switch">
+                        <input type="checkbox" name="eb_enable" value="1" <?php checked($on, true) ?>>
+                        <span class="pp-switch-track"><span class="pp-switch-thumb"></span></span>
+                    </label>
+                </div>
+                <div class="pp-set-state pp-set-state--<?php echo $on?'on':'off' ?>">
+                    <span class="pp-dot"></span><?php echo $on ? 'Ebook je ZAPNUTÝ' : 'Ebook je VYPNUTÝ' ?>
+                </div>
+            </div>
+
+            <div class="pp-set-card">
+                <label class="eb-lbl">Názov ebooku <small>(v e-maile aj nadpis modalu)</small>
+                    <input type="text" name="eb_title" value="<?php echo esc_attr($title) ?>">
+                </label>
+                <label class="eb-lbl">Nadpis v páse
+                    <input type="text" name="eb_headline" value="<?php echo esc_attr($headline) ?>">
+                </label>
+                <label class="eb-lbl">Podnadpis / popis
+                    <textarea name="eb_subtext" rows="2"><?php echo esc_textarea($subtext) ?></textarea>
+                </label>
+                <label class="eb-lbl">Text tlačidla
+                    <input type="text" name="eb_button" value="<?php echo esc_attr($button) ?>">
+                </label>
+            </div>
+
+            <div class="pp-set-card">
+                <div class="pp-set-title" style="margin-bottom:10px">Otázka vo formulári</div>
+                <label class="eb-lbl">Otázka <small>(voliteľné – ukáže sa ako výber)</small>
+                    <input type="text" name="eb_question" value="<?php echo esc_attr($question) ?>">
+                </label>
+                <label class="eb-lbl">Možnosti odpovede <small>(každá na nový riadok)</small>
+                    <textarea name="eb_options" rows="4"><?php echo esc_textarea($options) ?></textarea>
+                </label>
+            </div>
+
+            <div class="pp-set-card">
+                <div class="pp-set-title" style="margin-bottom:10px">Súbory</div>
+                <label class="eb-lbl">PDF súbor
+                    <div class="eb-file">
+                        <input type="url" name="eb_pdf" id="ebPdf" value="<?php echo esc_attr($pdf) ?>" placeholder="https://…/ebook.pdf">
+                        <button type="button" class="btn btn-ghost" onclick="ebPick('ebPdf','application/pdf')">Vybrať z Médií</button>
+                    </div>
+                </label>
+                <label class="eb-lbl">Obálka ebooku (obrázok)
+                    <div class="eb-file">
+                        <input type="url" name="eb_cover" id="ebCover" value="<?php echo esc_attr($cover) ?>" placeholder="https://…/obalka.jpg">
+                        <button type="button" class="btn btn-ghost" onclick="ebPick('ebCover','image')">Vybrať z Médií</button>
+                    </div>
+                    <div id="ebCoverPrev" style="margin-top:10px"><?php if ($cover): ?><img src="<?php echo esc_url($cover) ?>" style="max-width:120px;border-radius:8px;box-shadow:var(--sh)"><?php endif; ?></div>
+                </label>
+            </div>
+
+            <div style="display:flex;gap:10px;align-items:center;margin-top:8px">
+                <button type="submit" name="pp_save_ebook" value="1" class="btn btn-primary" style="padding:12px 28px">Uložiť ebook</button>
+            </div>
+        </form>
+    </div>
+
+    <style>
+    .eb-lbl{display:block;font-size:13px;font-weight:600;color:var(--dark);margin-bottom:16px}
+    .eb-lbl small{font-weight:400;color:var(--muted)}
+    .eb-lbl input,.eb-lbl textarea{display:block;width:100%;margin-top:6px;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;font-family:var(--sans);color:var(--text);background:var(--white)}
+    .eb-lbl input:focus,.eb-lbl textarea:focus{outline:none;border-color:var(--accent)}
+    .eb-file{display:flex;gap:8px;margin-top:6px}
+    .eb-file input{margin-top:0;flex:1}
+    .eb-file .btn{white-space:nowrap;flex-shrink:0}
+    </style>
+    <script>
+    function ebPick(inputId,type){
+        var frame=wp.media({title:'Vyber súbor',button:{text:'Použiť'},multiple:false,library:type==='image'?{type:'image'}:{type:'application/pdf'}});
+        frame.on('select',function(){
+            var a=frame.state().get('selection').first().toJSON();
+            document.getElementById(inputId).value=a.url;
+            if(inputId==='ebCover'){document.getElementById('ebCoverPrev').innerHTML='<img src="'+a.url+'" style="max-width:120px;border-radius:8px">';}
+        });
+        frame.open();
+    }
+    </script>
+    <?php
+    return ob_get_clean();
+}
+
 // ── Panel: zoznam leadov ───────────────────────────────────────────────────
 function panel_leads() {
     $states = pp_lead_states();
@@ -233,7 +380,7 @@ function panel_leads() {
     ob_start(); ?>
     <div class="pnl-leads">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-            <h2 style="font-family:var(--serif);font-size:22px;color:var(--dark)">Dopyty <span style="color:var(--muted);font-size:15px">(<?php echo intval($counts['']) ?>)</span></h2>
+            <h2 style="font-family:var(--serif);font-size:22px;color:var(--dark)">Formuláre <span style="color:var(--muted);font-size:15px">(<?php echo intval($counts['']) ?>)</span></h2>
             <div class="lead-filters" style="display:flex;gap:6px;flex-wrap:wrap">
                 <a href="?action=leads" class="lead-fbtn<?php echo $filter===''?' active':'' ?>">Všetky (<?php echo intval($counts['']) ?>)</a>
                 <?php foreach ($states as $k => $v): ?>
@@ -243,7 +390,7 @@ function panel_leads() {
         </div>
 
         <?php if (!$q->have_posts()): ?>
-        <div class="empty"><div class="empty-icon"><?php echo pp_svg('email', 48) ?></div><p>Zatiaľ žiadne dopyty.</p></div>
+        <div class="empty"><div class="empty-icon"><?php echo pp_svg('email', 48) ?></div><p>Zatiaľ žiadne formuláre.</p></div>
         <?php else: ?>
         <div class="lead-list">
             <?php while ($q->have_posts()): $q->the_post();
@@ -256,7 +403,8 @@ function panel_leads() {
                 $lprop = intval(get_post_meta($lid, '_lead_property', true));
                 $lstat = get_post_meta($lid, '_lead_status', true) ?: 'novy';
                 $lsrc  = get_post_meta($lid, '_lead_source', true);
-                $src_labels = ['detail'=>'Detail ponuky','kontakt'=>'Kontaktný formulár','ponuka'=>'Ponuka','web'=>'Web'];
+                $lip   = get_post_meta($lid, '_lead_ip', true);
+                $src_labels = ['detail'=>'Detail ponuky','kontakt'=>'Kontaktný formulár','odhad'=>'Odhad nehnuteľnosti','ebook'=>'PDF ebook','ponuka'=>'Ponuka','web'=>'Web'];
             ?>
             <div class="lead-card" data-id="<?php echo $lid ?>">
                 <div class="lead-main">
@@ -269,6 +417,7 @@ function panel_leads() {
                         <?php if ($lphon): ?><a href="tel:<?php echo esc_attr($lphon) ?>"><?php echo pp_svg('phone',13) ?> <?php echo esc_html($lphon) ?></a><?php endif; ?>
                         <?php if ($lmail): ?><a href="mailto:<?php echo esc_attr($lmail) ?>"><?php echo pp_svg('email',13) ?> <?php echo esc_html($lmail) ?></a><?php endif; ?>
                         <?php if ($lprop): ?><a href="<?php echo esc_url(get_permalink($lprop)) ?>" target="_blank"><?php echo pp_svg('home',13) ?> <?php echo esc_html(get_the_title($lprop)) ?></a><?php endif; ?>
+                        <?php if ($lip): ?><span class="lead-ip" title="IP adresa odosielateľa">IP: <?php echo esc_html($lip) ?></span><?php endif; ?>
                     </div>
                     <?php if ($lmsg): ?><div class="lead-msg"><?php echo esc_html($lmsg) ?></div><?php endif; ?>
                     <textarea class="lead-note" placeholder="Interná poznámka (dohodnutá obhliadka, ponúknutá cena…)" onblur="ppLeadNote(<?php echo $lid ?>,this)"><?php echo esc_textarea($lnote) ?></textarea>
@@ -301,6 +450,7 @@ function panel_leads() {
     .lead-contact{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px}
     .lead-contact a{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--accent-txt);text-decoration:none}
     .lead-contact a:hover{text-decoration:underline}
+    .lead-ip{display:inline-flex;align-items:center;font-size:12px;color:var(--muted);background:var(--section);padding:2px 8px;border-radius:50px;font-family:monospace}
     .lead-msg{font-size:13px;color:var(--text);background:var(--section);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:8px;line-height:1.5;white-space:pre-line}
     .lead-note{width:100%;font-size:13px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);resize:vertical;min-height:40px;color:var(--text)}
     .lead-note:focus{outline:none;border-color:var(--accent)}
