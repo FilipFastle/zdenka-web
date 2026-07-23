@@ -21,7 +21,7 @@ if (isset($_POST['odhad_send']) && !wp_verify_nonce($_POST['odhad_nonce'] ?? '',
     $popis      = sanitize_textarea_field($_POST['popis']  ?? '');
     $ip         = $_SERVER['REMOTE_ADDR'] ?? '';
 
-    $subject = "Odhad nehnuteľnosti ZDARMA – {$meno} {$priezvisko}";
+    $subject = "Nová žiadosť o odhad – {$meno} {$priezvisko}";
 
     if (function_exists('zc_email_template')) {
         $html = zc_email_template([
