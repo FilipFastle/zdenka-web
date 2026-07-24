@@ -14,7 +14,7 @@ $title=zc_agent('title','Realitná maklérka');
 .zc-home-hero{height:100vh;min-height:560px;margin-top:calc(-1 * var(--hh,72px));position:sticky;top:0;z-index:0;overflow:hidden;display:flex;align-items:center}
 .zc-home-hero ~ section{position:relative;z-index:2}
 .zc-home-hero ~ footer.zc-footer{position:relative;z-index:2}
-.zc-hero-bg{position:absolute;inset:0;background-size:cover;background-position:67% center;background-repeat:no-repeat;will-change:transform;transform-origin:67% 35%;filter:brightness(1.13)}
+.zc-hero-bg{position:absolute;inset:0;background-size:cover;background-position:67% center;background-repeat:no-repeat;will-change:transform;transform-origin:67% 35%}
 .zc-hero-text{will-change:transform,opacity}
 /* Postupné nabehnutie hero obsahu pri načítaní (beží vždy, aj na PC) */
 @keyframes zcRise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
@@ -24,9 +24,9 @@ $title=zc_agent('title','Realitná maklérka');
 .zc-hero-text>*:nth-child(3){animation-delay:.36s}
 .zc-hero-text>*:nth-child(4){animation-delay:.48s}
 .zc-hero-text>*:nth-child(5){animation-delay:.60s}
-/* PC: jemný gradient len vľavo pod textom – fotka (maklérka vpravo) ostáva svetlá */
-.zc-hero-overlay{position:absolute;inset:0;background:linear-gradient(105deg,rgba(20,18,15,.7) 0%,rgba(20,18,15,.3) 34%,rgba(20,18,15,0) 62%);z-index:1}
-.zc-hero-text{position:relative;z-index:2;padding:calc(var(--hh,72px) + 40px) 64px 60px;max-width:660px}
+/* PC: žiadna úprava fotky – žiadny prekryv; text drží čitateľnosť cez jemný drop shadow */
+.zc-hero-overlay{position:absolute;inset:0;background:none;z-index:1}
+.zc-hero-text{position:relative;z-index:2;padding:calc(var(--hh,72px) + 40px) 64px 60px;max-width:660px;text-shadow:0 2px 12px rgba(0,0,0,.55)}
 .zc-hero-eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent,#B8A47A);margin-bottom:20px;font-family:var(--sans,sans-serif)}
 .zc-hero-eyebrow::before{content:'';width:28px;height:1.5px;background:var(--accent,#B8A47A);display:block}
 .zc-hero-h1{font-family:var(--serif,'Playfair Display',serif);font-size:clamp(36px,4.5vw,64px);font-weight:800;line-height:1.15;color:#fff;margin-bottom:24px;text-shadow:0 2px 20px rgba(0,0,0,.3)}

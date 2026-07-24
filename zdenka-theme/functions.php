@@ -3,8 +3,8 @@ defined('ABSPATH') || exit;
 
 add_action('wp_enqueue_scripts', function() {
     wp_enqueue_style('zdenka-fonts','https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,700&display=swap',[],null);
-    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'3.11.1');
-    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.11.1',true);
+    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',['zdenka-fonts'],'3.11.2');
+    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.11.2',true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.svg']);
 });
 
