@@ -39,6 +39,9 @@
             <a href="<?php echo home_url($path); ?>"
                <?php echo $active ? 'class="active"' : ''; ?>><?php echo $label; ?></a>
             <?php endforeach; ?>
+            <?php if (function_exists('zc_ebook_enabled') && zc_ebook_enabled()): zc_ebook_flag(true); ?>
+            <a href="#" data-zc-ebook-open class="zc-nav-ebook">Ebook</a>
+            <?php endif; ?>
             <a href="<?php echo home_url('/kontakt/'); ?>" class="zc-nav-cta"
                <?php echo is_page('kontakt') ? 'style="opacity:.85"' : ''; ?>>Kontakt</a>
             <?php echo zc_social_icons_html('zc-socials--nav'); ?>
@@ -65,6 +68,9 @@
             <?php echo $label; ?>
         </a>
         <?php endforeach; ?>
+        <?php if (function_exists('zc_ebook_enabled') && zc_ebook_enabled()): zc_ebook_flag(true); ?>
+        <a href="#" data-zc-ebook-open style="color:var(--accent-txt);font-weight:700">Ebook PDF zdarma</a>
+        <?php endif; ?>
         <?php $zc_mnav_soc = function_exists('zc_social_icons_html') ? zc_social_icons_html() : ''; ?>
         <?php if ($zc_mnav_soc): ?>
         <div style="display:flex;justify-content:center;margin-top:18px;padding-top:18px;border-top:1px solid rgba(184,164,122,.25)"><?php echo $zc_mnav_soc; ?></div>

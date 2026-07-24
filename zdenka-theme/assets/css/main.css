@@ -914,3 +914,8 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 @media (prefers-reduced-motion: reduce) {
     .zc-hero-ebook-btn { animation: zcEbookBreath 2.6s ease-in-out infinite !important; }
 }
+
+/* Ebook položka v navbare (otvára modal) */
+.zc-nav-ebook { color: var(--accent-txt) !important; font-weight: 700; }
+.zc-nav-ebook:hover { color: var(--accent) !important; }
+.zc-header-wrap.transparent .zc-nav-ebook { color: #EBD9B4 !important; }

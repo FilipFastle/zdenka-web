@@ -193,16 +193,17 @@ function zc_ebook_assets() {
     $nonce = wp_create_nonce('zc_nonce');
     ob_start(); ?>
     <style>
-    .zc-ebook{max-width:1120px;margin:64px auto;padding:0 24px}
-    .zc-ebook-inner{display:flex;align-items:center;gap:40px;background:linear-gradient(120deg,#1C1A18 0%,#2A2621 100%);border-radius:22px;padding:44px 48px;box-shadow:0 24px 60px rgba(20,18,15,.28);position:relative;overflow:hidden}
-    .zc-ebook-inner::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;background:radial-gradient(circle,rgba(191,156,95,.22),transparent 70%);pointer-events:none}
+    /* Pruh na 100% šírku, tmavšia krémová – flush nad footer */
+    .zc-ebook{width:100%;margin:0;padding:0;background:linear-gradient(120deg,#ECE1CD 0%,#E3D5BC 100%);border-top:1px solid rgba(155,134,96,.28);border-bottom:1px solid rgba(155,134,96,.28)}
+    .zc-ebook-inner{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:40px;padding:52px clamp(24px,5vw,48px);position:relative;overflow:hidden}
+    .zc-ebook-inner::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;background:radial-gradient(circle,rgba(155,134,96,.18),transparent 70%);pointer-events:none}
     .zc-ebook-cover{flex-shrink:0;width:150px}
-    .zc-ebook-cover img{width:100%;height:auto;border-radius:8px;box-shadow:0 16px 34px rgba(0,0,0,.45);transform:rotate(-3deg);transition:transform .4s cubic-bezier(.2,.7,.2,1)}
+    .zc-ebook-cover img{width:100%;height:auto;border-radius:8px;box-shadow:0 16px 34px rgba(60,48,28,.28);transform:rotate(-3deg);transition:transform .4s cubic-bezier(.2,.7,.2,1)}
     .zc-ebook-inner:hover .zc-ebook-cover img{transform:rotate(0) scale(1.03)}
     .zc-ebook-body{flex:1;min-width:0;position:relative;z-index:1}
-    .zc-ebook-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#BF9C5F;background:rgba(191,156,95,.14);border:1px solid rgba(191,156,95,.35);padding:4px 12px;border-radius:50px;margin-bottom:14px}
-    .zc-ebook-h{font-family:var(--serif,'Playfair Display',serif);color:#fff;font-size:clamp(22px,3vw,30px);line-height:1.2;margin:0 0 10px}
-    .zc-ebook-sub{color:rgba(255,255,255,.72);font-size:15px;line-height:1.55;margin:0 0 22px;max-width:46ch}
+    .zc-ebook-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#7C5E33;background:rgba(124,94,51,.10);border:1px solid rgba(124,94,51,.30);padding:4px 12px;border-radius:50px;margin-bottom:14px}
+    .zc-ebook-h{font-family:var(--serif,'Playfair Display',serif);color:#1C1A18;font-size:clamp(22px,3vw,30px);line-height:1.2;margin:0 0 10px}
+    .zc-ebook-sub{color:#5A5044;font-size:15px;line-height:1.55;margin:0 0 22px;max-width:46ch}
     .zc-ebook-open{display:inline-flex;align-items:center;gap:9px}
     /* Modal */
     .zc-ebook-modal{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px}
@@ -229,8 +230,8 @@ function zc_ebook_assets() {
     .zc-ebook-msg.err{color:#B4232A}
     .zc-ebook-msg.ok{color:#15803D}
     @media(max-width:760px){
-        .zc-ebook{margin:44px auto}
-        .zc-ebook-inner{flex-direction:column;text-align:center;padding:34px 24px;gap:24px}
+        .zc-ebook{margin:0}
+        .zc-ebook-inner{flex-direction:column;text-align:center;padding:40px 24px;gap:24px}
         .zc-ebook-sub{margin-left:auto;margin-right:auto}
         .zc-ebook-cover{width:120px}
         .zc-ebook-dialog-grid{flex-direction:column}
@@ -248,7 +249,8 @@ function zc_ebook_assets() {
             lastFocus=null;
         function open(){lastFocus=document.activeElement;modal.hidden=false;document.body.style.overflow='hidden';var f=modal.querySelector('input,select,button');if(f)f.focus();}
         function close(){modal.hidden=true;document.body.style.overflow='';if(lastFocus)lastFocus.focus();}
-        document.querySelectorAll('[data-zc-ebook-open]').forEach(function(b){b.addEventListener('click',open);});
+        window.zcEbookOpen=open; // sprístupnené aj pre dynamické menu (mobil overlay)
+        document.querySelectorAll('[data-zc-ebook-open]').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();open();});});
         modal.querySelectorAll('[data-zc-ebook-close]').forEach(function(b){b.addEventListener('click',close);});
         document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!modal.hidden)close();});
         if(form){form.addEventListener('submit',function(e){

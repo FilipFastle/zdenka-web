@@ -114,6 +114,23 @@ if (!document.getElementById('zcOv')) {
         a.textContent = item[1];
         nav.appendChild(a);
     });
+    // Ebook položka (ak je zverejnený) – otvorí modal namiesto navigácie
+    if (window.zcData && zcData.ebookOn) {
+        var eb = document.createElement('a');
+        eb.href = '#';
+        eb.textContent = 'Ebook PDF zdarma';
+        eb.setAttribute('data-zc-ebook-open', '');
+        eb.style.color = '#B8A47A';
+        eb.addEventListener('click', function (e) {
+            e.preventDefault();
+            ov.classList.remove('open', 'closing');
+            if (hdr) hdr.classList.remove('nav-open');
+            document.body.style.overflow = '';
+            isClosing = false;
+            if (window.zcEbookOpen) window.zcEbookOpen();
+        });
+        nav.appendChild(eb);
+    }
 }
 
 var ov = document.getElementById('zcOv');
