@@ -41,7 +41,11 @@ add_action('template_redirect', function() {
 <html lang="sk"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title><?php echo esc_html(get_the_title($id)) ?> — exposé</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+/* Lokálne fonty z aktívnej témy (bez Google serverov) */
+@font-face{font-family:'DM Sans';font-weight:100 1000;font-display:swap;src:url('<?php echo esc_url(get_stylesheet_directory_uri()); ?>/assets/fonts/DMSans.woff2') format('woff2')}
+@font-face{font-family:'Playfair Display';font-weight:400 900;font-display:swap;src:url('<?php echo esc_url(get_stylesheet_directory_uri()); ?>/assets/fonts/PlayfairDisplay.woff2') format('woff2')}
+</style>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'DM Sans',Arial,sans-serif;color:#2C2825;background:#fff;line-height:1.6}

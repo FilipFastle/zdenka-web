@@ -114,8 +114,10 @@ if (!document.getElementById('zcOv')) {
         a.textContent = item[1];
         nav.appendChild(a);
     });
-    // Ebook položka (ak je zverejnený) – otvorí modal namiesto navigácie
-    if (window.zcData && zcData.ebookOn) {
+    // Ebook položka (ak je zverejnený) – otvorí modal namiesto navigácie.
+    // Detekcia je odolná: buď príznak zo servera, alebo prítomnosť položky v desktop menu.
+    var ebookOn = (window.zcData && zcData.ebookOn) || document.querySelector('.zc-nav-ebook') || document.querySelector('[data-zc-ebook-open]');
+    if (ebookOn) {
         var eb = document.createElement('a');
         eb.href = '#';
         eb.textContent = 'Ebook PDF zdarma';

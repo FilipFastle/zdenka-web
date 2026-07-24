@@ -3,8 +3,9 @@
 <head>
 <meta charset="<?php bloginfo('charset'); ?>">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,700&display=swap" rel="stylesheet">
+<?php $zc_fdir = get_stylesheet_directory_uri() . '/assets/fonts'; ?>
+<link rel="preload" href="<?php echo esc_url($zc_fdir); ?>/DMSans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="<?php echo esc_url($zc_fdir); ?>/PlayfairDisplay.woff2" as="font" type="font/woff2" crossorigin>
 <?php wp_head(); ?>
 
 </head>

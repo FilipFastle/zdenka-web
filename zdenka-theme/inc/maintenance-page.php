@@ -13,9 +13,11 @@ $logo   = get_stylesheet_directory_uri() . '/assets/images/zc-logo.svg';
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title><?php echo esc_html($name); ?> – Údržba</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
 <style>
+/* Lokálne fonty (self-hosted, žiadne Google servery – GDPR) */
+@font-face{font-family:'DM Sans';font-style:normal;font-weight:100 1000;font-display:swap;src:url('<?php echo esc_url(get_stylesheet_directory_uri()); ?>/assets/fonts/DMSans.woff2') format('woff2')}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:400 900;font-display:swap;src:url('<?php echo esc_url(get_stylesheet_directory_uri()); ?>/assets/fonts/PlayfairDisplay.woff2') format('woff2')}
+@font-face{font-family:'Playfair Display';font-style:italic;font-weight:400 900;font-display:swap;src:url('<?php echo esc_url(get_stylesheet_directory_uri()); ?>/assets/fonts/PlayfairDisplay-Italic.woff2') format('woff2')}
 *{margin:0;padding:0;box-sizing:border-box}
 body{
     font-family:'DM Sans',sans-serif;

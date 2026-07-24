@@ -58,8 +58,12 @@ function panel_dashboard() {
     $logout = wp_logout_url(home_url());
     ob_start();
     ?>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* Lokálne fonty z aktívnej témy (bez Google serverov) */
+@font-face{font-family:'DM Sans';font-weight:100 1000;font-display:swap;src:url('<?php echo esc_url(get_stylesheet_directory_uri()); ?>/assets/fonts/DMSans.woff2') format('woff2')}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:400 900;font-display:swap;src:url('<?php echo esc_url(get_stylesheet_directory_uri()); ?>/assets/fonts/PlayfairDisplay.woff2') format('woff2')}
+@font-face{font-family:'Playfair Display';font-style:italic;font-weight:400 900;font-display:swap;src:url('<?php echo esc_url(get_stylesheet_directory_uri()); ?>/assets/fonts/PlayfairDisplay-Italic.woff2') format('woff2')}
+</style>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
