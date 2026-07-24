@@ -40,15 +40,15 @@ $title=zc_agent('title','Realitná maklérka');
 <?php if ($zc_hero_portrait): ?>
 /* Mobil: hero = vertikálny portrét – tvár je vycentrovaná z podstaty fotky */
 @media(max-width:768px){
-    /* fotka je pripravená vo Photoshope – žiadne umelé stmavenie */
-    .zc-hero-bg{background-image:url('<?php echo esc_url($zc_hero_portrait); ?>') !important;background-position:center 22% !important;transform-origin:center 25%}
+    /* fotka presne ako originál – žiadne stmavenie/zosvetlenie ani gradient */
+    .zc-hero-bg{background-image:url('<?php echo esc_url($zc_hero_portrait); ?>') !important;background-position:center 22% !important;transform-origin:center 25%;filter:none !important}
     .zc-home-hero{align-items:flex-end}
-    .zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 88px}
-    /* jemný gradient len na spodku pre čitateľnosť textu */
-    .zc-hero-overlay{background:linear-gradient(to top,rgba(18,15,12,.55) 0%,rgba(18,15,12,.28) 30%,rgba(18,15,12,.08) 60%,rgba(18,15,12,0) 100%)}
+    /* text ostáva čitateľný cez tieň písma, nie stmavením fotky */
+    .zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 88px;text-shadow:0 2px 14px rgba(0,0,0,.5)}
+    .zc-hero-overlay{background:none !important}
 }
 <?php else: ?>
-@media(max-width:768px){.zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 48px}.zc-hero-overlay{background:linear-gradient(to top,rgba(18,15,12,.6) 0%,rgba(18,15,12,.35) 40%,rgba(18,15,12,.1) 100%)}.zc-hero-bg{background-position:73% 28%}}
+@media(max-width:768px){.zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 48px;text-shadow:0 2px 14px rgba(0,0,0,.5)}.zc-hero-overlay{background:none !important}.zc-hero-bg{background-position:73% 28%;filter:none !important}}
 <?php endif; ?>
 </style>
 
@@ -78,8 +78,16 @@ $title=zc_agent('title','Realitná maklérka');
         <h1 class="zc-hero-h1">Predáme váš domov <em>za najlepšiu cenu</em></h1>
         <p class="zc-hero-p">Profesionálna realitná maklérka s bohatými skúsenosťami. Predaj, prenájom aj poradenstvo – vždy s osobným prístupom.</p>
         <div class="zc-hero-btns">
+            <?php if (function_exists('zc_ebook_enabled') && zc_ebook_enabled()): zc_ebook_flag(true); ?>
+            <button type="button" class="zc-btn zc-btn-primary" data-zc-ebook-open>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:2px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+                Ebook PDF zdarma
+            </button>
+            <a href="<?php echo home_url('/ponuky/'); ?>" class="zc-btn" style="background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.3)">Pozrieť ponuky</a>
+            <?php else: ?>
             <a href="<?php echo home_url('/ponuky/'); ?>" class="zc-btn zc-btn-primary">Pozrieť ponuky</a>
             <a href="<?php echo home_url('/kontakt/'); ?>" class="zc-btn" style="background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.3)">Bezplatná konzultácia</a>
+            <?php endif; ?>
         </div>
     </div>
     <div class="zc-hero-scroll">

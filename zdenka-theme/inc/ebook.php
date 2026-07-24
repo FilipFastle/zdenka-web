@@ -88,13 +88,12 @@ function zc_ebook_option_list() {
 add_shortcode('zc_ebook', function () {
     if (!zc_ebook_enabled()) return '';
 
+    zc_ebook_flag(true); // modal doplní pätička
+
     $headline = zc_ebook_get('headline');
     $subtext  = zc_ebook_get('subtext');
     $button   = zc_ebook_get('button');
-    $question = zc_ebook_get('question');
     $cover    = zc_ebook_get('cover');
-    $options  = zc_ebook_option_list();
-    $hp       = function_exists('zc_honeypot_fields') ? zc_honeypot_fields() : '';
 
     ob_start(); ?>
     <section class="zc-ebook" aria-labelledby="zcEbookHead">
@@ -115,7 +114,35 @@ add_shortcode('zc_ebook', function () {
             </div>
         </div>
     </section>
+    <?php
+    return ob_get_clean();
+});
 
+// ── Príznak: na stránke treba vykresliť modal (pás alebo hero tlačidlo) ──────
+function zc_ebook_flag($set = false) {
+    static $need = false;
+    if ($set) $need = true;
+    return $need;
+}
+
+// ── Modal + assets do pätičky (raz za stránku, keď je potrebný) ─────────────
+add_action('wp_footer', function () {
+    if (!zc_ebook_enabled() || !zc_ebook_flag()) return;
+    echo zc_ebook_modal_html();
+}, 20);
+
+function zc_ebook_modal_html() {
+    static $done = false;
+    if ($done) return '';
+    $done = true;
+
+    $button   = zc_ebook_get('button');
+    $question = zc_ebook_get('question');
+    $cover    = zc_ebook_get('cover');
+    $options  = zc_ebook_option_list();
+    $hp       = function_exists('zc_honeypot_fields') ? zc_honeypot_fields() : '';
+
+    ob_start(); ?>
     <div class="zc-ebook-modal" id="zcEbookModal" role="dialog" aria-modal="true" aria-labelledby="zcEbookModalH" hidden>
         <div class="zc-ebook-backdrop" data-zc-ebook-close></div>
         <div class="zc-ebook-dialog">
@@ -145,22 +172,18 @@ add_shortcode('zc_ebook', function () {
                             </select>
                         </label>
                         <?php endif; ?>
-                        <label class="zc-ebook-consent">
-                            <input type="checkbox" name="newsletter" value="1" checked>
-                            <span>Súhlasím so zasielaním noviniek e-mailom (kedykoľvek sa dá odhlásiť).</span>
-                        </label>
                         <button type="submit" class="zc-btn zc-btn-primary zc-ebook-submit"><?php echo esc_html($button); ?></button>
+                        <p class="zc-ebook-consent-note">Odoslaním získate PDF na e-mail a prihlásite sa na odber noviniek. Odhlásiť sa môžete kedykoľvek jedným klikom.</p>
                         <p class="zc-ebook-msg" id="zcEbookMsg" role="status"></p>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-
     <?php echo zc_ebook_assets(); ?>
     <?php
     return ob_get_clean();
-});
+}
 
 // ── CSS + JS (vypíše sa len raz) ────────────────────────────────────────────
 function zc_ebook_assets() {
@@ -200,8 +223,7 @@ function zc_ebook_assets() {
     .zc-ebook-lbl .req{color:#BF9C5F}
     .zc-ebook-lbl input,.zc-ebook-lbl select{display:block;width:100%;margin-top:5px;padding:11px 13px;border:1.5px solid #D8CFBF;border-radius:10px;font-size:15px;font-family:inherit;background:#fff;color:#1C1A18}
     .zc-ebook-lbl input:focus,.zc-ebook-lbl select:focus{outline:none;border-color:#BF9C5F;box-shadow:0 0 0 3px rgba(191,156,95,.18)}
-    .zc-ebook-consent{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:#6B6155;line-height:1.45;margin:4px 0 18px;cursor:pointer}
-    .zc-ebook-consent input{margin-top:2px;flex-shrink:0}
+    .zc-ebook-consent-note{font-size:11.5px;color:#8A8073;line-height:1.45;margin:12px 0 0;text-align:center}
     .zc-ebook-submit{width:100%;justify-content:center}
     .zc-ebook-msg{font-size:13.5px;margin:14px 0 0;text-align:center;min-height:1em}
     .zc-ebook-msg.err{color:#B4232A}
@@ -305,8 +327,8 @@ function zc_ebook_handle() {
         ]);
     }
 
-    // 2) Newsletter opt-in (ak zaškrtnuté)
-    if (!empty($_POST['newsletter']) && function_exists('zcn_subscribe_forced')) {
+    // 2) Newsletter – automaticky prihlásiť každého, kto si stiahne ebook
+    if (function_exists('zcn_subscribe_forced')) {
         zcn_subscribe_forced($email, $name, 'ebook');
     }
 
