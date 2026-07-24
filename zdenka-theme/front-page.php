@@ -128,9 +128,6 @@ $title=zc_agent('title','Realitná maklérka');
 })();
 </script>
 
-<?php /* PDF ebook lead-magnet – zobrazí sa len keď je zapnutý v paneli → Ebook */ ?>
-<?php echo do_shortcode('[zc_ebook]'); ?>
-
 <!-- MOJE HODNOTY -->
 <section class="zc-section bg-section">
 <div class="zc-container">
@@ -229,4 +226,8 @@ $title=zc_agent('title','Realitná maklérka');
     </div>
 </div>
 </section>
+
+<?php /* PDF ebook – pod kontaktným formulárom; zobrazí sa len keď je zapnutý v paneli → Ebook */ ?>
+<?php echo do_shortcode('[zc_ebook]'); ?>
+
 <?php get_footer(); ?>
