@@ -84,7 +84,7 @@ $title=zc_agent('title','Realitná maklérka');
         <p class="zc-hero-p">Profesionálna realitná maklérka s bohatými skúsenosťami. Predaj, prenájom aj poradenstvo – vždy s osobným prístupom.</p>
         <div class="zc-hero-btns">
             <?php if (function_exists('zc_ebook_enabled') && zc_ebook_enabled()): zc_ebook_flag(true); ?>
-            <button type="button" class="zc-btn zc-btn-primary" data-zc-ebook-open>
+            <button type="button" class="zc-btn zc-btn-primary zc-hero-ebook-btn" data-zc-ebook-open>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:2px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
                 Ebook PDF zdarma
             </button>
