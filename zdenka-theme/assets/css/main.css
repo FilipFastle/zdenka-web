@@ -52,18 +52,32 @@ h1 em, h2 em, h3 em, h4 em { font-style: normal; }
     padding: 0; text-decoration: none;
     transition: background .3s cubic-bezier(.4,0,.2,1),
                 color .3s cubic-bezier(.4,0,.2,1),
-                transform .35s cubic-bezier(.34,1.56,.64,1),
-                box-shadow .3s ease;
+                transform .4s cubic-bezier(.34,1.56,.64,1),
+                box-shadow .35s ease;
 }
-.zc-social-ic svg { transition: transform .35s cubic-bezier(.34,1.56,.64,1); }
-.zc-social-ic:hover {
+.zc-social-ic svg { transition: transform .4s cubic-bezier(.34,1.56,.64,1); }
+.zc-social-ic:hover, .zc-social-ic:focus-visible {
     background: var(--accent, #B8A47A); color: var(--dark, #1C1A18);
-    transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(184,164,122,.4);
+    transform: translateY(-4px) scale(1.06) !important;
+    box-shadow: 0 8px 20px rgba(184,164,122,.45);
 }
-.zc-social-ic:hover svg { transform: scale(1.12); }
+.zc-social-ic:hover svg, .zc-social-ic:focus-visible svg { transform: scale(1.18) rotate(-6deg); }
+.zc-social-ic:active { transform: translateY(-1px) scale(.97) !important; }
 /* žiadne podčiarknutie z navbaru pod ikonami */
 .zc-social-ic::after { content: none !important; display: none !important; }
+
+/* Jemné „dýchanie" ikon v navbare – staggered, beží vždy (bypass reduced-motion) */
+@keyframes zcSocFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+.zc-socials--nav .zc-social-ic { animation: zcSocFloat 3.4s ease-in-out infinite; }
+.zc-socials--nav .zc-social-ic:nth-child(2) { animation-delay: .45s; }
+.zc-socials--nav .zc-social-ic:nth-child(3) { animation-delay: .9s; }
+.zc-socials--nav .zc-social-ic:nth-child(4) { animation-delay: 1.35s; }
+.zc-socials--nav .zc-social-ic:nth-child(5) { animation-delay: 1.8s; }
+/* Explicitne obísť systémové „obmedziť pohyb" – ikony sa hýbu aj tak */
+@media (prefers-reduced-motion: reduce) {
+    .zc-social-ic, .zc-social-ic svg { transition-duration: .38s !important; }
+    .zc-socials--nav .zc-social-ic { animation: zcSocFloat 3.4s ease-in-out infinite !important; }
+}
 /* Navbar varianta – menšie a v riadku s menu */
 .zc-socials--nav { gap: 6px; margin-left: 10px; }
 .zc-socials--nav .zc-social-ic { width: 32px; height: 32px; padding-bottom: 0; }
@@ -133,9 +147,14 @@ ul { list-style: none; }
     display: block; font-family: var(--sans); font-size: 9px;
     letter-spacing: 2px; text-transform: uppercase; color: var(--accent); font-weight: 400;
 }
-/* Transparent header – logo text white */
+/* Transparent header (nad fotkou) – biele meno + tieň pre čitateľnosť */
 .transparent .zc-logo { color: #fff; }
-.transparent .zc-logo small { color: rgba(184,164,122,.9); }
+.transparent .zc-logo-text { text-shadow: 0 1px 10px rgba(0,0,0,.55); }
+.transparent .zc-logo small { color: #E8DFD0; }
+/* Po scrollnutí (svetlé sklo) – meno tmavé, podnadpis čitateľná tmavšia zlatá */
+.zc-header-wrap:not(.transparent) .zc-logo,
+.zc-header-wrap:not(.transparent) .zc-logo-text { color: var(--dark); }
+.zc-header-wrap:not(.transparent) .zc-logo small { color: var(--accent-txt); }
 .zc-nav { display: flex; align-items: center; gap: 20px; }
 .zc-nav a {
     font-size: 10px; font-weight: 700; letter-spacing: .6px;
@@ -848,3 +867,30 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 .zc-prop-img img.zc-loaded,.pp-gal-item img.zc-loaded,.zc-prop-img img[data-noanim]{opacity:1;transform:scale(1)}
 /* hover priblíženie ostáva funkčné aj po odhalení */
 .zc-prop-card:hover .zc-prop-img img.zc-loaded{transform:scale(1.06)}
+
+/* ═══ VEĽKÉ / ULTRAWIDE MONITORY (21:9 a viac) ═══════════════════
+   Obsah necháme v pohodlnej šírke a jemne zväčšíme, aby web nepôsobil
+   „stratený" v strede obrovskej plochy. */
+@media (min-width: 1800px) {
+    :root { --hh: 84px; }
+    .zc-container { max-width: 1480px; padding: 0 48px; }
+    .zc-header    { max-width: 1760px; padding: 0 64px; }
+    .zc-hero-text { max-width: 780px; padding-left: 96px; }
+    .zc-hero-h1   { font-size: clamp(52px, 3.6vw, 74px); }
+    .zc-hero-p    { font-size: clamp(17px, 1.15vw, 21px); }
+    .zc-footer .zc-container { max-width: 1480px; }
+}
+@media (min-width: 2400px) {
+    .zc-container { max-width: 1680px; }
+    .zc-header    { max-width: 2000px; }
+    .zc-hero-text { max-width: 880px; padding-left: 120px; }
+    .zc-hero-h1   { font-size: 80px; }
+    .zc-hero-p    { font-size: 22px; }
+    /* na extrémne širokých obrazovkách hero nie je zbytočne vysoký */
+    .zc-home-hero { max-height: 1100px; }
+}
+/* Nízke, veľmi široké okná (21:9) – hero drží tvár v zábere, nie príliš vysoké */
+@media (min-aspect-ratio: 2/1) and (min-width: 1200px) {
+    .zc-home-hero { height: 100vh; max-height: 960px; }
+    .zc-hero-bg { background-position: 62% 30%; }
+}

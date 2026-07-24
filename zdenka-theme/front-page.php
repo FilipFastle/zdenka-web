@@ -41,14 +41,19 @@ $title=zc_agent('title','Realitná maklérka');
 <?php if ($zc_hero_portrait): ?>
 /* Mobil: hero = vertikálny portrét – tvár je vycentrovaná z podstaty fotky */
 @media(max-width:768px){
-    /* fotka bez brightness filtra; gradient len zdola pre čitateľnosť textu */
-    .zc-hero-bg{background-image:url('<?php echo esc_url($zc_hero_portrait); ?>') !important;background-position:center 22% !important;transform-origin:center 25%;filter:none !important}
+    /* fotka bez brightness filtra; tvár hore ostáva čistá, scrim je len dole pod textom */
+    .zc-hero-bg{background-image:url('<?php echo esc_url($zc_hero_portrait); ?>') !important;background-position:center 18% !important;transform-origin:center 25%;filter:none !important}
     .zc-home-hero{align-items:flex-end}
-    .zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 88px;text-shadow:0 2px 14px rgba(0,0,0,.5)}
-    .zc-hero-overlay{background:linear-gradient(to top,rgba(18,15,12,.6) 0%,rgba(18,15,12,.3) 32%,rgba(18,15,12,.08) 62%,rgba(18,15,12,0) 100%) !important}
+    .zc-hero-text{padding:calc(var(--hh,60px) + 24px) 22px 80px;text-shadow:0 2px 16px rgba(0,0,0,.65)}
+    /* menší nadpis nezasahuje do tváre */
+    .zc-hero-h1{font-size:30px !important;line-height:1.12;margin-bottom:14px}
+    .zc-hero-p{font-size:14.5px !important;line-height:1.6;margin-bottom:24px}
+    .zc-hero-eyebrow{margin-bottom:12px}
+    /* silnejší scrim dole (čitateľný text nad blúzkou), plynulo mizne pred tvárou */
+    .zc-hero-overlay{background:linear-gradient(to top,rgba(18,15,12,.9) 0%,rgba(18,15,12,.8) 18%,rgba(18,15,12,.52) 40%,rgba(18,15,12,.2) 62%,rgba(18,15,12,0) 86%) !important}
 }
 <?php else: ?>
-@media(max-width:768px){.zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 48px;text-shadow:0 2px 14px rgba(0,0,0,.5)}.zc-hero-overlay{background:linear-gradient(to top,rgba(18,15,12,.6) 0%,rgba(18,15,12,.3) 32%,rgba(18,15,12,.08) 62%,rgba(18,15,12,0) 100%) !important}.zc-hero-bg{background-position:73% 28%;filter:none !important}}
+@media(max-width:768px){.zc-hero-text{padding:calc(var(--hh,60px) + 24px) 22px 56px;text-shadow:0 2px 16px rgba(0,0,0,.65)}.zc-hero-h1{font-size:30px !important;line-height:1.12}.zc-hero-p{font-size:14.5px !important}.zc-hero-overlay{background:linear-gradient(to top,rgba(18,15,12,.9) 0%,rgba(18,15,12,.8) 18%,rgba(18,15,12,.52) 40%,rgba(18,15,12,.2) 62%,rgba(18,15,12,0) 86%) !important}.zc-hero-bg{background-position:73% 24%;filter:none !important}}
 <?php endif; ?>
 </style>
 
