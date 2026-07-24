@@ -24,7 +24,8 @@ $title=zc_agent('title','Realitná maklérka');
 .zc-hero-text>*:nth-child(3){animation-delay:.36s}
 .zc-hero-text>*:nth-child(4){animation-delay:.48s}
 .zc-hero-text>*:nth-child(5){animation-delay:.60s}
-.zc-hero-overlay{position:absolute;inset:0;background:linear-gradient(105deg,rgba(20,18,15,.88) 0%,rgba(20,18,15,.6) 55%,rgba(20,18,15,.15) 100%);z-index:1}
+/* PC: jemný gradient len vľavo pod textom – fotka (maklérka vpravo) ostáva svetlá */
+.zc-hero-overlay{position:absolute;inset:0;background:linear-gradient(105deg,rgba(20,18,15,.7) 0%,rgba(20,18,15,.3) 34%,rgba(20,18,15,0) 62%);z-index:1}
 .zc-hero-text{position:relative;z-index:2;padding:calc(var(--hh,72px) + 40px) 64px 60px;max-width:660px}
 .zc-hero-eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent,#B8A47A);margin-bottom:20px;font-family:var(--sans,sans-serif)}
 .zc-hero-eyebrow::before{content:'';width:28px;height:1.5px;background:var(--accent,#B8A47A);display:block}
@@ -40,15 +41,14 @@ $title=zc_agent('title','Realitná maklérka');
 <?php if ($zc_hero_portrait): ?>
 /* Mobil: hero = vertikálny portrét – tvár je vycentrovaná z podstaty fotky */
 @media(max-width:768px){
-    /* fotka presne ako originál – žiadne stmavenie/zosvetlenie ani gradient */
+    /* fotka bez brightness filtra; gradient len zdola pre čitateľnosť textu */
     .zc-hero-bg{background-image:url('<?php echo esc_url($zc_hero_portrait); ?>') !important;background-position:center 22% !important;transform-origin:center 25%;filter:none !important}
     .zc-home-hero{align-items:flex-end}
-    /* text ostáva čitateľný cez tieň písma, nie stmavením fotky */
     .zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 88px;text-shadow:0 2px 14px rgba(0,0,0,.5)}
-    .zc-hero-overlay{background:none !important}
+    .zc-hero-overlay{background:linear-gradient(to top,rgba(18,15,12,.6) 0%,rgba(18,15,12,.3) 32%,rgba(18,15,12,.08) 62%,rgba(18,15,12,0) 100%) !important}
 }
 <?php else: ?>
-@media(max-width:768px){.zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 48px;text-shadow:0 2px 14px rgba(0,0,0,.5)}.zc-hero-overlay{background:none !important}.zc-hero-bg{background-position:73% 28%;filter:none !important}}
+@media(max-width:768px){.zc-hero-text{padding:calc(var(--hh,60px) + 32px) 24px 48px;text-shadow:0 2px 14px rgba(0,0,0,.5)}.zc-hero-overlay{background:linear-gradient(to top,rgba(18,15,12,.6) 0%,rgba(18,15,12,.3) 32%,rgba(18,15,12,.08) 62%,rgba(18,15,12,0) 100%) !important}.zc-hero-bg{background-position:73% 28%;filter:none !important}}
 <?php endif; ?>
 </style>
 
