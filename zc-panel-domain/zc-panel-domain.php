@@ -2,12 +2,12 @@
 /**
  * Plugin Name: ZC Panel doména – realitný panel na subdoméne
  * Description: Umožní prevádzkovať realitný panel na vlastnej subdoméne (napr. panel.zdenkacibulova.sk) nad tým istým WordPressom. Kým nie je subdoména nastavená, plugin nič nemení.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: Filip
  */
 defined('ABSPATH') || exit;
 
-define('ZC_PD_VER', '1.1.0');
+define('ZC_PD_VER', '1.2.0');
 define('ZC_PD_SLUG', 'realitny-panel'); // slug stránky s panelom
 
 /* ───────────────────────── Konfigurácia hostov ───────────────────────── */
@@ -109,6 +109,34 @@ add_action('init', function () {
 }, 0);
 add_action('admin_init', 'zc_pd_send_cors', 0);
 
+/* ── Diagnostika: /?zcpd_check=1 vypíše, ako plugin vidí požiadavku ──────────
+ * Beží veľmi skoro a končí výpisom, takže sa NEUPLATNÍ žiadne presmerovanie
+ * WordPressu. Ak sa tento výpis nezobrazí, presmerovanie robí hosting/.htaccess.
+ */
+add_action('init', function () {
+    if (empty($_GET['zcpd_check'])) return;
+    nocache_headers();
+    header('Content-Type: text/plain; charset=utf-8');
+    $page = get_page_by_path(ZC_PD_SLUG);
+    echo "ZC Panel doména – diagnostika\n";
+    echo "─────────────────────────────\n";
+    echo "verzia pluginu:      " . ZC_PD_VER . "\n";
+    echo "aktuálny host:       " . zc_pd_current_host() . "\n";
+    echo "nastavený panel host: " . (zc_pd_panel_host() ?: '(NENASTAVENÝ – doplň v Nastavenia → Panel doména)') . "\n";
+    echo "je to panel request:  " . (zc_pd_is_panel_request() ? 'ÁNO' : 'NIE') . "\n";
+    echo "režim:               " . zc_pd_mode() . "\n";
+    echo "presmerovanie na sub: " . (get_option('zc_pd_force', '') ? 'zapnuté' : 'vypnuté') . "\n";
+    echo "home_url():          " . home_url() . "\n";
+    echo "site_url():          " . site_url() . "\n";
+    echo "stránka panela:      " . ($page ? '/' . ZC_PD_SLUG . '/ (ID ' . $page->ID . ')' : 'NENÁJDENÁ') . "\n";
+    echo "COOKIE_DOMAIN:       " . (defined('COOKIE_DOMAIN') && COOKIE_DOMAIN ? COOKIE_DOMAIN : '(nedefinovaná)') . "\n";
+    echo "prihlásený:          " . (is_user_logged_in() ? wp_get_current_user()->user_login : 'nie') . "\n";
+    echo "\nAk tento výpis vidíš na subdoméne, WordPress sa na ňu dostane\n";
+    echo "a presmerovanie NEROBÍ hosting. Ak ťa to hodí na hlavnú doménu,\n";
+    echo "presmerovanie je nastavené v hostingu alebo v .htaccess.\n";
+    exit;
+}, 0);
+
 /* ─────────────────── Chovanie na subdoméne panela ─────────────────── */
 
 add_action('plugins_loaded', function () {
@@ -125,16 +153,22 @@ add_action('plugins_loaded', function () {
         return $robots;
     });
 
-    // 3) Koreň subdomény = priamo panel
-    add_filter('request', function ($qv) {
-        $path = (string) wp_parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
-        if (trim($path, '/') === '') {
-            $qv['pagename'] = ZC_PD_SLUG;
-            unset($qv['error']);
-        }
-        return $qv;
+    // 3) Koreň subdomény = priamo panel (natvrdo prepíšeme dopyt na stránku panela)
+    add_action('parse_request', function ($wp) {
+        if (zc_pd_req_path() !== '') return;
+        $page = get_page_by_path(ZC_PD_SLUG);
+        if (!$page) return;
+        $wp->query_vars   = ['page_id' => $page->ID];
+        $wp->request      = ZC_PD_SLUG;
+        $wp->matched_rule = '';
+        $wp->matched_query = '';
     });
 });
+
+// Cesta požiadavky bez lomítok („" = koreň)
+function zc_pd_req_path() {
+    return trim((string) wp_parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
+}
 
 // 4) Ostatné stránky webu na subdoméne presmerovať na hlavnú doménu
 add_action('template_redirect', function () {
@@ -145,6 +179,8 @@ add_action('template_redirect', function () {
 
     // Panel (a jeho podstránky/akcie) necháme byť
     if (is_page(ZC_PD_SLUG)) return;
+    // Koreň subdomény nikdy nepresmerovávame (patrí panelu)
+    if (zc_pd_req_path() === '') return;
 
     $main = zc_pd_main_host();
     if (!$main) return;
@@ -221,7 +257,11 @@ function zc_pd_settings_page() {
                 <li><?php echo is_ssl() ? '✅' : '⚠️'; ?> HTTPS <?php echo is_ssl() ? 'aktívne' : '– skontroluj certifikát aj pre subdoménu'; ?></li>
             </ul>
             <?php if ($host): ?>
-            <p style="margin:12px 0 0"><a href="<?php echo esc_url('https://' . $host); ?>" target="_blank" class="button">Otestovať <?php echo esc_html($host); ?> ↗</a></p>
+            <p style="margin:12px 0 0">
+                <a href="<?php echo esc_url('https://' . $host); ?>" target="_blank" class="button">Otestovať <?php echo esc_html($host); ?> ↗</a>
+                <a href="<?php echo esc_url('https://' . $host . '/?zcpd_check=1'); ?>" target="_blank" class="button button-primary">Diagnostika subdomény ↗</a>
+            </p>
+            <p class="description" style="margin-top:8px">Diagnostika vypíše čistý text. <strong>Ak ťa namiesto výpisu hodí na hlavnú doménu, presmerovanie robí hosting alebo <code>.htaccess</code>, nie WordPress.</strong></p>
             <?php endif; ?>
         </div>
 
