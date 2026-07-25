@@ -106,18 +106,20 @@ function zc2fa_render_setup($ctx = 'admin') {
                     <strong>Nainštalujte si aplikáciu</strong> do mobilu – <em>Google Authenticator</em> (Android/iPhone), prípadne Microsoft Authenticator či Authy.
                 </li>
                 <li>
-                    <strong>Pridajte účet ručne</strong> – v aplikácii zvoľte <em>„Zadať kód nastavenia"</em> / <em>„Enter a setup key"</em> a prepíšte:
-                    <div class="zc2fa-secret">
-                        <div><span>Názov účtu:</span> <code><?php echo esc_html($user->user_login . ' (' . $issuer . ')'); ?></code></div>
-                        <div><span>Kľúč:</span> <code id="zc2faKey"><?php echo esc_html(zc2fa_format_secret($secret)); ?></code>
-                            <button type="button" class="zc2fa-btn-ghost zc2fa-mini" onclick="zc2faCopyKey()">Kopírovať</button></div>
-                        <div><span>Typ:</span> <code>Časovo založený (Time-based)</code></div>
+                    <strong>Naskenujte QR kód</strong> – v aplikácii zvoľte <em>„Skenovať QR kód"</em>:
+                    <div class="zc2fa-qr-wrap">
+                        <div class="zc2fa-qr"><?php echo zc2fa_qr_svg($uri, 210); ?></div>
+                        <div class="zc2fa-qr-side">
+                            <p class="zc2fa-hint" style="margin-bottom:8px"><strong>Nejde naskenovať?</strong> Zvoľte v aplikácii <em>„Zadať kód nastavenia"</em> a prepíšte:</p>
+                            <div class="zc2fa-secret">
+                                <div><span>Účet:</span> <code><?php echo esc_html($user->user_login); ?></code></div>
+                                <div><span>Kľúč:</span> <code id="zc2faKey"><?php echo esc_html(zc2fa_format_secret($secret)); ?></code>
+                                    <button type="button" class="zc2fa-btn-ghost zc2fa-mini" onclick="zc2faCopyKey()">Kopírovať</button></div>
+                                <div><span>Typ:</span> <code>Time-based</code></div>
+                            </div>
+                        </div>
                     </div>
-                    <details class="zc2fa-details">
-                        <summary>Odkaz pre aplikáciu (ak ho vie otvoriť priamo)</summary>
-                        <code class="zc2fa-uri"><?php echo esc_html($uri); ?></code>
-                        <p class="zc2fa-hint">Tento odkaz obsahuje tajný kľúč – neposielajte ho nikomu a negenerujte z neho QR kód na cudzích weboch.</p>
-                    </details>
+                    <p class="zc2fa-hint">QR aj kľúč obsahujú tajomstvo vášho účtu – nefoťte ich a nikomu neposielajte. QR sa vytvára priamo na tomto webe, nikam sa neodosiela.</p>
                 </li>
                 <li>
                     <strong>Opíšte kód z aplikácie</strong> a potvrďte:
@@ -182,6 +184,10 @@ function zc2fa_render_setup($ctx = 'admin') {
     .zc2fa-steps{margin:0;padding-left:20px;line-height:1.7}
     .zc2fa-steps li{margin-bottom:16px}
     .zc2fa-steps li:last-child{margin-bottom:0}
+    .zc2fa-qr-wrap{display:flex;gap:22px;align-items:flex-start;margin:12px 0;flex-wrap:wrap}
+    .zc2fa-qr{background:#fff;border:1px solid var(--ln);border-radius:10px;padding:10px;line-height:0;flex-shrink:0}
+    .zc2fa-qr svg{display:block;width:210px;height:210px}
+    .zc2fa-qr-side{flex:1;min-width:250px}
     .zc2fa-secret{background:#FBF8F2;border:1px solid var(--ln);border-radius:9px;padding:12px 14px;margin:10px 0;font-size:13px;line-height:2}
     .zc2fa-secret span{display:inline-block;min-width:110px;color:#8a8178}
     .zc2fa-secret code{background:#fff;border:1px solid var(--ln);padding:3px 8px;border-radius:5px;font-size:14px;letter-spacing:1px}
