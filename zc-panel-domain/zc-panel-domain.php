@@ -2,12 +2,12 @@
 /**
  * Plugin Name: ZC Panel doména – realitný panel na subdoméne
  * Description: Umožní prevádzkovať realitný panel na vlastnej subdoméne (napr. panel.zdenkacibulova.sk) nad tým istým WordPressom. Kým nie je subdoména nastavená, plugin nič nemení.
- * Version: 1.2.0
+ * Version: 1.2.1
  * Author: Filip
  */
 defined('ABSPATH') || exit;
 
-define('ZC_PD_VER', '1.2.0');
+define('ZC_PD_VER', '1.2.1');
 define('ZC_PD_SLUG', 'realitny-panel'); // slug stránky s panelom
 
 /* ───────────────────────── Konfigurácia hostov ───────────────────────── */
@@ -223,7 +223,11 @@ function zc_pd_settings_page() {
         } elseif ($host && strpos($host, '.www.') !== false) {
             $warn = 'Host obsahuje <code>www.</code> na nesprávnom mieste. Správne je <code>panel.' . esc_html($base) . '</code>.';
         }
-        update_option('zc_pd_host', $host);
+        // Ak je host zamknutý konštantou, pole je disabled a POST ho neposiela –
+        // vtedy uloženú hodnotu nechávame na pokoji (nech sa nevynuluje).
+        if (!(defined('ZC_PANEL_HOST') && ZC_PANEL_HOST)) {
+            update_option('zc_pd_host', $host);
+        }
         update_option('zc_pd_force', empty($_POST['force']) ? '' : '1');
         $mode = ($_POST['mode'] ?? 'alias') === 'loader' ? 'loader' : 'alias';
         update_option('zc_pd_mode', $mode);
@@ -294,7 +298,8 @@ function zc_pd_settings_page() {
                     </td>
                 </tr>
             </table>
-            <?php submit_button('Uložiť'); ?>
+            <input type="hidden" name="zc_pd_save" value="1">
+            <?php submit_button('Uložiť', 'primary', 'zc_pd_save'); ?>
         </form>
 
         <div style="background:#fff;border:1px solid #dcdcde;border-radius:8px;padding:18px 20px">
