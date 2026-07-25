@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ZC Recenzie
  * Description: Správa recenzií a referencií pre zdenkacibulova.sk
- * Version: 1.0.6
+ * Version: 1.1.0
  * Author: Filip
  */
 defined('ABSPATH') || exit;
@@ -16,5 +16,6 @@ require_once ZCR_PATH . 'includes/db.php';
 require_once ZCR_PATH . 'includes/shortcode.php';
 require_once ZCR_PATH . 'includes/admin.php';
 require_once ZCR_PATH . 'includes/api.php';
+require_once ZCR_PATH . 'includes/google.php';
 
 register_activation_hook(__FILE__, 'zcr_install');

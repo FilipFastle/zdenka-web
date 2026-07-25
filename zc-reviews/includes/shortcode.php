@@ -7,6 +7,12 @@ add_shortcode('zc_reviews', function($atts) {
         "SELECT * FROM ".zcr_table()." WHERE published=1 ORDER BY sort_order ASC,id ASC LIMIT %d",
         intval($atts['limit'])
     ));
+    $rows = $rows ?: [];
+    // Recenzie z Google firmy (ak je napojená) – pridajú sa za vlastné
+    if (function_exists('zcr_google_enabled') && zcr_google_enabled()) {
+        $rows = array_merge($rows, zcr_google_fetch());
+        $rows = array_slice($rows, 0, intval($atts['limit']));
+    }
     // Tlačidlo na Google recenzie (ak je v Customizeri nastavený odkaz)
     $google = function_exists('get_theme_mod') ? get_theme_mod('zc_social_google', '') : '';
     $gicon  = '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M21.35 11.1H12v3.83h5.35c-.23 1.4-1.66 4.1-5.35 4.1a5.9 5.9 0 0 1 0-11.8c1.87 0 3.13.8 3.85 1.48l2.62-2.53C16.9 3.6 14.66 2.6 12 2.6A9.4 9.4 0 1 0 21.35 11.1z"/></svg>';
@@ -48,12 +54,67 @@ add_shortcode('zc_reviews', function($atts) {
     <?php return ob_get_clean();
 });
 
+/**
+ * Spoločné štýly kariet – rovnaká výška, meno vždy dole, dlhý text skrátený
+ * na jednotný počet riadkov (dá sa rozbaliť). Vypíše sa len raz.
+ */
+function zcr_card_styles() {
+    static $done = false;
+    if ($done) return '';
+    $done = true;
+    ob_start(); ?>
+    <style>
+    /* Karty v riadku majú rovnakú výšku */
+    .zcr-grid{align-items:stretch}
+    .zcrc-track{align-items:stretch}
+    .zcrc-slide{display:flex}
+    .zcr-grid>.zc-testimonial,.zcrc-slide>.zc-testimonial{width:100%}
+    .zc-testimonial{display:flex;flex-direction:column;height:100%}
+    /* Text vyplní priestor, meno ostane prilepené dole */
+    .zc-testimonial-quote{flex:1 1 auto}
+    .zc-testimonial-author{margin-top:auto;padding-top:16px}
+    /* Jednotná dĺžka textu – dlhšie recenzie sa skrátia */
+    .zcr-clamp{display:-webkit-box;-webkit-line-clamp:8;-webkit-box-orient:vertical;overflow:hidden}
+    .zcr-clamp.is-open{display:block;-webkit-line-clamp:unset;overflow:visible}
+    .zcr-more{align-self:flex-start;background:none;border:none;padding:4px 0 0;margin:0;
+        font-family:inherit;font-size:12.5px;font-weight:700;color:var(--accent-txt,#7C5E33);
+        cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+    .zcr-more:hover{color:var(--accent,#B8A47A)}
+    /* Google recenzie – odlíšenie */
+    .zcr-src{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted,#7A7068);margin-top:4px}
+    .zcr-src svg{flex-shrink:0}
+    </style>
+    <script>
+    (function(){
+        function init(){
+            document.querySelectorAll('.zcr-clamp:not([data-zcr-done])').forEach(function(q){
+                q.setAttribute('data-zcr-done','1');
+                if (q.scrollHeight - q.clientHeight < 6) return; // text sa zmestil
+                var b=document.createElement('button');
+                b.type='button'; b.className='zcr-more'; b.textContent='Zobraziť celé';
+                b.addEventListener('click',function(){
+                    var open=q.classList.toggle('is-open');
+                    b.textContent=open?'Skryť':'Zobraziť celé';
+                });
+                q.parentNode.insertBefore(b,q.nextSibling);
+            });
+        }
+        if(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);
+        window.addEventListener('load',init);
+    })();
+    </script>
+    <?php
+    return ob_get_clean();
+}
+
 function zcr_card($r) {
     $stars = str_repeat('★', intval($r->rating)) . str_repeat('☆', 5 - intval($r->rating));
-    ob_start(); ?>
+    $is_google = !empty($r->source) && $r->source === 'google';
+    ob_start();
+    echo zcr_card_styles(); ?>
     <div class="zc-testimonial">
         <div class="zc-stars"><?php echo $stars ?></div>
-        <div class="zc-testimonial-quote"><?php echo esc_html($r->body) ?></div>
+        <div class="zc-testimonial-quote zcr-clamp"><?php echo esc_html($r->body) ?></div>
         <div class="zc-testimonial-author">
             <?php if ($r->avatar_url): ?>
             <div class="zc-testimonial-avatar">
@@ -62,8 +123,11 @@ function zcr_card($r) {
             <?php endif; ?>
             <div>
                 <div class="zc-testimonial-name"><?php echo esc_html($r->author_name) ?></div>
-                <?php if ($r->author_role): ?>
+                <?php if (!empty($r->author_role)): ?>
                 <div class="zc-testimonial-meta"><?php echo esc_html($r->author_role) ?></div>
+                <?php endif; ?>
+                <?php if ($is_google): ?>
+                <span class="zcr-src"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M21.35 11.1H12v3.83h5.35c-.23 1.4-1.66 4.1-5.35 4.1a5.9 5.9 0 0 1 0-11.8c1.87 0 3.13.8 3.85 1.48l2.62-2.53C16.9 3.6 14.66 2.6 12 2.6A9.4 9.4 0 1 0 21.35 11.1z"/></svg> Recenzia z Google</span>
                 <?php endif; ?>
             </div>
         </div>
