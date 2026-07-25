@@ -373,6 +373,9 @@ a.pnl-stat:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(60,50,30,
         <?php if (function_exists('panel_ebook') && (!function_exists('zc_ebook_can_manage') || zc_ebook_can_manage())): ?>
         <a href="?action=ebook" class="<?php echo $action==='ebook'?'active':'' ?>">Ebook</a>
         <?php endif; ?>
+        <?php if (function_exists('panel_security')): ?>
+        <a href="?action=zabezpecenie" class="<?php echo $action==='zabezpecenie'?'active':'' ?>">Zabezpečenie</a>
+        <?php endif; ?>
         <a href="?action=import" class="<?php echo $action==='import'?'active':'' ?>">Import/Export</a>
         <?php if (current_user_can('manage_options')): ?>
         <a href="?action=settings" class="<?php echo $action==='settings'?'active':'' ?>">Nastavenia</a>
@@ -404,6 +407,7 @@ a.pnl-stat:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(60,50,30,
     elseif ($action==='import') echo panel_import_export();
     elseif ($action==='settings' && current_user_can('manage_options')) echo panel_settings();
     elseif ($action==='ebook'    && function_exists('panel_ebook') && (!function_exists('zc_ebook_can_manage') || zc_ebook_can_manage())) echo panel_ebook();
+    elseif ($action==='zabezpecenie' && function_exists('panel_security')) echo panel_security();
     elseif ($action==='newsletter' && function_exists('zcn_table')) panel_newsletter();
     elseif ($action==='reviews'    && function_exists('zcr_table'))  panel_reviews();
     else panel_home();

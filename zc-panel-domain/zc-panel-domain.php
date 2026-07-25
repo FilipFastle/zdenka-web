@@ -2,12 +2,12 @@
 /**
  * Plugin Name: ZC Panel doména – realitný panel na subdoméne
  * Description: Umožní prevádzkovať realitný panel na vlastnej subdoméne (napr. panel.zdenkacibulova.sk) nad tým istým WordPressom. Kým nie je subdoména nastavená, plugin nič nemení.
- * Version: 1.2.2
+ * Version: 1.3.0
  * Author: Filip
  */
 defined('ABSPATH') || exit;
 
-define('ZC_PD_VER', '1.2.2');
+define('ZC_PD_VER', '1.3.0');
 define('ZC_PD_SLUG', 'realitny-panel'); // slug stránky s panelom
 
 /* ───────────────────────── Konfigurácia hostov ───────────────────────── */
@@ -177,6 +177,26 @@ function zc_pd_req_path() {
     return trim((string) wp_parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
 }
 
+// Aktuálny query string (napr. „action=edit&id=1423") alebo ''
+function zc_pd_query_string() {
+    $qs = (string) ($_SERVER['QUERY_STRING'] ?? '');
+    return $qs !== '' ? '?' . $qs : '';
+}
+
+/* ── Panel má na subdoméne žiť v KORENI, nie na /realitny-panel/ ───────────
+ * Preto prepíšeme odkaz na stránku panela na koreň subdomény. Vďaka tomu
+ * všetky presmerovania po uložení, mazaní atď. smerujú na panel.<domena>/
+ */
+add_filter('page_link', function ($link, $post_id) {
+    $panel = zc_pd_panel_host();
+    if (!$panel) return $link;
+    $page = get_page_by_path(ZC_PD_SLUG);
+    if (!$page || (int) $post_id !== (int) $page->ID) return $link;
+    // Na subdoméne vždy; z hlavnej domény len keď je zapnuté presmerovanie
+    if (!zc_pd_is_panel_request() && !get_option('zc_pd_force', '')) return $link;
+    return 'https://' . $panel . '/';
+}, 10, 2);
+
 // 4) Ostatné stránky webu na subdoméne presmerovať na hlavnú doménu
 add_action('template_redirect', function () {
     if (!zc_pd_is_panel_request()) return;
@@ -184,10 +204,19 @@ add_action('template_redirect', function () {
 
     header('X-Robots-Tag: noindex, nofollow', true);
 
-    // Panel (a jeho podstránky/akcie) necháme byť
-    if (is_page(ZC_PD_SLUG)) return;
     // Koreň subdomény nikdy nepresmerovávame (patrí panelu)
     if (zc_pd_req_path() === '') return;
+
+    // Stará cesta /realitny-panel/ na subdoméne → koreň subdomény
+    // (POST necháme prejsť, aby sa nestratili odoslané dáta formulára)
+    if (zc_pd_req_path() === ZC_PD_SLUG) {
+        if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') return;
+        wp_redirect('https://' . zc_pd_panel_host() . '/' . zc_pd_query_string(), 301);
+        exit;
+    }
+
+    // Panel (a jeho podstránky/akcie) necháme byť
+    if (is_page(ZC_PD_SLUG)) return;
 
     $main = zc_pd_main_host();
     if (!$main) return;
@@ -202,8 +231,8 @@ add_action('template_redirect', function () {
     if (!get_option('zc_pd_force', '')) return;
     $panel = zc_pd_panel_host();
     if (!$panel || !is_page(ZC_PD_SLUG)) return;
-    $uri = $_SERVER['REQUEST_URI'] ?? '/';
-    wp_redirect('https://' . $panel . $uri, 301);
+    // Na subdoméne žije panel v koreni – prenesieme len parametre (?action=…)
+    wp_redirect('https://' . $panel . '/' . zc_pd_query_string(), 301);
     exit;
 }, 2);
 
