@@ -2,12 +2,12 @@
 /**
  * Plugin Name: ZC Panel doména – realitný panel na subdoméne
  * Description: Umožní prevádzkovať realitný panel na vlastnej subdoméne (napr. panel.zdenkacibulova.sk) nad tým istým WordPressom. Kým nie je subdoména nastavená, plugin nič nemení.
- * Version: 1.4.0
+ * Version: 1.5.0
  * Author: Filip
  */
 defined('ABSPATH') || exit;
 
-define('ZC_PD_VER', '1.4.0');
+define('ZC_PD_VER', '1.5.0');
 define('ZC_PD_SLUG', 'realitny-panel'); // slug stránky s panelom
 
 /* ───────────────────────── Konfigurácia hostov ───────────────────────── */
@@ -58,13 +58,15 @@ function zc_pd_main_host() {
  */
 function zc_pd_mode() {
     $m = get_option('zc_pd_mode', 'alias');
-    return ($m === 'loader') ? 'loader' : 'alias';
+    if (in_array($m, ['loader', 'redirect'], true)) return $m;
+    return 'alias';
 }
 
 /* ──────────── Prepnutie adries webu na panel host (len na ňom) ──────────── */
 
 function zc_pd_swap_url($url) {
     if (!is_string($url) || $url === '') return $url;
+    if (zc_pd_mode() === 'redirect') return $url; // presmerovanie nič neprepisuje
     if (!zc_pd_is_panel_request()) return $url;
     $panel = zc_pd_panel_host();
     $host  = wp_parse_url($url, PHP_URL_HOST);
@@ -179,6 +181,23 @@ add_action('init', function () {
 
 add_action('plugins_loaded', function () {
     if (!zc_pd_is_panel_request()) return;
+
+    /* REŽIM „PRESMEROVANIE" – subdoména len presmeruje na panel na hlavnej
+     * doméne. Nevyžaduje COOKIE_DOMAIN ani zdieľanie prihlásenia medzi
+     * doménami, takže sa nemôže stať, že prihlásenie skončí v slučke. */
+    if (zc_pd_mode() === 'redirect') {
+        add_action('init', function () {
+            $main = zc_pd_main_host();
+            if (!$main) return;
+            $path = zc_pd_req_path();
+            $target = ($path === '' || $path === ZC_PD_SLUG)
+                ? 'https://' . $main . '/' . ZC_PD_SLUG . '/'
+                : 'https://' . $main . '/' . $path;
+            wp_redirect($target . zc_pd_query_string(), 301);
+            exit;
+        }, 1);
+        return;
+    }
 
     // 1) Vypnúť kanonické presmerovanie (inak WP hodí návštevníka na hlavnú doménu)
     remove_action('template_redirect', 'redirect_canonical');
@@ -306,8 +325,8 @@ function zc_pd_settings_page() {
             update_option('zc_pd_host', $host);
         }
         update_option('zc_pd_force', empty($_POST['force']) ? '' : '1');
-        $mode = ($_POST['mode'] ?? 'alias') === 'loader' ? 'loader' : 'alias';
-        update_option('zc_pd_mode', $mode);
+        $mode = (string) ($_POST['mode'] ?? 'alias');
+        update_option('zc_pd_mode', in_array($mode, ['alias', 'loader', 'redirect'], true) ? $mode : 'alias');
         $saved = true;
     }
 
@@ -362,9 +381,13 @@ function zc_pd_settings_page() {
                 <tr>
                     <th scope="row">Režim subdomény</th>
                     <td>
+                        <label style="display:block;margin-bottom:8px"><input type="radio" name="mode" value="redirect" <?php checked(zc_pd_mode(), 'redirect'); ?>> <strong>Presmerovanie</strong> – subdoména len presmeruje na panel na hlavnej doméne <em>(najbezpečnejšie)</em></label>
                         <label style="display:block;margin-bottom:8px"><input type="radio" name="mode" value="alias" <?php checked(zc_pd_mode(), 'alias'); ?>> <strong>Alias</strong> – subdoména má <em>rovnaký</em> document root ako web</label>
                         <label style="display:block"><input type="radio" name="mode" value="loader" <?php checked(zc_pd_mode(), 'loader'); ?>> <strong>Loader</strong> – subdoména má <em>vlastný</em> priečinok (vložíš doň 2 súbory nižšie)</label>
-                        <p class="description">Ak ti hosting nedovolí rovnaký document root, zvoľ <strong>Loader</strong>. Plugin vtedy nechá <code>wp-admin</code>, <code>wp-includes</code> a <code>wp-content</code> na hlavnej doméne a povolí AJAX/upload zo subdomény.</p>
+                        <p class="description">
+                            <strong>Presmerovanie</strong> funguje vždy a <strong>nevyžaduje <code>COOKIE_DOMAIN</code></strong> – adresa sa v prehliadači prepne na hlavnú doménu.<br>
+                            <strong>Alias</strong> a <strong>Loader</strong> nechajú v adrese subdoménu, ale vyžadujú <code>COOKIE_DOMAIN</code> vo <code>wp-config.php</code> (bez nej sa prihlásenie na subdoménu neprenesie).
+                        </p>
                     </td>
                 </tr>
                 <tr>
