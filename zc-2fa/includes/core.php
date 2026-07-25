@@ -17,11 +17,12 @@ function zc2fa_opt($key, $default = null) {
         'enforce'    => '',   // vyžadovať 2FA od správcov
     ];
     $val = get_option('zc2fa_' . $key, null);
-    if ($val === null || $val === '') {
-        if ($key === 'enforce') return get_option('zc2fa_enforce', '') ? '1' : '';
-        return $defaults[$key] ?? $default;
-    }
-    return $val;
+    if ($key === 'enforce') return $val ? '1' : '';
+    // Číselné hodnoty musia byť platné – prázdna alebo chybná hodnota by inak
+    // znamenala nezmyselne krátky limit a predčasné odhlasovanie.
+    $num = is_numeric($val) ? (int) $val : 0;
+    if ($num <= 0) $num = (int) ($defaults[$key] ?? $default);
+    return $num;
 }
 
 // ── Stav používateľa ────────────────────────────────────────────────────────

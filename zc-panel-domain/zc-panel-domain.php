@@ -2,12 +2,12 @@
 /**
  * Plugin Name: ZC Panel doména – realitný panel na subdoméne
  * Description: Umožní prevádzkovať realitný panel na vlastnej subdoméne (napr. panel.zdenkacibulova.sk) nad tým istým WordPressom. Kým nie je subdoména nastavená, plugin nič nemení.
- * Version: 1.3.1
+ * Version: 1.4.0
  * Author: Filip
  */
 defined('ABSPATH') || exit;
 
-define('ZC_PD_VER', '1.3.1');
+define('ZC_PD_VER', '1.4.0');
 define('ZC_PD_SLUG', 'realitny-panel'); // slug stránky s panelom
 
 /* ───────────────────────── Konfigurácia hostov ───────────────────────── */
@@ -111,6 +111,34 @@ add_action('init', function () {
     }
 }, 0);
 add_action('admin_init', 'zc_pd_send_cors', 0);
+
+/* ── Odstránenie starých „host-only" prihlasovacích cookies ─────────────────
+ * Po zavedení COOKIE_DOMAIN ('.domena.sk') môže v prehliadači ostať stará
+ * cookie viazaná len na www.domena.sk. Obe majú rovnaký názov, prehliadač
+ * posiela obe a WordPress môže dostať tú starú → odmietne ju a pridá do URL
+ * reauth=1 (prihlásenie sa „nechytí"). Tu ju cielene zmažeme: Set-Cookie bez
+ * atribútu Domain ruší práve tú host-only, doménová ostáva nedotknutá.
+ */
+add_action('login_init', function () {
+    if (empty($_GET['reauth'])) return;
+    if (!defined('COOKIEHASH')) return;
+    $names = [
+        'wordpress_' . COOKIEHASH,            // AUTH_COOKIE
+        'wordpress_sec_' . COOKIEHASH,        // SECURE_AUTH_COOKIE
+        'wordpress_logged_in_' . COOKIEHASH,  // LOGGED_IN_COOKIE
+    ];
+    $paths = array_unique(array_filter([
+        '/',
+        defined('COOKIEPATH') ? COOKIEPATH : '',
+        defined('SITECOOKIEPATH') ? SITECOOKIEPATH : '',
+        defined('ADMIN_COOKIE_PATH') ? ADMIN_COOKIE_PATH : '',
+    ]));
+    foreach ($names as $n) {
+        foreach ($paths as $p) {
+            setcookie($n, ' ', time() - YEAR_IN_SECONDS, $p); // bez domény = host-only
+        }
+    }
+}, 1);
 
 /* ── Diagnostika: /?zcpd_check=1 vypíše, ako plugin vidí požiadavku ──────────
  * Beží veľmi skoro a končí výpisom, takže sa NEUPLATNÍ žiadne presmerovanie
@@ -227,6 +255,16 @@ add_action('template_redirect', function () {
     wp_redirect('https://' . $main . $uri, 301);
     exit;
 }, 1);
+
+// 4b) Skratka /panel na hlavnej doméne → subdoména s panelom
+add_action('template_redirect', function () {
+    if (zc_pd_is_panel_request()) return;
+    if (zc_pd_req_path() !== 'panel') return;
+    $panel  = zc_pd_panel_host();
+    $target = $panel ? 'https://' . $panel . '/' : home_url('/' . ZC_PD_SLUG . '/');
+    wp_redirect($target . zc_pd_query_string(), 301);
+    exit;
+}, 0);
 
 // 5) Voliteľne: /realitny-panel/ na hlavnej doméne presmerovať na subdoménu
 add_action('template_redirect', function () {
