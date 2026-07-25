@@ -296,6 +296,6 @@ function zcSetToggle(groupId, inputId, btn) {
 </script>
 
 <?php /* PDF ebook – zobrazí sa len keď je zapnutý v paneli → Ebook */ ?>
-<?php echo do_shortcode('[zc_ebook]'); ?>
+<?php if (shortcode_exists('zc_ebook')) echo do_shortcode('[zc_ebook]'); ?>
 
 <?php get_footer(); ?>

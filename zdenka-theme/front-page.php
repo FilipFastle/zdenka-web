@@ -228,6 +228,6 @@ $title=zc_agent('title','Realitná maklérka');
 </section>
 
 <?php /* PDF ebook – pod kontaktným formulárom; zobrazí sa len keď je zapnutý v paneli → Ebook */ ?>
-<?php echo do_shortcode('[zc_ebook]'); ?>
+<?php if (shortcode_exists('zc_ebook')) echo do_shortcode('[zc_ebook]'); ?>
 
 <?php get_footer(); ?>
