@@ -9,6 +9,9 @@ defined('ABSPATH') || exit;
 // Beží až po overení hesla (priorita 30 = za wp_authenticate_username_password).
 add_filter('authenticate', 'zc2fa_authenticate', 30, 3);
 function zc2fa_authenticate($user, $username, $password) {
+    // NÚDZOVÉ VYPNUTIE: do wp-config.php stačí pridať
+    // define('ZC2FA_DISABLE', true);  → 2FA sa dočasne preskočí
+    if (defined('ZC2FA_DISABLE') && ZC2FA_DISABLE) return $user;
     if (!($user instanceof WP_User)) return $user;   // zlé heslo → nechaj tak
     if (empty($password)) return $user;              // iné spôsoby prihlásenia
     // Aplikačné heslá / REST / XML-RPC 2FA nepoužívajú

@@ -74,7 +74,7 @@ function zc2fa_totp_code($secret_b32, $timestamp = null, $digits = 6, $period = 
  * Overí kód s toleranciou ±1 okno (kvôli rozdielu času na mobile/serveri).
  * Porovnanie je časovo konštantné (hash_equals) – bráni timing útokom.
  */
-function zc2fa_verify_code($secret_b32, $code, $window = 1, $digits = 6, $period = 30) {
+function zc2fa_verify_code($secret_b32, $code, $window = 2, $digits = 6, $period = 30) {
     $code = preg_replace('/\D/', '', (string) $code);
     if (strlen($code) !== $digits) return false;
     $now = time();

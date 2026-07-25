@@ -2,12 +2,12 @@
 /**
  * Plugin Name: ZC Panel doména – realitný panel na subdoméne
  * Description: Umožní prevádzkovať realitný panel na vlastnej subdoméne (napr. panel.zdenkacibulova.sk) nad tým istým WordPressom. Kým nie je subdoména nastavená, plugin nič nemení.
- * Version: 1.3.0
+ * Version: 1.3.1
  * Author: Filip
  */
 defined('ABSPATH') || exit;
 
-define('ZC_PD_VER', '1.3.0');
+define('ZC_PD_VER', '1.3.1');
 define('ZC_PD_SLUG', 'realitny-panel'); // slug stránky s panelom
 
 /* ───────────────────────── Konfigurácia hostov ───────────────────────── */
@@ -71,14 +71,17 @@ function zc_pd_swap_url($url) {
     if (!$host || strtolower($host) === $panel) return $url;
     return preg_replace('~://' . preg_quote($host, '~') . '~i', '://' . $panel, $url, 1);
 }
-// „home" (verejné adresy) prepíname vždy – vďaka tomu je panel na subdoméne
+// „home" (verejné adresy) prepíname – vďaka tomu je panel na subdoméne.
 add_filter('option_home', 'zc_pd_swap_url');
-// „siteurl" (wp-admin, wp-includes) prepíname len v režime alias; v režime
-// loader tieto súbory na subdoméne neexistujú, musia ostať na hlavnej doméne.
-add_filter('option_siteurl', function ($url) {
-    if (zc_pd_mode() === 'loader') return $url;
-    return zc_pd_swap_url($url);
-});
+
+/* DÔLEŽITÉ: „siteurl" NEPREPÍNAME nikdy.
+ * WordPress z neho odvádza COOKIEHASH (názov prihlasovacej cookie). Ak by sa
+ * siteurl na subdoméne líšil, cookie nastavená na jednom hoste by na druhom
+ * mala iný názov – používateľ by sa „prihlásil", ale hneď by bol opäť
+ * odhlásený a skončil v nekonečnej slučke prihlasovania.
+ * Vďaka tomu wp-admin aj prihlásenie zostávajú na hlavnej doméne a cookie
+ * platí pre obe (COOKIE_DOMAIN = .domena.sk). AJAX zo subdomény rieši CORS.
+ */
 
 /* ── CORS pre AJAX/upload zo subdomény (potrebné v režime loader) ──────────
  * Prihlasovacia cookie sa medzi subdomémami posiela (rovnaká doména), ale

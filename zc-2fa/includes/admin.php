@@ -161,6 +161,13 @@ function zc2fa_render_setup($ctx = 'admin') {
         <?php endif; ?>
 
         <div class="zc2fa-card">
+            <div class="zc2fa-card-t">Kontrola času</div>
+            <p class="zc2fa-hint">Kódy sa počítajú z času, preto sa musí čas servera zhodovať s časom v mobile.<br>
+                Čas servera: <strong><?php echo esc_html(gmdate('H:i:s', time())); ?> UTC</strong>
+                <span id="zc2faClock"></span></p>
+        </div>
+
+        <div class="zc2fa-card">
             <div class="zc2fa-card-t">Automatické odhlásenie</div>
             <p class="zc2fa-hint">
                 Bez 2FA: po <strong><?php echo (int) zc2fa_opt('idle_no2fa'); ?> min</strong> nečinnosti ·
@@ -218,6 +225,15 @@ function zc2fa_render_setup($ctx = 'admin') {
     </style>
     <script>
     function zc2faCopyKey(){var t=document.getElementById('zc2faKey');if(!t)return;navigator.clipboard&&navigator.clipboard.writeText(t.textContent.replace(/\s/g,''));}
+    (function(){
+        // Porovnanie času servera a tohto zariadenia (rozdiel > 20 s = kódy nebudú sedieť)
+        var srv = <?php echo (int) time(); ?> * 1000, el = document.getElementById('zc2faClock');
+        if (!el) return;
+        var diff = Math.round(Math.abs(Date.now() - srv) / 1000);
+        el.innerHTML = (diff <= 20)
+            ? ' · rozdiel oproti tomuto zariadeniu: <strong style="color:#15803d">' + diff + ' s ✓</strong>'
+            : ' · <strong style="color:#b91c1c">rozdiel ' + diff + ' s – to je príliš veľa, kódy nebudú sedieť. Skontrolujte automatický čas v mobile aj na serveri.</strong>';
+    })();
     function zc2faCopy(btn){
         var codes=[].map.call(document.querySelectorAll('.zc2fa-codelist code'),function(c){return c.textContent;}).join('\n');
         if(navigator.clipboard){navigator.clipboard.writeText(codes);btn.textContent='Skopírované ✓';}
