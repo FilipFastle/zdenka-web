@@ -2,12 +2,12 @@
 /**
  * Plugin Name: ZC Panel doména – realitný panel na subdoméne
  * Description: Umožní prevádzkovať realitný panel na vlastnej subdoméne (napr. panel.zdenkacibulova.sk) nad tým istým WordPressom. Kým nie je subdoména nastavená, plugin nič nemení.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Filip
  */
 defined('ABSPATH') || exit;
 
-define('ZC_PD_VER', '1.0.0');
+define('ZC_PD_VER', '1.0.1');
 define('ZC_PD_SLUG', 'realitny-panel'); // slug stránky s panelom
 
 /* ───────────────────────── Konfigurácia hostov ───────────────────────── */
@@ -32,6 +32,11 @@ function zc_pd_is_panel_request() {
     $h = zc_pd_panel_host();
     if (!$h) return false;
     return zc_pd_current_host() === $h;
+}
+
+// Základná doména bez „www." – na návrh subdomény a cookie domény
+function zc_pd_base_domain() {
+    return preg_replace('/^www\./i', '', (string) zc_pd_main_host());
 }
 
 // Pôvodný (hlavný) host webu – čítame surovú hodnotu bez našich filtrov
@@ -123,11 +128,19 @@ function zc_pd_settings_page() {
     if (!current_user_can('manage_options')) return;
 
     $saved = false;
+    $warn  = '';
     if (isset($_POST['zc_pd_save']) && check_admin_referer('zc_pd_save')) {
         $host = strtolower(trim((string) ($_POST['host'] ?? '')));
         $host = preg_replace('~^https?://~i', '', $host);
         $host = trim($host, '/ ');
         $host = preg_replace('/[^a-z0-9\.\-]/', '', $host);
+        // Kontrola: musí to byť subdoména tej istej domény (bez www.)
+        $base = zc_pd_base_domain();
+        if ($host && $base && substr($host, -strlen($base)) !== $base) {
+            $warn = 'Zadaný host <code>' . esc_html($host) . '</code> nepatrí k doméne <code>' . esc_html($base) . '</code>. Ulož radšej <code>panel.' . esc_html($base) . '</code>.';
+        } elseif ($host && strpos($host, '.www.') !== false) {
+            $warn = 'Host obsahuje <code>www.</code> na nesprávnom mieste. Správne je <code>panel.' . esc_html($base) . '</code>.';
+        }
         update_option('zc_pd_host', $host);
         update_option('zc_pd_force', empty($_POST['force']) ? '' : '1');
         $saved = true;
@@ -147,6 +160,9 @@ function zc_pd_settings_page() {
         <?php if ($saved): ?>
         <div class="notice notice-success is-dismissible"><p>Uložené.</p></div>
         <?php endif; ?>
+        <?php if ($warn): ?>
+        <div class="notice notice-warning"><p><?php echo wp_kses_post($warn); ?></p></div>
+        <?php endif; ?>
 
         <div style="background:#fff;border:1px solid #dcdcde;border-radius:8px;padding:18px 20px;margin:18px 0">
             <h2 style="margin-top:0;font-size:15px">Stav nastavenia</h2>
@@ -156,6 +172,9 @@ function zc_pd_settings_page() {
                 <li><?php echo $cookie_ok ? '✅' : '❌'; ?> <code>COOKIE_DOMAIN</code>: <?php echo $cookie ? '<code>' . esc_html($cookie) . '</code>' : '<strong>nie je nastavená</strong> – bez nej sa neudrží prihlásenie medzi doménami'; ?></li>
                 <li><?php echo is_ssl() ? '✅' : '⚠️'; ?> HTTPS <?php echo is_ssl() ? 'aktívne' : '– skontroluj certifikát aj pre subdoménu'; ?></li>
             </ul>
+            <?php if ($host): ?>
+            <p style="margin:12px 0 0"><a href="<?php echo esc_url('https://' . $host); ?>" target="_blank" class="button">Otestovať <?php echo esc_html($host); ?> ↗</a></p>
+            <?php endif; ?>
         </div>
 
         <form method="post">
@@ -164,7 +183,7 @@ function zc_pd_settings_page() {
                 <tr>
                     <th scope="row"><label for="zcpdhost">Host subdomény</label></th>
                     <td>
-                        <input name="host" id="zcpdhost" type="text" class="regular-text" value="<?php echo esc_attr($const ? ZC_PANEL_HOST : get_option('zc_pd_host', '')); ?>" placeholder="panel.<?php echo esc_attr($main); ?>" <?php disabled($const, true); ?>>
+                        <input name="host" id="zcpdhost" type="text" class="regular-text" value="<?php echo esc_attr($const ? ZC_PANEL_HOST : get_option('zc_pd_host', '')); ?>" placeholder="panel.<?php echo esc_attr(zc_pd_base_domain()); ?>" <?php disabled($const, true); ?>>
                         <p class="description">
                             <?php if ($const): ?>Nastavené v <code>wp-config.php</code> cez <code>ZC_PANEL_HOST</code>, tu sa nedá zmeniť.
                             <?php else: ?>Bez <code>https://</code> a bez lomítka. Prázdne = funkcia vypnutá (panel ostane len na hlavnej doméne).<?php endif; ?>
@@ -185,18 +204,31 @@ function zc_pd_settings_page() {
         <div style="background:#fff;border:1px solid #dcdcde;border-radius:8px;padding:18px 20px">
             <h2 style="margin-top:0;font-size:15px">Postup nastavenia (Websupport)</h2>
             <ol style="line-height:1.9">
-                <li>Vytvor subdoménu <code>panel.<?php echo esc_html($main); ?></code> a nastav jej <strong>rovnaký document root</strong> ako má hlavný web (alias, nie nový priestor).</li>
+                <li><strong>DNS:</strong> A záznam <code>panel</code> na rovnakú IP ako hlavný web.</li>
+                <li><strong>Hosting (toto sa najčastejšie zabúda):</strong> pridaj <code>panel.<?php echo esc_html(zc_pd_base_domain()); ?></code> aj do webhostingu ako <em>doménu / alias</em> s <strong>rovnakým document rootom</strong> ako hlavný web. Bez tohto kroku vráti server <code>Not Found</code>, aj keď DNS funguje.</li>
                 <li>Zapni pre ňu <strong>SSL certifikát</strong> (Let's Encrypt).</li>
                 <li>Do <code>wp-config.php</code> nad riadok <code>/* That's all */</code> pridaj:
-                    <pre style="background:#f6f7f7;padding:12px;border-radius:6px;overflow:auto">define('COOKIE_DOMAIN', '.<?php echo esc_html($main); ?>');
+                    <pre style="background:#f6f7f7;padding:12px;border-radius:6px;overflow:auto">define('COOKIE_DOMAIN', '.<?php echo esc_html(zc_pd_base_domain()); ?>');
 define('COOKIEPATH', '/');
 define('SITECOOKIEPATH', '/');
 define('ADMIN_COOKIE_PATH', '/');</pre>
                 </li>
-                <li>Vyplň host subdomény vyššie a ulož. Otestuj <code>https://panel.<?php echo esc_html($main); ?></code> – má sa otvoriť prihlásenie do panela.</li>
+                <li>Ak máš v <code>.htaccess</code> pravidlo, ktoré vynucuje <code>www</code>, vylúč z neho subdoménu – inak ťa presmeruje na hlavnú doménu:
+                    <pre style="background:#f6f7f7;padding:12px;border-radius:6px;overflow:auto">RewriteCond %{HTTP_HOST} !^panel\.<?php echo esc_html(preg_quote(zc_pd_base_domain(), '/')); ?>$ [NC]</pre>
+                    (vlož ako ďalšiu podmienku pred riadok, ktorý presmerováva na <code>www</code>)
+                </li>
+                <li>Vyplň host subdomény vyššie a ulož. Otestuj <code>https://panel.<?php echo esc_html(zc_pd_base_domain()); ?></code> – má sa otvoriť prihlásenie do panela.</li>
                 <li>Až keď to funguje, zapni presmerovanie (voľba vyššie).</li>
             </ol>
             <p style="margin-bottom:0;color:#666">Po zmene cookie nastavení sa všetci používatelia odhlásia – treba sa prihlásiť znova.</p>
+
+            <h2 style="font-size:15px;margin-top:22px">Keď to nefunguje</h2>
+            <table class="widefat striped" style="margin-top:8px">
+                <tr><td style="width:38%"><strong><code>Not Found</code></strong> (biela stránka, text od servera)</td><td>Subdoména nie je pridaná v <strong>hostingu</strong> (krok 2), alebo má iný document root. DNS je v poriadku.</td></tr>
+                <tr><td><strong>Presmeruje na hlavnú doménu</strong></td><td>Pravidlo na <code>www</code> v <code>.htaccess</code> (krok 5), alebo nie je vyplnený host subdomény vyššie.</td></tr>
+                <tr><td><strong>Chyba certifikátu</strong></td><td>Pre subdoménu nie je vystavený SSL certifikát (krok 3).</td></tr>
+                <tr><td><strong>Odhlasuje / nepustí do panela</strong></td><td>Chýba <code>COOKIE_DOMAIN</code> (krok 4). Musí byť <code>.<?php echo esc_html(zc_pd_base_domain()); ?></code> – s bodkou na začiatku, bez <code>www</code>.</td></tr>
+            </table>
         </div>
     </div>
     <?php
