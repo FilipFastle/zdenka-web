@@ -16,7 +16,11 @@ add_action('template_redirect', function() {
 
     $agent_name  = get_the_author_meta('display_name', $agent_id) ?: 'Realitná maklérka';
     $agent_phone = get_user_meta($agent_id, 'property_phone', true) ?: '+421 907 579 742';
-    $agent_email = get_user_meta($agent_id, 'property_email', true) ?: get_the_author_meta('user_email', $agent_id);
+    // PRIVACY: nepoužívať e-mail WP účtu (môže byť privátny/administrátorský).
+    // Verejné exposé používa výhradne kontaktný e-mail nastavený pre web.
+    $agent_email = get_user_meta($agent_id, 'property_email', true);
+    if (!$agent_email && function_exists('zc_agent')) $agent_email = zc_agent('email', '');
+    if (!$agent_email) $agent_email = get_theme_mod('zc_email_main', '');
     $agent_title = get_user_meta($agent_id, 'property_title', true) ?: 'Realitná maklérka';
 
     $typ_labels = ['predaj'=>'Na predaj','prenajom'=>'Na prenájom','pozemok'=>'Pozemok'];
@@ -125,7 +129,7 @@ h1{font-family:'Playfair Display',serif;font-size:26px;margin-bottom:6px}
         <div class="agent">
             <div class="r"><?php echo esc_html($agent_title) ?></div>
             <div class="n"><?php echo esc_html($agent_name) ?></div>
-            <div class="c"><?php echo esc_html($agent_phone) ?> · <?php echo esc_html($agent_email) ?></div>
+            <div class="c"><?php echo esc_html($agent_phone) ?><?php if ($agent_email): ?> · <?php echo esc_html($agent_email) ?><?php endif; ?></div>
         </div>
         <div class="qr"><img src="<?php echo esc_url($qr) ?>" alt="QR"><div class="t">Otvoriť ponuku online</div></div>
     </div>

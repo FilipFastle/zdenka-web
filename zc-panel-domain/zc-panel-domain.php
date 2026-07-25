@@ -2,12 +2,12 @@
 /**
  * Plugin Name: ZC Panel doména – realitný panel na subdoméne
  * Description: Umožní prevádzkovať realitný panel na vlastnej subdoméne (napr. panel.zdenkacibulova.sk) nad tým istým WordPressom. Kým nie je subdoména nastavená, plugin nič nemení.
- * Version: 1.2.1
+ * Version: 1.2.2
  * Author: Filip
  */
 defined('ABSPATH') || exit;
 
-define('ZC_PD_VER', '1.2.1');
+define('ZC_PD_VER', '1.2.2');
 define('ZC_PD_SLUG', 'realitny-panel'); // slug stránky s panelom
 
 /* ───────────────────────── Konfigurácia hostov ───────────────────────── */
@@ -117,6 +117,13 @@ add_action('init', function () {
     if (empty($_GET['zcpd_check'])) return;
     nocache_headers();
     header('Content-Type: text/plain; charset=utf-8');
+    // SECURITY: výpis obsahuje interné údaje (adresy, COOKIE_DOMAIN, prihlásený
+    // používateľ) – dostupný len prihlásenému správcovi.
+    if (!current_user_can('manage_options')) {
+        status_header(403);
+        echo "Prístup zamietnutý.\nDiagnostiku vidí len prihlásený správca webu.\n";
+        exit;
+    }
     $page = get_page_by_path(ZC_PD_SLUG);
     echo "ZC Panel doména – diagnostika\n";
     echo "─────────────────────────────\n";

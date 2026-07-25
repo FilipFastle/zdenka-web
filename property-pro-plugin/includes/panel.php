@@ -722,6 +722,14 @@ function panel_list() {
 }
 
 function panel_form($pid) {
+    // SECURITY: nezobrazovať údaje iného typu obsahu ani bez oprávnenia
+    if ($pid) {
+        $chk = get_post($pid);
+        if (!$chk || $chk->post_type !== 'property' || !current_user_can('edit_post', $pid)) {
+            echo '<div style="padding:40px;text-align:center;color:#e74c3c">Táto ponuka neexistuje alebo k nej nemáš prístup. <a href="?action=list">← Späť na ponuky</a></div>';
+            return;
+        }
+    }
     $f = function($k) use ($pid) { return $pid ? get_post_meta($pid,'_property_'.$k,true) : ''; };
     $post = $pid ? get_post($pid) : null;
     $ams_sel = $pid ? (get_post_meta($pid,'_property_amenities',true)?:[]) : [];
@@ -975,6 +983,7 @@ add_action('template_redirect', function() {
         if (!wp_verify_nonce($_GET['_wpnonce']??'', 'panel_dup_'.intval($_GET['id']))) wp_die('Neplatný token.');
         $src = get_post(intval($_GET['id']));
         if (!$src || $src->post_type !== 'property') wp_die('Neplatná požiadavka.');
+        if (!current_user_can('edit_post', $src->ID)) wp_die('Nemáte oprávnenie duplikovať túto ponuku.');
         $new_id = wp_insert_post([
             'post_title'  => $src->post_title . ' (kópia)',
             'post_content'=> $src->post_content,
@@ -994,6 +1003,18 @@ add_action('template_redirect', function() {
 
     if (!isset($_POST['title'])||!wp_verify_nonce($_POST['_wpnonce']??'','panel_save')) return;
     $pid = intval($_GET['id']??0);
+    // SECURITY: pri úprave musí ísť skutočne o ponuku (nie inú stránku/príspevok)
+    // a používateľ ju musí smieť upravovať. Bez toho by sa dala cez ?id=<čokoľvek>
+    // prepísať ľubovoľná stránka webu a premeniť na nehnuteľnosť.
+    if ($pid) {
+        $existing = get_post($pid);
+        if (!$existing || $existing->post_type !== 'property') {
+            wp_die('Neplatná požiadavka.');
+        }
+        if (!current_user_can('edit_post', $pid)) {
+            wp_die('Nemáte oprávnenie upraviť túto ponuku.');
+        }
+    }
     $is_new = !$pid;
     $data = ['post_title'=>sanitize_text_field($_POST['title']),'post_content'=>wp_kses_post($_POST['content']??''),'post_type'=>'property','post_status'=>'publish'];
     if ($pid){$data['ID']=$pid;wp_update_post($data);}else{$pid=wp_insert_post($data);}
