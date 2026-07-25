@@ -2,12 +2,12 @@
 /**
  * Plugin Name: ZC Panel doména – realitný panel na subdoméne
  * Description: Umožní prevádzkovať realitný panel na vlastnej subdoméne (napr. panel.zdenkacibulova.sk) nad tým istým WordPressom. Kým nie je subdoména nastavená, plugin nič nemení.
- * Version: 1.0.1
+ * Version: 1.1.0
  * Author: Filip
  */
 defined('ABSPATH') || exit;
 
-define('ZC_PD_VER', '1.0.1');
+define('ZC_PD_VER', '1.1.0');
 define('ZC_PD_SLUG', 'realitny-panel'); // slug stránky s panelom
 
 /* ───────────────────────── Konfigurácia hostov ───────────────────────── */
@@ -50,6 +50,17 @@ function zc_pd_main_host() {
     return $host;
 }
 
+/* ───────────────────────────── Režim prevádzky ─────────────────────────────
+ * alias  = subdoména má ROVNAKÝ document root ako web (ideálne)
+ * loader = subdoména má VLASTNÝ priečinok, v ktorom je loader (index.php),
+ *          ktorý spustí hlavný WordPress. Vtedy musia wp-admin, wp-includes
+ *          a wp-content ostať na hlavnej doméne.
+ */
+function zc_pd_mode() {
+    $m = get_option('zc_pd_mode', 'alias');
+    return ($m === 'loader') ? 'loader' : 'alias';
+}
+
 /* ──────────── Prepnutie adries webu na panel host (len na ňom) ──────────── */
 
 function zc_pd_swap_url($url) {
@@ -60,8 +71,43 @@ function zc_pd_swap_url($url) {
     if (!$host || strtolower($host) === $panel) return $url;
     return preg_replace('~://' . preg_quote($host, '~') . '~i', '://' . $panel, $url, 1);
 }
+// „home" (verejné adresy) prepíname vždy – vďaka tomu je panel na subdoméne
 add_filter('option_home', 'zc_pd_swap_url');
-add_filter('option_siteurl', 'zc_pd_swap_url');
+// „siteurl" (wp-admin, wp-includes) prepíname len v režime alias; v režime
+// loader tieto súbory na subdoméne neexistujú, musia ostať na hlavnej doméne.
+add_filter('option_siteurl', function ($url) {
+    if (zc_pd_mode() === 'loader') return $url;
+    return zc_pd_swap_url($url);
+});
+
+/* ── CORS pre AJAX/upload zo subdomény (potrebné v režime loader) ──────────
+ * Prihlasovacia cookie sa medzi subdomémami posiela (rovnaká doména), ale
+ * prehliadač potrebuje aj CORS hlavičky, aby odpoveď smel prečítať.
+ */
+function zc_pd_send_cors() {
+    $panel = zc_pd_panel_host();
+    if (!$panel) return;
+    $origin = isset($_SERVER['HTTP_ORIGIN']) ? (string) $_SERVER['HTTP_ORIGIN'] : '';
+    if (!$origin) return;
+    $oh = strtolower((string) wp_parse_url($origin, PHP_URL_HOST));
+    if ($oh !== $panel) return; // povolíme výhradne vlastnú subdoménu
+
+    header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
+    header('Access-Control-Allow-Credentials: true');
+    header('Vary: Origin', false);
+    if (strtoupper($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+        header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, X-Requested-With, X-WP-Nonce');
+        exit;
+    }
+}
+add_action('init', function () {
+    $script = basename($_SERVER['PHP_SELF'] ?? '');
+    if (wp_doing_ajax() || in_array($script, ['admin-ajax.php', 'async-upload.php', 'media-upload.php'], true)) {
+        zc_pd_send_cors();
+    }
+}, 0);
+add_action('admin_init', 'zc_pd_send_cors', 0);
 
 /* ─────────────────── Chovanie na subdoméne panela ─────────────────── */
 
@@ -143,6 +189,8 @@ function zc_pd_settings_page() {
         }
         update_option('zc_pd_host', $host);
         update_option('zc_pd_force', empty($_POST['force']) ? '' : '1');
+        $mode = ($_POST['mode'] ?? 'alias') === 'loader' ? 'loader' : 'alias';
+        update_option('zc_pd_mode', $mode);
         $saved = true;
     }
 
@@ -191,6 +239,14 @@ function zc_pd_settings_page() {
                     </td>
                 </tr>
                 <tr>
+                    <th scope="row">Režim subdomény</th>
+                    <td>
+                        <label style="display:block;margin-bottom:8px"><input type="radio" name="mode" value="alias" <?php checked(zc_pd_mode(), 'alias'); ?>> <strong>Alias</strong> – subdoména má <em>rovnaký</em> document root ako web</label>
+                        <label style="display:block"><input type="radio" name="mode" value="loader" <?php checked(zc_pd_mode(), 'loader'); ?>> <strong>Loader</strong> – subdoména má <em>vlastný</em> priečinok (vložíš doň 2 súbory nižšie)</label>
+                        <p class="description">Ak ti hosting nedovolí rovnaký document root, zvoľ <strong>Loader</strong>. Plugin vtedy nechá <code>wp-admin</code>, <code>wp-includes</code> a <code>wp-content</code> na hlavnej doméne a povolí AJAX/upload zo subdomény.</p>
+                    </td>
+                </tr>
+                <tr>
                     <th scope="row">Presmerovanie</th>
                     <td>
                         <label><input type="checkbox" name="force" value="1" <?php checked($force, '1'); ?>> Presmerovať <code>/<?php echo esc_html(ZC_PD_SLUG); ?>/</code> na subdoménu</label>
@@ -221,6 +277,35 @@ define('ADMIN_COOKIE_PATH', '/');</pre>
                 <li>Až keď to funguje, zapni presmerovanie (voľba vyššie).</li>
             </ol>
             <p style="margin-bottom:0;color:#666">Po zmene cookie nastavení sa všetci používatelia odhlásia – treba sa prihlásiť znova.</p>
+
+            <h2 style="font-size:15px;margin-top:22px">Súbory pre režim „Loader"</h2>
+            <p style="margin-top:4px">Ak subdoména dostala <strong>vlastný priečinok</strong> (napr. <code>/panel</code>), vlož doň tieto dva súbory. Cesta je už vyplnená podľa tvojho servera – netreba nič dopisovať.</p>
+            <p style="margin:0 0 6px"><strong>1.</strong> <code>index.php</code></p>
+            <pre style="background:#f6f7f7;padding:12px;border-radius:6px;overflow:auto">&lt;?php
+/* Loader: subdoména panela spustí WordPress z hlavného webu */
+define('WP_USE_THEMES', true);
+require '<?php echo esc_html(rtrim(ABSPATH, '/\\')); ?>/wp-blog-header.php';</pre>
+            <p style="margin:14px 0 6px"><strong>2.</strong> <code>.htaccess</code></p>
+            <pre style="background:#f6f7f7;padding:12px;border-radius:6px;overflow:auto">RewriteEngine On
+RewriteBase /
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]</pre>
+            <p style="color:#666">Potom vyššie prepni <strong>Režim subdomény</strong> na <em>Loader</em> a ulož.</p>
+
+            <h2 style="font-size:15px;margin-top:22px">Text pre podporu Websupportu</h2>
+            <p style="margin-top:4px">Ak si nie si istý, kde sa subdoména pridáva, pošli im toto:</p>
+            <pre style="background:#f6f7f7;padding:12px;border-radius:6px;overflow:auto;white-space:pre-wrap">Dobrý deň,
+prosím o pridanie subdomény panel.<?php echo esc_html(zc_pd_base_domain()); ?> do webhostingu tak,
+aby ju server obsluhoval (nie len DNS záznam), a o vystavenie Let's Encrypt
+certifikátu pre túto subdoménu.
+
+Ideálne s rovnakým document rootom ako hlavná doména
+(<?php echo esc_html(rtrim(ABSPATH, '/\\')); ?>).
+Ak to nie je možné, stačí vlastný priečinok – obsah si doplním sám.
+
+Ďakujem.</pre>
 
             <h2 style="font-size:15px;margin-top:22px">Keď to nefunguje</h2>
             <table class="widefat striped" style="margin-top:8px">
