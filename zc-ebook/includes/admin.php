@@ -4,9 +4,16 @@
  */
 defined('ABSPATH') || exit;
 
+// Kto smie spravovať ebook: admin alebo realitný maklér (má upload_files)
+function zc_ebook_can_manage() {
+    if (current_user_can('manage_options')) return true;
+    if (function_exists('pp_is_agent') && pp_is_agent() && current_user_can('upload_files')) return true;
+    return false;
+}
+
 // ── Uloženie z POST (spoločné pre obe umiestnenia) ──────────────────────────
 function zc_ebook_save_from_post() {
-    if (!isset($_POST['zceb_save']) || !current_user_can('manage_options')) return false;
+    if (!isset($_POST['zceb_save']) || !zc_ebook_can_manage()) return false;
     if (!isset($_POST['zceb_nonce']) || !wp_verify_nonce($_POST['zceb_nonce'], 'zceb_save')) return false;
 
     update_option('zc_ebook_enable',   empty($_POST['enable']) ? '' : '1');
@@ -25,6 +32,9 @@ function zc_ebook_save_from_post() {
 // ── Zdieľané UI (vracia HTML) ───────────────────────────────────────────────
 // $ctx: 'admin' | 'panel' – iba drobné rozdiely v obale.
 function zc_ebook_render_manager($ctx = 'admin') {
+    if (!zc_ebook_can_manage()) {
+        return '<p style="padding:40px;text-align:center;color:#e74c3c">Nemáš prístup k nastaveniam ebooku.</p>';
+    }
     $saved = zc_ebook_save_from_post();
 
     $on       = zc_ebook_enabled();
@@ -191,20 +201,38 @@ function zc_ebook_render_manager($ctx = 'admin') {
     </style>
     <script>
     (function(){
-        if(typeof jQuery==='undefined'||!window.wp||!wp.media){return;}
-        document.querySelectorAll('[data-zceb-pick]').forEach(function(btn){
-            btn.addEventListener('click',function(){
-                var target=btn.getAttribute('data-zceb-pick');
-                var type=btn.getAttribute('data-type');
-                var lib=(type==='image')?{type:'image'}:{type:type};
-                var frame=wp.media({title:'Vyber súbor',button:{text:'Použiť'},multiple:false,library:lib});
-                frame.on('select',function(){
-                    var a=frame.state().get('selection').first().toJSON();
-                    var inp=document.getElementById(target); if(inp)inp.value=a.url;
-                    if(target==='zcebCover'){var p=document.getElementById('zcebCoverPrev');if(p)p.innerHTML='<img src="'+a.url+'" alt="">';}
+        var frames={};
+        // Delegovaný listener – naviaže sa hneď, wp.media sa overí až pri kliknutí
+        // (skripty médií sa načítavajú v pätičke, preto skorá kontrola zlyhávala).
+        document.addEventListener('click',function(e){
+            var btn=e.target.closest?e.target.closest('[data-zceb-pick]'):null;
+            if(!btn)return;
+            e.preventDefault();
+            var target=btn.getAttribute('data-zceb-pick');
+            var type=btn.getAttribute('data-type');
+
+            if(!window.wp||!wp.media){
+                alert('Knižnica médií sa nenačítala. Obnovte stránku (Ctrl+F5). Prípadne vložte URL súboru ručne – nájdete ju v Médiá → kliknite na súbor → „Adresa súboru".');
+                return;
+            }
+            if(!frames[target]){
+                var opts={title:(type==='image'?'Vyber obrázok obálky':'Vyber PDF súbor'),button:{text:'Použiť tento súbor'},multiple:false};
+                // Obrázky filtrujeme; pri PDF nefiltrujeme, aby sa zobrazili všetky
+                // už nahrané súbory (filtre podľa MIME niekedy PDF skryjú).
+                if(type==='image')opts.library={type:'image'};
+                frames[target]=wp.media(opts);
+                frames[target].on('select',function(){
+                    var a=frames[target].state().get('selection').first().toJSON();
+                    var url=a.url||'';
+                    var inp=document.getElementById(target);
+                    if(inp)inp.value=url;
+                    if(target==='zcebCover'){
+                        var p=document.getElementById('zcebCoverPrev');
+                        if(p)p.innerHTML='<img src="'+url+'" alt="">';
+                    }
                 });
-                frame.open();
-            });
+            }
+            frames[target].open();
         });
     })();
     </script>
