@@ -17,6 +17,35 @@
 $host = preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? '');
 $base = preg_replace('/^www\./i', '', $host);
 
+/* ── DIAGNOSTIKA (spustí sa pred mazaním) ───────────────────────────────────
+ * PHP v $_COOKIE ponechá pri rovnakom názve len poslednú hodnotu, preto
+ * duplicity čítame z hlavičky Cookie, kde sú všetky. */
+$raw = (string) ($_SERVER['HTTP_COOKIE'] ?? '');
+$names = [];
+foreach (explode(';', $raw) as $part) {
+    $part = trim($part);
+    if ($part === '') continue;
+    $n = trim(explode('=', $part, 2)[0]);
+    if ($n === '') continue;
+    $names[$n] = ($names[$n] ?? 0) + 1;
+}
+$wp_names  = array_filter($names, function ($n) { return stripos($n, 'wordpress') === 0; }, ARRAY_FILTER_USE_KEY);
+$dupes     = array_filter($wp_names, function ($c) { return $c > 1; });
+
+// Kontrola wp-config.php – vypisujeme len počty a nastavenia, žiadne tajomstvá
+$cfg_path = __DIR__ . '/wp-config.php';
+$cfg_ok   = is_readable($cfg_path);
+$cfg      = $cfg_ok ? (string) file_get_contents($cfg_path) : '';
+$salt_dupes = [];
+foreach (['AUTH_KEY','SECURE_AUTH_KEY','LOGGED_IN_KEY','NONCE_KEY','AUTH_SALT','SECURE_AUTH_SALT','LOGGED_IN_SALT','NONCE_SALT'] as $k) {
+    $c = preg_match_all("/define\(\s*['\"]" . $k . "['\"]/", $cfg);
+    if ($c > 1) $salt_dupes[] = $k . ' (' . $c . '×)';
+}
+preg_match("/define\(\s*['\"]COOKIE_DOMAIN['\"]\s*,\s*['\"]([^'\"]*)['\"]/", $cfg, $m_cd);
+$cookie_domain = $m_cd[1] ?? null;
+$has_cache = file_exists(__DIR__ . '/wp-content/advanced-cache.php')
+          || file_exists(__DIR__ . '/wp-content/object-cache.php');
+
 // Varianty domén, pod ktorými mohla cookie vzniknúť
 $domains = array_unique(array_filter([
     '',                 // host-only (bez atribútu Domain)
@@ -71,8 +100,59 @@ small{color:#6B6560}
     <?php if ($deleted): ?>
     <div class="ok">✓ Vymazaných cookies: <?php echo count($deleted); ?></div>
     <?php else: ?>
-    <div class="warn">V prehliadači už neboli žiadne WordPress cookies. Ak ťa to aj tak loopuje, príčina je v <code>wp-config.php</code> – pozri krok 2 nižšie.</div>
+    <div class="warn">V prehliadači už neboli žiadne WordPress cookies. Ak ťa to aj tak loopuje, pozri diagnostiku nižšie.</div>
     <?php endif; ?>
+
+    <h2 style="font-size:15px;margin-top:24px">Diagnostika – čo spôsobuje slučku</h2>
+    <table style="width:100%;border-collapse:collapse;font-size:14px">
+        <tr><td style="padding:8px 0;border-bottom:1px solid #eee">Duplicitné prihlasovacie cookies</td>
+            <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">
+                <?php if ($dupes): ?><strong style="color:#b91c1c">ÁNO – toto je príčina</strong>
+                <?php else: ?><strong style="color:#15803d">nie</strong><?php endif; ?>
+            </td></tr>
+        <?php if ($dupes): foreach ($dupes as $n => $c): ?>
+        <tr><td colspan="2" style="padding:2px 0 8px;border-bottom:1px solid #eee;color:#b91c1c;font-size:12px">
+            <code><?php echo htmlspecialchars($n); ?></code> poslaná <?php echo (int) $c; ?>× (rôzne domény)</td></tr>
+        <?php endforeach; endif; ?>
+
+        <tr><td style="padding:8px 0;border-bottom:1px solid #eee">Duplicitné bezpečnostné kľúče v <code>wp-config.php</code></td>
+            <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">
+                <?php if (!$cfg_ok): ?><span style="color:#92400e">neviem prečítať</span>
+                <?php elseif ($salt_dupes): ?><strong style="color:#b91c1c">ÁNO – toto je príčina</strong>
+                <?php else: ?><strong style="color:#15803d">nie</strong><?php endif; ?>
+            </td></tr>
+        <?php if ($salt_dupes): ?>
+        <tr><td colspan="2" style="padding:2px 0 8px;border-bottom:1px solid #eee;color:#b91c1c;font-size:12px">
+            Viackrát definované: <?php echo htmlspecialchars(implode(', ', $salt_dupes)); ?> – nechaj od každého len jeden riadok.</td></tr>
+        <?php endif; ?>
+
+        <tr><td style="padding:8px 0;border-bottom:1px solid #eee"><code>COOKIE_DOMAIN</code></td>
+            <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">
+                <?php if ($cookie_domain === null): ?><span style="color:#15803d">nie je nastavená</span>
+                <?php else: ?>
+                    <code><?php echo htmlspecialchars($cookie_domain); ?></code>
+                    <?php if ($cookie_domain !== '' && stripos($host, ltrim($cookie_domain, '.')) === false): ?>
+                        <br><strong style="color:#b91c1c">nesedí s doménou <?php echo htmlspecialchars($host); ?> – toto je príčina</strong>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </td></tr>
+
+        <tr><td style="padding:8px 0;border-bottom:1px solid #eee">Vyrovnávacia pamäť (cache) na serveri</td>
+            <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">
+                <?php echo $has_cache ? '<strong style="color:#92400e">áno – môže cachovať prihlásenie</strong>' : '<strong style="color:#15803d">nie</strong>'; ?>
+            </td></tr>
+
+        <tr><td style="padding:8px 0">Čas servera</td>
+            <td style="padding:8px 0;text-align:right"><code><?php echo gmdate('H:i:s'); ?> UTC</code><span id="clk"></span></td></tr>
+    </table>
+    <script>
+    (function(){
+        var s=<?php echo time(); ?>*1000, e=document.getElementById('clk');
+        var d=Math.round(Math.abs(Date.now()-s)/1000);
+        e.innerHTML = d<120 ? ' <span style="color:#15803d">✓</span>'
+            : '<br><strong style="color:#b91c1c">rozdiel '+d+' s oproti tvojmu zariadeniu – zle nastavený čas servera spôsobuje slučku</strong>';
+    })();
+    </script>
 
     <p><a class="btn" href="/wp-login.php">Prihlásiť sa →</a></p>
 
