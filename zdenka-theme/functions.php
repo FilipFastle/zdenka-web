@@ -3,8 +3,8 @@ defined('ABSPATH') || exit;
 
 add_action('wp_enqueue_scripts', function() {
     // Fonty sú self-hostované v main.css (@font-face) – žiadne Google servery
-    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',[],'3.16.0');
-    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.16.0',true);
+    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',[],'3.17.0');
+    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.17.0',true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.svg','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0]);
 });
 
@@ -263,7 +263,9 @@ function zc_video_embed($url) {
         $vertical = (stripos($url, '/shorts/') !== false);
         $origin   = rawurlencode(home_url());
         return [
-            'url'      => 'https://www.youtube.com/embed/' . $m[1] . '?rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=' . $origin,
+            // youtube-nocookie.com = režim „rozšírenej ochrany súkromia" –
+            // YouTube nenastaví sledovacie cookies, kým návštevník video nespustí
+            'url'      => 'https://www.youtube-nocookie.com/embed/' . $m[1] . '?rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=' . $origin,
             'vertical' => $vertical,
         ];
     }
@@ -583,7 +585,6 @@ require_once get_stylesheet_directory() . '/inc/maintenance.php';
 require_once get_stylesheet_directory() . '/inc/email-template.php';
 require_once get_stylesheet_directory() . '/inc/privacy.php';
 require_once get_stylesheet_directory() . '/inc/seo.php';
-require_once get_stylesheet_directory() . '/inc/cookie-bar.php';
 // Ebook je teraz samostatný plugin (zc-ebook). Ak je aktívny, poskytuje
 // zc_ebook_* funkcie aj shortcode [zc_ebook]; téma ich používa cez function_exists.
 
