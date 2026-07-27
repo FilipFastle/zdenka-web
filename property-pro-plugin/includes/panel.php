@@ -8,16 +8,21 @@ register_activation_hook(PROPERTY_PRO_PATH . 'property-manager-pro.php', 'zcpp_e
 // Also ensure page exists on every admin load (handles file-only updates)
 add_action('admin_init', 'zcpp_ensure_panel_page');
 
+/**
+ * Zabezpečí, že stránka panela existuje a je funkčná.
+ * Hľadá zámerne aj v KOŠI a aj pod iným typom obsahu – stránka v koši totiž
+ * naďalej blokuje slug „realitny-panel", takže novovytvorená by dostala
+ * „realitny-panel-2" a pôvodná adresa by trvalo vracala 404.
+ */
 function zcpp_ensure_panel_page() {
-    // Check if page exists (published or draft)
-    $existing = get_posts([
-        'post_type'   => 'page',
-        'post_name'   => 'realitny-panel',
-        'post_status' => ['publish', 'draft', 'private'],
+    $found = get_posts([
+        'post_type'   => ['page', 'property', 'post'],
+        'name'        => 'realitny-panel',
+        'post_status' => ['publish', 'draft', 'private', 'pending', 'future', 'trash'],
         'numberposts' => 1,
     ]);
 
-    if (empty($existing)) {
+    if (empty($found)) {
         wp_insert_post([
             'post_type'    => 'page',
             'post_title'   => 'Realitný Panel',
@@ -25,10 +30,56 @@ function zcpp_ensure_panel_page() {
             'post_content' => '[realitny_panel]',
             'post_status'  => 'publish',
         ]);
-        // Flush rewrite rules so URL works immediately
         flush_rewrite_rules(false);
+        return;
     }
+
+    $page    = $found[0];
+    $changed = false;
+
+    // V koši → obnoviť
+    if ($page->post_status === 'trash') {
+        wp_untrash_post($page->ID);
+        $page = get_post($page->ID);
+        $changed = true;
+    }
+    // Zlý typ obsahu (napr. omylom prepísaná na ponuku) → vrátiť na stránku
+    if ($page && $page->post_type !== 'page') {
+        wp_update_post(['ID' => $page->ID, 'post_type' => 'page']);
+        $changed = true;
+    }
+    // Nie je zverejnená → zverejniť
+    if ($page && $page->post_status !== 'publish') {
+        wp_update_post(['ID' => $page->ID, 'post_status' => 'publish']);
+        $changed = true;
+    }
+    // Chýba shortcode → doplniť (inak by sa zobrazila prázdna stránka)
+    if ($page && strpos((string) $page->post_content, '[realitny_panel]') === false) {
+        wp_update_post(['ID' => $page->ID, 'post_content' => trim($page->post_content . "\n\n[realitny_panel]")]);
+        $changed = true;
+    }
+
+    if ($changed) flush_rewrite_rules(false);
 }
+
+/**
+ * Samoliečenie na frontende: keď adresa panela vráti 404 (napr. po presune do
+ * koša), stránku opravíme a používateľa pošleme späť. Beží len pri 404 na
+ * tejto adrese, takže bežné načítanie webu to nespomaľuje.
+ */
+add_action('template_redirect', function () {
+    if (!is_404()) return;
+    $path = trim((string) wp_parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+    if (strpos($path, 'realitny-panel') !== 0) return;
+
+    zcpp_ensure_panel_page();
+    $page = get_page_by_path('realitny-panel');
+    if (!$page || $page->post_status !== 'publish') return; // nepodarilo sa – necháme 404
+
+    $qs = (string) ($_SERVER['QUERY_STRING'] ?? '');
+    wp_safe_redirect(get_permalink($page) . ($qs !== '' ? '?' . $qs : ''), 302);
+    exit;
+}, 5);
 
 add_shortcode('realitny_panel', function() {
     if (!is_user_logged_in()) return panel_login_page();
