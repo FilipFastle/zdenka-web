@@ -5,6 +5,8 @@ defined('ABSPATH') || exit;
 add_action('template_redirect', function() {
     if (!get_option('zc_maintenance_on', 0)) return;
     if (is_admin()) return;
+    // Účet „Náhľad webu“ vidí web aj počas údržby – na to slúži
+    if (function_exists('zc_is_preview_user') && zc_is_preview_user()) return;
     // Admin má web normálne prístupný – okrem náhľadu údržby (?preview_maintenance=1)
     if (current_user_can('manage_options') && !isset($_GET['preview_maintenance'])) return;
 

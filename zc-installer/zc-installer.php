@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ZC Inštalátor (hromadná inštalácia témy a pluginov)
  * Description: Nahraj tému a všetky pluginy naraz — viac .zip súborov v jednom kroku, alebo jedným klikom nainštaluj celý priložený balík. Po inštalácii môžeš tento plugin zmazať.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Filip
  */
 defined('ABSPATH') || exit;
@@ -10,8 +10,13 @@ defined('ABSPATH') || exit;
 define('ZCI_PATH', plugin_dir_path(__FILE__));
 
 add_action('admin_menu', function() {
-    add_menu_page('ZC Inštalátor', 'ZC Inštalátor', 'install_plugins',
-        'zc-installer', 'zci_render_page', 'dashicons-download', 2);
+    if (function_exists('zc_hub_slug')) {
+        add_submenu_page(zc_hub_slug(), 'ZC Inštalátor', 'Inštalátor', 'install_plugins',
+            'zc-installer', 'zci_render_page');
+    } else {
+        add_menu_page('ZC Inštalátor', 'ZC Inštalátor', 'install_plugins',
+            'zc-installer', 'zci_render_page', 'dashicons-download', 2);
+    }
 });
 
 // ── Jadro: nainštaluje jeden .zip (téma alebo plugin) ───────────────────

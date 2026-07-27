@@ -1,43 +1,77 @@
 <?php
 defined('ABSPATH') || exit;
-add_shortcode('zc_reviews', function($atts) {
-    $atts = shortcode_atts(['limit'=>'100','cols'=>'3','carousel'=>'auto'], $atts);
+
+/**
+ * Všetky zverejnené recenzie (vlastné + Google, ak je firma napojená)
+ * zoradené podľa nastavenia. Používa to shortcode aj šablóna Referencie.
+ */
+function zcr_public_reviews($limit = 500) {
     global $wpdb;
+    $limit = max(1, intval($limit));
     $order = function_exists('zcr_order_sql') ? zcr_order_sql() : 'sort_order ASC, id ASC';
-    $rows = $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM ".zcr_table()." WHERE published=1 ORDER BY {$order} LIMIT %d",
-        intval($atts['limit'])
+    $rows  = $wpdb->get_results($wpdb->prepare(
+        "SELECT * FROM " . zcr_table() . " WHERE published=1 ORDER BY {$order} LIMIT %d",
+        $limit
     ));
     $rows = $rows ?: [];
 
     // Recenzie z Google firmy (ak je napojená) – zaradenie podľa nastavenia
     if (function_exists('zcr_google_enabled') && zcr_google_enabled()) {
-        $g = zcr_google_fetch();
+        $g   = zcr_google_fetch();
         $pos = function_exists('zcr_google_position') ? zcr_google_position() : 'after';
         if ($pos === 'before') {
             $rows = array_merge($g, $rows);
         } elseif ($pos === 'mixed') {
             $rows = array_merge($rows, $g);
-            usort($rows, function ($a, $b) {
-                return (int) $b->rating <=> (int) $a->rating;
-            });
+            usort($rows, function ($a, $b) { return (int) $b->rating <=> (int) $a->rating; });
         } else {
             $rows = array_merge($rows, $g);
         }
-        $rows = array_slice($rows, 0, intval($atts['limit']));
+        $rows = array_slice($rows, 0, $limit);
     }
+    return $rows;
+}
+
+/** Počet a priemerné hodnotenie zverejnených recenzií. */
+function zcr_public_stats() {
+    $rows = zcr_public_reviews(500);
+    $n    = count($rows);
+    if (!$n) return ['count' => 0, 'avg' => 0];
+    $sum = 0;
+    foreach ($rows as $r) $sum += intval($r->rating);
+    return ['count' => $n, 'avg' => round($sum / $n, 1)];
+}
+
+add_shortcode('zc_reviews', function($atts) {
+    $atts = shortcode_atts([
+        'limit'    => '500',
+        'cols'     => '3',
+        'carousel' => 'auto',
+        'layout'   => '',      // '' | grid | mosaic | carousel
+        'clamp'    => '',      // '0' = zobraziť celý text
+        'google'   => '1',     // '0' = skryť tlačidlo na Google
+    ], $atts);
+    $rows = zcr_public_reviews(intval($atts['limit']));
+
     // Tlačidlo na Google recenzie (ak je v Customizeri nastavený odkaz)
-    $google = function_exists('get_theme_mod') ? get_theme_mod('zc_social_google', '') : '';
+    $google = ($atts['google'] === '0') ? '' : (function_exists('get_theme_mod') ? get_theme_mod('zc_social_google', '') : '');
     $gicon  = '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M21.35 11.1H12v3.83h5.35c-.23 1.4-1.66 4.1-5.35 4.1a5.9 5.9 0 0 1 0-11.8c1.87 0 3.13.8 3.85 1.48l2.62-2.53C16.9 3.6 14.66 2.6 12 2.6A9.4 9.4 0 1 0 21.35 11.1z"/></svg>';
     $gbtn   = $google ? '<div style="text-align:center;margin-top:34px"><a href="' . esc_url($google) . '" target="_blank" rel="noopener" class="zc-btn zc-btn-primary" style="display:inline-flex;align-items:center;gap:9px">' . $gicon . ' Pozrieť recenzie na Google →</a></div>' : '';
 
     if (!$rows) return $gbtn ? '<div class="zcr-only-google">' . $gbtn . '</div>' : '';
 
-    $count    = count($rows);
-    $cols     = max(1, min(4, intval($atts['cols'])));
-    $carousel = $atts['carousel'] === 'auto' ? ($count > 3) : ($atts['carousel'] === '1');
+    $count  = count($rows);
+    $cols   = max(1, min(4, intval($atts['cols'])));
+    $layout = $atts['layout'];
+    $clamp  = $atts['clamp'] !== '0';
 
-    if ($carousel) return zcr_carousel($rows) . $gbtn;
+    if ($layout === '') {
+        $carousel = $atts['carousel'] === 'auto' ? ($count > 3) : ($atts['carousel'] === '1');
+        $layout   = $carousel ? 'carousel' : 'grid';
+    }
+
+    if ($layout === 'carousel') return zcr_carousel($rows) . $gbtn;
+    if ($layout === 'mosaic')   return zcr_mosaic($rows, $cols, $clamp) . $gbtn;
 
     ob_start(); ?>
     <style>
@@ -62,10 +96,35 @@ add_shortcode('zc_reviews', function($atts) {
     <?php endif; ?>
     </style>
     <div class="zcr-grid">
-    <?php foreach ($rows as $r): echo zcr_card($r); endforeach; ?>
+    <?php foreach ($rows as $r): echo zcr_card($r, $clamp); endforeach; ?>
     </div>
     <?php return ob_get_clean();
 });
+
+/**
+ * Mozaika – karty v stĺpcoch s prirodzenou výškou (nie rovnaká výška v riadku).
+ * Používa CSS columns, takže dlhá aj krátka recenzia vyzerajú prirodzene.
+ */
+function zcr_mosaic($rows, $cols = 3, $clamp = false) {
+    $cols = max(1, min(4, intval($cols)));
+    ob_start(); ?>
+    <style>
+    .zcr-mosaic{columns:<?php echo $cols ?>;column-gap:22px}
+    .zcr-mosaic>.zcr-m-item{break-inside:avoid;-webkit-column-break-inside:avoid;
+        page-break-inside:avoid;margin:0 0 22px;display:block}
+    /* v mozaike nechceme naťahovanie na rovnakú výšku */
+    .zcr-mosaic .zc-testimonial{height:auto}
+    .zcr-mosaic .zc-testimonial-author{margin-top:16px}
+    @media(max-width:900px){.zcr-mosaic{columns:2}}
+    @media(max-width:600px){.zcr-mosaic{columns:1}}
+    </style>
+    <div class="zcr-mosaic">
+    <?php foreach ($rows as $r): ?>
+        <div class="zcr-m-item"><?php echo zcr_card($r, $clamp); ?></div>
+    <?php endforeach; ?>
+    </div>
+    <?php return ob_get_clean();
+}
 
 /**
  * Spoločné štýly kariet – rovnaká výška, meno vždy dole, dlhý text skrátený
@@ -120,14 +179,14 @@ function zcr_card_styles() {
     return ob_get_clean();
 }
 
-function zcr_card($r) {
+function zcr_card($r, $clamp = true) {
     $stars = str_repeat('★', intval($r->rating)) . str_repeat('☆', 5 - intval($r->rating));
     $is_google = !empty($r->source) && $r->source === 'google';
     ob_start();
     echo zcr_card_styles(); ?>
     <div class="zc-testimonial">
         <div class="zc-stars"><?php echo $stars ?></div>
-        <div class="zc-testimonial-quote zcr-clamp"><?php echo esc_html($r->body) ?></div>
+        <div class="zc-testimonial-quote<?php echo $clamp ? ' zcr-clamp' : '' ?>"><?php echo esc_html($r->body) ?></div>
         <div class="zc-testimonial-author">
             <?php if ($r->avatar_url): ?>
             <div class="zc-testimonial-avatar">

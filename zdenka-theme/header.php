@@ -62,6 +62,7 @@
             ['/ako-pracujem/',is_page('ako-pracujem'),'Ako pracujem'],
             ['/ponuky/',      is_page('ponuky'),      'Ponuky'],
             ['/odhad/',       is_page('odhad'),       'Odhad ZDARMA'],
+            ['/referencie/',  is_page('referencie'),  'Referencie'],
             ['/kontakt/',     is_page('kontakt'),     'Kontakt'],
         ] as [$path,$active,$label]): ?>
         <a href="<?php echo home_url($path); ?>"

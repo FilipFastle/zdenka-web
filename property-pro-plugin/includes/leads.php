@@ -171,6 +171,14 @@ function panel_settings() {
                 <a href="<?php echo home_url('/?preview_maintenance=1') ?>" target="_blank" class="btn btn-ghost">Náhľad zatvoreného webu</a>
             </div>
         </form>
+
+        <?php if (function_exists('zc_notify_settings_box')): ?>
+        <h2 style="font-family:var(--serif);font-size:20px;color:var(--dark);margin:34px 0 6px">Notifikácie z formulárov</h2>
+        <p style="color:var(--muted);font-size:14px;margin-bottom:18px">
+            Komu majú chodiť e-maily z kontaktu, odhadu a ebooku. Odberateľom newslettera sa nič neposiela automaticky.
+        </p>
+        <?php echo zc_notify_settings_box(); ?>
+        <?php endif; ?>
     </div>
 
     <style>

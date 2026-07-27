@@ -28,8 +28,13 @@ add_action('admin_head', function() {
 });
 
 add_action('admin_menu', function() {
-    add_menu_page('ZC Newsletter', 'Newsletter ', 'manage_options',
-        'zc-newsletter', 'zcn_admin_page', 'dashicons-email-alt', 26);
+    if (function_exists('zc_hub_slug')) {
+        add_submenu_page(zc_hub_slug(), 'Newsletter', 'Newsletter', 'manage_options',
+            'zc-newsletter', 'zcn_admin_page');
+    } else {
+        add_menu_page('ZC Newsletter', 'Newsletter ', 'manage_options',
+            'zc-newsletter', 'zcn_admin_page', 'dashicons-email-alt', 26);
+    }
 });
 
 function zcn_admin_page() {

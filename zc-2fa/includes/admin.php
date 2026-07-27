@@ -246,7 +246,11 @@ function zc2fa_render_setup($ctx = 'admin') {
 /* ───────────────────────── wp-admin: stránka 2FA ───────────────────────── */
 
 add_action('admin_menu', function () {
-    add_options_page('Zabezpečenie (2FA)', 'Zabezpečenie (2FA)', 'read', 'zc-2fa', 'zc2fa_admin_page');
+    if (function_exists('zc_hub_slug')) {
+        add_submenu_page(zc_hub_slug(), 'Zabezpečenie (2FA)', 'Zabezpečenie (2FA)', 'read', 'zc-2fa', 'zc2fa_admin_page');
+    } else {
+        add_options_page('Zabezpečenie (2FA)', 'Zabezpečenie (2FA)', 'read', 'zc-2fa', 'zc2fa_admin_page');
+    }
 });
 
 function zc2fa_admin_page() {

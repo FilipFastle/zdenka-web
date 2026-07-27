@@ -309,7 +309,7 @@ function zc_ebook_handle() {
     }
     wp_mail($email, $subject, $body, $headers);
 
-    $to_admin = get_theme_mod('zc_email_main', '') ?: get_option('admin_email');
+    $to_admin = function_exists('zc_notify_to') ? zc_notify_to('ebook') : (get_theme_mod('zc_email_main', '') ?: get_option('admin_email'));
     if ($to_admin) {
         $adm_html = function_exists('zc_email_template')
             ? zc_email_template(['name' => $name, 'email' => $email, 'message' => implode("\n", $msg_parts), 'subject' => 'Nové stiahnutie ebooku', 'heading' => 'Nové stiahnutie ebooku', 'ip' => $ip])

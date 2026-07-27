@@ -168,8 +168,11 @@ $title=zc_agent('title','Realitná maklérka');
     </div>
     <?php
     if (function_exists('zcr_table')) {
-        // Dynamic reviews from plugin
-        echo do_shortcode('[zc_reviews limit="6" cols="3"]');
+        // Všetky recenzie v karuseli – bez obmedzenia počtu
+        echo do_shortcode('[zc_reviews carousel="1" cols="3"]');
+        if (get_page_by_path('referencie')) {
+            echo '<div style="text-align:center;margin-top:26px"><a href="' . esc_url(home_url('/referencie/')) . '" class="zc-btn zc-btn-outline">Všetky referencie →</a></div>';
+        }
     } else {
         // Fallback – hardcoded kým plugin nie je aktívny
         $fallback = [

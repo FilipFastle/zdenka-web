@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ZC Zabezpečenie – 2FA + časovanie relácií
  * Description: Dvojfaktorové overenie (Google Authenticator / TOTP) pre wp-admin aj realitný panel, záložné kódy a automatické odhlásenie pri nečinnosti (30 min bez 2FA, 2 h s 2FA).
- * Version: 1.1.2
+ * Version: 1.1.3
  * Author: Filip
  */
 defined('ABSPATH') || exit;

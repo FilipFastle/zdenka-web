@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ZC Ebook – PDF lead-magnet
  * Description: PDF ebook (lead-magnet) – pás na stránke + modal formulár. Zbiera kontakty do Formulárov, prihlasuje na newsletter a posiela PDF. Správa cez wp-admin aj realitný panel.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Filip
  * Text Domain: zc-ebook
  */

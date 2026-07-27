@@ -3,8 +3,8 @@ defined('ABSPATH') || exit;
 
 add_action('wp_enqueue_scripts', function() {
     // Fonty sú self-hostované v main.css (@font-face) – žiadne Google servery
-    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',[],'3.17.0');
-    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.17.0',true);
+    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',[],'3.18.0');
+    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.18.0',true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.svg','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0]);
 });
 
@@ -26,6 +26,7 @@ add_filter('theme_page_templates', function($t) {
     $t['templates/page-ponuky.php']       = 'Ponuky';
     $t['templates/page-kontakt.php']      = 'Kontakt';
     $t['templates/page-odhad.php']         = 'Odhad nehnuteľnosti';
+    $t['templates/page-referencie.php']    = 'Referencie';
     return $t;
 });
 
@@ -44,7 +45,9 @@ function zc_handle_contact() {
     $msg   = sanitize_textarea_field($_POST['message']??'');
     if (!$name||!$email) { wp_send_json_error(['message'=>'Vyplňte meno a email.']); }
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    $to   = get_theme_mod('zc_email_main', '') ?: get_option('admin_email');
+    // Adresátov určuje nastavenie notifikácií (roly / používatelia / e-maily)
+    $to   = function_exists('zc_notify_to') ? zc_notify_to('contact')
+          : (get_theme_mod('zc_email_main', '') ?: get_option('admin_email'));
     $bcc  = get_theme_mod('zc_email_bcc', '');
     $from = zc_mail_from();
     $site = zc_agent('name', 'Mgr. Zdenka Cibuľová');
@@ -300,6 +303,7 @@ add_action('admin_init', function() {
         ['Ponuky','ponuky','templates/page-ponuky.php'],
         ['Kontakt',              'kontakt','templates/page-kontakt.php'],
         ['Odhad nehnuteľnosti', 'odhad',  'templates/page-odhad.php'],
+        ['Referencie',          'referencie', 'templates/page-referencie.php'],
     ];
     foreach ($pages as [$title, $slug, $tpl]) {
         if (!get_page_by_path($slug)) {
@@ -340,6 +344,7 @@ add_filter('template_include', function($template) {
     if (is_page('kontakt'))      return $dir . '/templates/page-kontakt.php';
     if (is_page('odhad'))        return $dir . '/templates/page-odhad.php';
     if (is_page('oblubene'))     return $dir . '/templates/page-oblubene.php';
+    if (is_page('referencie'))   return $dir . '/templates/page-referencie.php';
     // Ponuky – match by slug, title, or page template meta
     if (is_page('ponuky') || (is_page() && get_page_template_slug() === 'templates/page-ponuky.php')) {
         return $dir . '/templates/page-ponuky.php';
@@ -347,11 +352,7 @@ add_filter('template_include', function($template) {
     return $template;
 }, 999);
 
-// ── Admin page to create pages manually ──
-add_action('admin_menu', function() {
-    add_menu_page('Zdenka Setup', 'Zdenka Setup', 'manage_options', 'zdenka-setup', 'zdenka_setup_page', 'dashicons-admin-home', 3);
-});
-
+// ── Stránka na vytvorenie stránok a údržbu (v menu je pod „Web Zdenky“) ──
 function zdenka_setup_page() {
     // Handle create action
     if (isset($_POST['zdenka_create']) && check_admin_referer('zdenka_setup')) {
@@ -362,6 +363,7 @@ function zdenka_setup_page() {
             ['Ponuky',               'ponuky',       'templates/page-ponuky.php'],
             ['Kontakt',              'kontakt',      'templates/page-kontakt.php'],
             ['Odhad nehnuteľnosti',  'odhad',        'templates/page-odhad.php'],
+            ['Referencie',           'referencie',   'templates/page-referencie.php'],
         ];
         $created = 0;
         $existing = 0;
@@ -403,7 +405,7 @@ function zdenka_setup_page() {
             <p style="color:#666;margin-bottom:20px">Klikni na tlačidlo a automaticky sa vytvoria všetky stránky so správnymi templatemi.</p>
             <table style="width:100%;margin-bottom:24px;border-collapse:collapse">
                 <tr style="background:#f8f9fa"><th style="padding:10px;text-align:left;border:1px solid #dee2e6">Stránka</th><th style="padding:10px;text-align:left;border:1px solid #dee2e6">Slug</th><th style="padding:10px;text-align:left;border:1px solid #dee2e6">Stav</th></tr>
-                <?php foreach([['Domov','domov'],['O mne','o-mne'],['Ako pracujem','ako-pracujem'],['Ponuky','ponuky'],['Kontakt','kontakt'],['Odhad nehnuteľnosti','odhad']] as [$t,$s]):
+                <?php foreach([['Domov','domov'],['O mne','o-mne'],['Ako pracujem','ako-pracujem'],['Ponuky','ponuky'],['Kontakt','kontakt'],['Odhad nehnuteľnosti','odhad'],['Referencie','referencie']] as [$t,$s]):
                     $exists = get_page_by_path($s); ?>
                 <tr>
                     <td style="padding:10px;border:1px solid #dee2e6"><strong><?php echo $t ?></strong></td>
@@ -583,6 +585,9 @@ require_once get_stylesheet_directory() . '/inc/favorites.php';
 require_once get_stylesheet_directory() . '/inc/webp-optimizer.php';
 require_once get_stylesheet_directory() . '/inc/maintenance.php';
 require_once get_stylesheet_directory() . '/inc/email-template.php';
+require_once get_stylesheet_directory() . '/inc/notifications.php';
+require_once get_stylesheet_directory() . '/inc/preview-role.php';
+require_once get_stylesheet_directory() . '/inc/admin-hub.php';
 require_once get_stylesheet_directory() . '/inc/privacy.php';
 require_once get_stylesheet_directory() . '/inc/seo.php';
 // Ebook je teraz samostatný plugin (zc-ebook). Ak je aktívny, poskytuje

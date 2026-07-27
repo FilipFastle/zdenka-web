@@ -117,7 +117,8 @@ function zcr_google_find_place($query) {
 /* ─────────────────────── Nastavenia vo wp-admin ─────────────────────── */
 
 add_action('admin_menu', function () {
-    add_submenu_page('zc-reviews', 'Google recenzie', 'Google firma', 'manage_options',
+    $parent = function_exists('zc_hub_slug') ? zc_hub_slug() : 'zc-reviews';
+    add_submenu_page($parent, 'Google recenzie', 'Recenzie z Google', 'manage_options',
         'zc-reviews-google', 'zcr_google_settings_page');
 }, 20);
 

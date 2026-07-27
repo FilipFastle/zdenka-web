@@ -242,8 +242,10 @@ function zc_ebook_render_manager($ctx = 'admin') {
 
 // ── wp-admin: samostatná stránka ────────────────────────────────────────────
 add_action('admin_menu', function () {
-    $hook = add_menu_page('Ebook (PDF lead-magnet)', 'Ebook', 'manage_options', 'zc-ebook', 'zc_ebook_admin_page', 'dashicons-book-alt', 26);
-    add_action('load-' . $hook, function () { wp_enqueue_media(); });
+    $hook = function_exists('zc_hub_slug')
+        ? add_submenu_page(zc_hub_slug(), 'Ebook (PDF lead-magnet)', 'Ebook', 'manage_options', 'zc-ebook', 'zc_ebook_admin_page')
+        : add_menu_page('Ebook (PDF lead-magnet)', 'Ebook', 'manage_options', 'zc-ebook', 'zc_ebook_admin_page', 'dashicons-book-alt', 26);
+    if ($hook) add_action('load-' . $hook, function () { wp_enqueue_media(); });
 });
 
 function zc_ebook_admin_page() {

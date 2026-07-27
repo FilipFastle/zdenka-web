@@ -52,7 +52,7 @@
                 <?php foreach([
                     ['/','Domov'],['/o-mne/','O mne'],
                     ['/ako-pracujem/','Ako pracujem'],['/ponuky/','Ponuky'],
-                    ['/odhad/','Odhad ZDARMA'],['/kontakt/','Kontakt'],
+                    ['/odhad/','Odhad ZDARMA'],['/referencie/','Referencie'],['/kontakt/','Kontakt'],
                 ] as [$path,$label]): ?>
                 <li><a href="<?php echo home_url($path); ?>"><?php echo $label; ?></a></li>
                 <?php endforeach; ?>

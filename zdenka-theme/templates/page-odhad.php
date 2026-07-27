@@ -40,7 +40,7 @@ if (isset($_POST['odhad_send']) && !wp_verify_nonce($_POST['odhad_nonce'] ?? '',
         $html = "<p>Typ: {$typ_ponuky} / {$typ_nehnut}<br>Meno: {$meno} {$priezvisko}<br>Email: {$email_od}<br>Tel: {$telefon}<br><br>{$popis}<br><br>IP: {$ip}</p>";
     }
 
-    $to      = get_theme_mod('zc_email_odhad', '') ?: get_option('admin_email');
+    $to      = function_exists('zc_notify_to') ? zc_notify_to('odhad') : (get_theme_mod('zc_email_odhad', '') ?: get_option('admin_email'));
     $bcc     = get_theme_mod('zc_email_bcc', '');
     $from    = function_exists('zc_mail_from') ? zc_mail_from() : (get_theme_mod('zc_email_from', '') ?: get_option('admin_email'));
     $headers = [

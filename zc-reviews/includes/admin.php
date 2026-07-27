@@ -1,8 +1,13 @@
 <?php
 defined('ABSPATH') || exit;
 add_action('admin_menu', function() {
-    add_menu_page('ZC Recenzie','Recenzie ','edit_posts',
-        'zc-reviews','zcr_admin_page','dashicons-star-filled',27);
+    // Ak je aktívna téma s bublinou „Web Zdenky“, zaradíme sa pod ňu
+    if (function_exists('zc_hub_slug')) {
+        add_submenu_page(zc_hub_slug(), 'Recenzie', 'Recenzie', 'edit_posts', 'zc-reviews', 'zcr_admin_page');
+    } else {
+        add_menu_page('ZC Recenzie','Recenzie ','edit_posts',
+            'zc-reviews','zcr_admin_page','dashicons-star-filled',27);
+    }
 });
 
 function zcr_admin_page() {

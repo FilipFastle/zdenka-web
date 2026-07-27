@@ -141,16 +141,22 @@ function zcr_display_settings_box() {
                     <option value="mixed"  <?php selected(zcr_google_position(), 'mixed');  ?>>Premiešať podľa hodnotenia</option>
                 </select>
             </label>
-            <button type="submit" name="zcr_disp_save" value="1" class="button button-primary">Uložiť</button>
+            <button type="submit" name="zcr_disp_save" value="1" class="zcr-disp-btn">Uložiť</button>
         </form>
         <p class="zcr-disp-hint">Pri vlastnom poradí presúvaj recenzie šípkami v zozname nižšie. Ostatné voľby poradie určujú automaticky.</p>
     </div>
     <style>
-    .zcr-disp{background:#fff;border:1px solid #dcdcde;border-radius:10px;padding:16px 18px;margin:16px 0}
+    /* Vyzerá rovnako vo wp-admine aj v realitnom paneli */
+    .zcr-disp{background:var(--white,#fff);border:1px solid var(--border,#E2DACE);
+        border-radius:var(--r,12px);padding:16px 18px;margin:16px 0}
     .zcr-disp-form{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap}
-    .zcr-disp-form label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600;color:#1C1A18}
-    .zcr-disp-form select{min-width:220px;padding:6px 8px}
-    .zcr-disp-hint{font-size:12.5px;color:#6b6560;margin:10px 0 0}
+    .zcr-disp-form label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600;color:var(--dark,#1C1A18)}
+    .zcr-disp-form select{min-width:220px;padding:9px 11px;border:1.5px solid var(--border,#E2DACE);
+        border-radius:8px;background:#fff;font-family:inherit;font-size:13.5px;color:var(--text,#2C2C2C)}
+    .zcr-disp-btn{padding:11px 24px;border:none;border-radius:8px;background:var(--accent,#B8A47A);
+        color:var(--dark,#1C1A18);font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;line-height:1.2}
+    .zcr-disp-btn:hover{background:var(--accent-dk,#9A8660)}
+    .zcr-disp-hint{font-size:12.5px;color:var(--muted,#6b6560);margin:10px 0 0}
     .zcr-disp-ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;padding:9px 13px;border-radius:8px;margin-bottom:12px;font-size:13px;font-weight:600}
     </style>
     <?php

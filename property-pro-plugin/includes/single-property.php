@@ -493,7 +493,12 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
             if (!empty($_POST['newsletter']) && $cta_email && function_exists('zcn_subscribe_forced')) {
                 zcn_subscribe_forced($cta_email, $cta_name, 'ponuka');
             }
-            wp_mail($agent_email,'Záujem o: '.get_the_title(),"Meno: $cta_name\nTel: $cta_phone\nE-mail: $cta_email\n\n$cta_msg\n\n".get_permalink());
+            // Adresátov určuje nastavenie notifikácií; maklér ponuky ostáva v kópii
+            $cta_to = function_exists('zc_notify_to') ? zc_notify_to('property') : [];
+            if ($agent_email) $cta_to[] = $agent_email;
+            $cta_to = array_values(array_unique(array_filter($cta_to)));
+            $cta_headers = $cta_email ? ['Reply-To: ' . $cta_email] : [];
+            wp_mail($cta_to,'Záujem o: '.get_the_title(),"Meno: $cta_name\nTel: $cta_phone\nE-mail: $cta_email\n\n$cta_msg\n\n".get_permalink(), $cta_headers);
         ?>
             <div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:14px;border-radius:10px;text-align:center;color:#15803d">Správa odoslaná! Čoskoro sa vám ozveme.</div>
         <?php else: ?>
