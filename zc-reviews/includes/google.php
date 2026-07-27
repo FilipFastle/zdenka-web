@@ -81,6 +81,39 @@ function zcr_google_fetch($force = false) {
     return $out;
 }
 
+/**
+ * Vyhľadá podnik na Google Mapách podľa názvu a vráti kandidátov
+ * (názov, adresa, Place ID) – aby sa Place ID nemuselo hľadať ručne.
+ */
+function zcr_google_find_place($query) {
+    $key = zcr_g_opt('key');
+    if (!$key) {
+        update_option('zcr_google_error', 'Najprv ulož API kľúč.');
+        return [];
+    }
+    $url = add_query_arg([
+        'input'     => $query,
+        'inputtype' => 'textquery',
+        'fields'    => 'place_id,name,formatted_address,rating,user_ratings_total',
+        'language'  => 'sk',
+        'key'       => $key,
+    ], 'https://maps.googleapis.com/maps/api/place/findplacefromtext/json');
+
+    $res = wp_remote_get($url, ['timeout' => 15]);
+    if (is_wp_error($res)) {
+        update_option('zcr_google_error', $res->get_error_message());
+        return [];
+    }
+    $body = json_decode(wp_remote_retrieve_body($res), true);
+    $status = $body['status'] ?? 'ERROR';
+    if (!in_array($status, ['OK', 'ZERO_RESULTS'], true)) {
+        update_option('zcr_google_error', $status . ' – ' . ($body['error_message'] ?? 'neznáma chyba'));
+        return [];
+    }
+    delete_option('zcr_google_error');
+    return $body['candidates'] ?? [];
+}
+
 /* ─────────────────────── Nastavenia vo wp-admin ─────────────────────── */
 
 add_action('admin_menu', function () {
@@ -104,6 +137,23 @@ function zcr_google_settings_page() {
         $n = count(zcr_google_fetch(true));
         $msg = $n ? "Načítaných recenzií: {$n}." : 'Nenačítala sa žiadna recenzia – pozri chybu nižšie.';
     }
+    // Vyhľadanie podniku podľa názvu → doplní Place ID bez ručného hľadania
+    $candidates = [];
+    if (isset($_POST['zcr_g_find']) && check_admin_referer('zcr_g')) {
+        $q = sanitize_text_field(trim($_POST['q'] ?? ''));
+        if ($q === '') {
+            $msg = 'Zadaj názov podniku (ideálne aj mesto).';
+        } else {
+            $candidates = zcr_google_find_place($q);
+            $msg = $candidates ? 'Nájdené podniky – vyber ten správny.' : 'Nič sa nenašlo. Skús presnejší názov aj s mestom.';
+        }
+    }
+    if (isset($_POST['zcr_g_pick']) && check_admin_referer('zcr_g')) {
+        update_option('zcr_google_place', sanitize_text_field($_POST['pick'] ?? ''));
+        delete_transient(ZCR_G_CACHE);
+        $n = count(zcr_google_fetch(true));
+        $msg = 'Podnik prepojený. Načítaných recenzií: ' . $n . '.';
+    }
 
     $meta = (array) get_option('zcr_google_meta', []);
     $err  = get_option('zcr_google_error', '');
@@ -123,6 +173,34 @@ function zcr_google_settings_page() {
             </ol>
             <p style="margin-bottom:0;color:#666;font-size:13px">Google cez API sprístupňuje <strong>maximálne 5 najnovších recenzií</strong> – to je jeho obmedzenie, nie webu. Vlastné recenzie zadané ručne sa zobrazujú spolu s nimi.</p>
         </div>
+
+        <form method="post" style="background:#fff;border:1px solid #dcdcde;border-radius:8px;padding:18px 20px;margin-bottom:16px">
+            <?php wp_nonce_field('zcr_g'); ?>
+            <h2 style="margin-top:0;font-size:15px">Nájsť podnik na Mapách</h2>
+            <p class="description" style="margin-bottom:10px">Napíš názov firmy aj s mestom – Place ID doplním za teba. (Najprv ulož API kľúč nižšie.)</p>
+            <p>
+                <input type="text" name="q" class="regular-text" placeholder="napr. Zdenka Cibuľová reality Banská Bystrica"
+                       value="<?php echo esc_attr($_POST['q'] ?? ''); ?>">
+                <button type="submit" name="zcr_g_find" value="1" class="button">Vyhľadať</button>
+            </p>
+            <?php if ($candidates): ?>
+            <table class="widefat striped" style="margin-top:12px">
+                <thead><tr><th>Podnik</th><th>Adresa</th><th style="width:110px">Hodnotenie</th><th style="width:110px"></th></tr></thead>
+                <tbody>
+                <?php foreach ($candidates as $c): ?>
+                <tr>
+                    <td><strong><?php echo esc_html($c['name'] ?? ''); ?></strong></td>
+                    <td style="font-size:13px;color:#555"><?php echo esc_html($c['formatted_address'] ?? ''); ?></td>
+                    <td><?php echo isset($c['rating']) ? esc_html($c['rating']) . ' ★ (' . (int) ($c['user_ratings_total'] ?? 0) . ')' : '–'; ?></td>
+                    <td><button type="submit" name="zcr_g_pick" value="1" class="button button-primary"
+                                onclick="this.form.pick.value='<?php echo esc_js($c['place_id'] ?? ''); ?>'">Prepojiť</button></td>
+                </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+            <?php endif; ?>
+            <input type="hidden" name="pick" value="">
+        </form>
 
         <form method="post">
             <?php wp_nonce_field('zcr_g'); ?>

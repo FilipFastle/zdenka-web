@@ -3,14 +3,27 @@ defined('ABSPATH') || exit;
 add_shortcode('zc_reviews', function($atts) {
     $atts = shortcode_atts(['limit'=>'100','cols'=>'3','carousel'=>'auto'], $atts);
     global $wpdb;
+    $order = function_exists('zcr_order_sql') ? zcr_order_sql() : 'sort_order ASC, id ASC';
     $rows = $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM ".zcr_table()." WHERE published=1 ORDER BY sort_order ASC,id ASC LIMIT %d",
+        "SELECT * FROM ".zcr_table()." WHERE published=1 ORDER BY {$order} LIMIT %d",
         intval($atts['limit'])
     ));
     $rows = $rows ?: [];
-    // Recenzie z Google firmy (ak je napojená) – pridajú sa za vlastné
+
+    // Recenzie z Google firmy (ak je napojená) – zaradenie podľa nastavenia
     if (function_exists('zcr_google_enabled') && zcr_google_enabled()) {
-        $rows = array_merge($rows, zcr_google_fetch());
+        $g = zcr_google_fetch();
+        $pos = function_exists('zcr_google_position') ? zcr_google_position() : 'after';
+        if ($pos === 'before') {
+            $rows = array_merge($g, $rows);
+        } elseif ($pos === 'mixed') {
+            $rows = array_merge($rows, $g);
+            usort($rows, function ($a, $b) {
+                return (int) $b->rating <=> (int) $a->rating;
+            });
+        } else {
+            $rows = array_merge($rows, $g);
+        }
         $rows = array_slice($rows, 0, intval($atts['limit']));
     }
     // Tlačidlo na Google recenzie (ak je v Customizeri nastavený odkaz)

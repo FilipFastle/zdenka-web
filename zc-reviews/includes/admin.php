@@ -14,8 +14,13 @@ function zcr_admin_page() {
         <button onclick="zcrOpenModal(0)" class="page-title-action">+ Pridať recenziu</button>
     </h1>
 
+    <?php if (function_exists('zcr_display_settings_box')) echo zcr_display_settings_box(); ?>
+
     <table class="wp-list-table widefat fixed striped" style="border-radius:10px;overflow:hidden;margin-top:16px">
         <thead><tr>
+            <?php if (function_exists('zcr_order_controls') && zcr_display_order() === 'manual'): ?>
+            <th style="width:70px">Poradie</th>
+            <?php endif; ?>
             <th style="width:40px">#</th>
             <th>Klient</th><th>Rola / Typ</th><th>Text</th>
             <th style="width:80px">Hodnotenie</th>
@@ -23,8 +28,11 @@ function zcr_admin_page() {
             <th style="width:120px">Akcie</th>
         </tr></thead>
         <tbody id="zcrList">
-        <?php if ($rows): foreach ($rows as $r): ?>
+        <?php if ($rows): $zcr_last = count($rows) - 1; foreach ($rows as $zcr_i => $r): ?>
         <tr data-id="<?php echo $r->id ?>">
+            <?php if (function_exists('zcr_order_controls') && zcr_display_order() === 'manual'): ?>
+            <td><?php echo zcr_order_controls($r->id, $zcr_i === 0, $zcr_i === $zcr_last); ?></td>
+            <?php endif; ?>
             <td style="color:#aaa;font-size:12px"><?php echo $r->id ?></td>
             <td style="font-weight:600"><?php echo esc_html($r->author_name) ?></td>
             <td style="color:#666;font-size:13px"><?php echo esc_html($r->author_role ?: '–') ?></td>
@@ -40,7 +48,7 @@ function zcr_admin_page() {
             </td>
         </tr>
         <?php endforeach; else: ?>
-        <tr><td colspan="7" style="text-align:center;padding:32px;color:#aaa">Zatiaľ žiadne recenzie. Pridajte prvú!</td></tr>
+        <tr><td colspan="<?php echo (function_exists('zcr_order_controls') && zcr_display_order() === 'manual') ? 8 : 7; ?>" style="text-align:center;padding:32px;color:#aaa">Zatiaľ žiadne recenzie. Pridajte prvú!</td></tr>
         <?php endif; ?>
         </tbody>
     </table>

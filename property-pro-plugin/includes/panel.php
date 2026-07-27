@@ -1491,7 +1491,10 @@ function panel_reviews() {
 
     $edit_id = intval($_GET['edit_review'] ?? 0);
     $edit_r  = $edit_id ? $wpdb->get_row($wpdb->prepare("SELECT * FROM {$t} WHERE id=%d", $edit_id)) : null;
-    $rows    = $wpdb->get_results("SELECT * FROM {$t} ORDER BY sort_order ASC, id ASC");
+    // Poradie ako na webe, aby sedelo to, čo maklérka vidí, s tým, čo je vonku
+    $zcr_ord = function_exists('zcr_order_sql') ? zcr_order_sql() : 'sort_order ASC, id ASC';
+    if ($zcr_ord === 'RAND()') $zcr_ord = 'sort_order ASC, id ASC'; // v paneli chceme stabilné poradie
+    $rows    = $wpdb->get_results("SELECT * FROM {$t} ORDER BY {$zcr_ord}");
     ?>
 
     <?php if (!empty($msg)): ?>
@@ -1504,10 +1507,16 @@ function panel_reviews() {
             <h3 style="font-family:var(--serif);font-size:22px;margin:0">Recenzie (<?php echo count($rows) ?>)</h3>
             <button type="button" class="btn btn-primary" style="padding:10px 18px" onclick="zcrOpen()"><?php echo pp_svg('plus',15) ?> Nová recenzia</button>
         </div>
-        <?php if ($rows): ?>
+        <?php if (function_exists('zcr_display_settings_box')) echo zcr_display_settings_box(); ?>
+        <?php if ($rows): $zcr_last = count($rows) - 1; ?>
         <div style="display:flex;flex-direction:column;gap:10px">
-        <?php foreach ($rows as $r): ?>
+        <?php foreach ($rows as $zcr_i => $r): ?>
         <div class="pnl-rev-item" style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px">
+            <?php if (function_exists('zcr_order_controls') && zcr_display_order() === 'manual'): ?>
+            <div style="flex-shrink:0;margin-right:14px;display:flex;align-items:center">
+                <?php echo zcr_order_controls($r->id, $zcr_i === 0, $zcr_i === $zcr_last); ?>
+            </div>
+            <?php endif; ?>
             <div style="flex:1;min-width:0">
                 <div style="font-family:var(--serif);font-weight:700;font-size:15px;color:var(--dark);margin-bottom:2px"><?php echo esc_html($r->author_name) ?></div>
                 <?php if ($r->author_role): ?><div style="font-size:11px;color:var(--accent-txt);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px"><?php echo esc_html($r->author_role) ?></div><?php endif; ?>
