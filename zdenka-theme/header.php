@@ -40,6 +40,10 @@
             <a href="<?php echo home_url($path); ?>"
                <?php echo $active ? 'class="active"' : ''; ?>><?php echo $label; ?></a>
             <?php endforeach; ?>
+            <?php if (function_exists('zc_has_referencie') && zc_has_referencie()): ?>
+            <a href="<?php echo home_url('/referencie/'); ?>"
+               <?php echo is_page('referencie') ? 'class="active"' : ''; ?>>Referencie</a>
+            <?php endif; ?>
             <?php if (function_exists('zc_ebook_enabled') && zc_ebook_enabled()): zc_ebook_flag(true); ?>
             <a href="#" data-zc-ebook-open class="zc-nav-ebook">Ebook</a>
             <?php endif; ?>
@@ -62,14 +66,18 @@
             ['/ako-pracujem/',is_page('ako-pracujem'),'Ako pracujem'],
             ['/ponuky/',      is_page('ponuky'),      'Ponuky'],
             ['/odhad/',       is_page('odhad'),       'Odhad ZDARMA'],
-            ['/referencie/',  is_page('referencie'),  'Referencie'],
-            ['/kontakt/',     is_page('kontakt'),     'Kontakt'],
         ] as [$path,$active,$label]): ?>
         <a href="<?php echo home_url($path); ?>"
            style="<?php echo $active ? 'color:var(--accent-txt);font-weight:700' : ''; ?>">
             <?php echo $label; ?>
         </a>
         <?php endforeach; ?>
+        <?php if (function_exists('zc_has_referencie') && zc_has_referencie()): ?>
+        <a href="<?php echo home_url('/referencie/'); ?>"
+           style="<?php echo is_page('referencie') ? 'color:var(--accent-txt);font-weight:700' : ''; ?>">Referencie</a>
+        <?php endif; ?>
+        <a href="<?php echo home_url('/kontakt/'); ?>"
+           style="<?php echo is_page('kontakt') ? 'color:var(--accent-txt);font-weight:700' : ''; ?>">Kontakt</a>
         <?php if (function_exists('zc_ebook_enabled') && zc_ebook_enabled()): zc_ebook_flag(true); ?>
         <a href="#" data-zc-ebook-open style="color:var(--accent-txt);font-weight:700">Ebook PDF zdarma</a>
         <?php endif; ?>

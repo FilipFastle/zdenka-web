@@ -52,10 +52,17 @@
                 <?php foreach([
                     ['/','Domov'],['/o-mne/','O mne'],
                     ['/ako-pracujem/','Ako pracujem'],['/ponuky/','Ponuky'],
-                    ['/odhad/','Odhad ZDARMA'],['/referencie/','Referencie'],['/kontakt/','Kontakt'],
+                    ['/odhad/','Odhad ZDARMA'],
                 ] as [$path,$label]): ?>
                 <li><a href="<?php echo home_url($path); ?>"><?php echo $label; ?></a></li>
                 <?php endforeach; ?>
+                <?php if (function_exists('zc_has_referencie') && zc_has_referencie()): ?>
+                <li><a href="<?php echo home_url('/referencie/'); ?>">Referencie</a></li>
+                <?php endif; ?>
+                <li><a href="<?php echo home_url('/kontakt/'); ?>">Kontakt</a></li>
+                <?php if (function_exists('zc_ebook_enabled') && zc_ebook_enabled()): zc_ebook_flag(true); ?>
+                <li><a href="#" data-zc-ebook-open style="color:var(--accent) !important;font-weight:600">Ebook PDF zdarma</a></li>
+                <?php endif; ?>
             </ul>
         </div>
 

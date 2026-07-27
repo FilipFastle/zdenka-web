@@ -924,3 +924,14 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 .zc-nav-ebook { color: var(--accent-txt) !important; font-weight: 700; }
 .zc-nav-ebook:hover { color: var(--accent) !important; }
 .zc-header-wrap.transparent .zc-nav-ebook { color: #EBD9B4 !important; }
+
+/* ── Navigácia: o položku viac (Referencie) ─────────────────────────────
+   Na užších obrazovkách stiahneme rozostupy, nech sa menu nezalomí. */
+@media (max-width: 1080px) {
+    .zc-nav { gap: 13px; }
+    .zc-nav-cta { padding: 8px 13px !important; }
+}
+@media (max-width: 900px) {
+    .zc-nav { gap: 10px; }
+    .zc-nav a { letter-spacing: .3px; }
+}

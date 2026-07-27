@@ -127,7 +127,7 @@ function zc_hub_page() {
         <div class="zch-sec">Obsah</div>
         <div class="zch-grid">
             <?php
-            $panel = get_page_by_path('realitny-panel');
+            $panel = function_exists('pp_panel_page_id') ? get_post(pp_panel_page_id()) : get_page_by_path('realitny-panel');
             zc_hub_card('Nehnuteľnosti', 'Ponuky, fotky, ceny a stavy.', admin_url('edit.php?post_type=property'), '🏠', post_type_exists('property'));
             zc_hub_card('Recenzie', 'Referencie klientov a napojenie na Google.', admin_url('admin.php?page=zc-reviews'), '★', zc_hub_has('zc-reviews'));
             zc_hub_card('Newsletter', 'Odberatelia, kampane a rozposielanie ponúk.', admin_url('admin.php?page=zc-newsletter'), '✉', zc_hub_has('zc-newsletter'));
@@ -295,6 +295,20 @@ function zc_hub_tools_page() {
                     ? '<span class="zch-warn">nastavená (' . esc_html(COOKIE_DOMAIN) . ') – subdoména panela sa zrušila, riadok vo wp-config.php môžeš zmazať</span>'
                     : 'nenastavená (správne)'; ?></td></tr>
                 <tr><td>Notifikácie chodia na</td><td><?php echo $recips ? esc_html(implode(', ', $recips)) : '<span class="zch-warn">nikam</span>'; ?></td></tr>
+                <?php if (function_exists('pp_panel_page_id')):
+                    $pid   = pp_panel_page_id();
+                    $ppage = $pid ? get_post($pid) : null; ?>
+                <tr><td>Realitný panel</td><td><?php
+                    if (!$ppage) {
+                        echo '<span class="zch-bad">stránka sa nenašla – otvor Stránky a údržba</span>';
+                    } else {
+                        echo '<a href="' . esc_url(get_permalink($pid)) . '" target="_blank">' . esc_html(get_permalink($pid)) . '</a>';
+                        if ($ppage->post_name !== 'realitny-panel') {
+                            echo ' <span class="zch-warn">(slug je „' . esc_html($ppage->post_name) . '" – v koši zrejme leží stará stránka, zmaž ju natrvalo)</span>';
+                        }
+                    }
+                ?></td></tr>
+                <?php endif; ?>
             </table>
         </div>
 

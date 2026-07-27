@@ -53,16 +53,14 @@ add_action('admin_init', function () {
     $script = basename($_SERVER['PHP_SELF'] ?? '');
     if (in_array($script, ['admin-ajax.php', 'async-upload.php', 'media-upload.php'], true)) return;
 
-    $panel = get_page_by_path('realitny-panel');
-    wp_safe_redirect($panel ? get_permalink($panel) : home_url('/'));
+    wp_safe_redirect(function_exists('pp_panel_url') ? pp_panel_url() : home_url('/'));
     exit;
 });
 
 // Po prihlásení makléra ho pošli rovno do panelu
 add_filter('login_redirect', function ($redirect_to, $requested, $user) {
     if ($user instanceof WP_User && pp_is_agent($user) && !user_can($user, 'manage_options')) {
-        $panel = get_page_by_path('realitny-panel');
-        return $panel ? get_permalink($panel) : home_url('/');
+        return function_exists('pp_panel_url') ? pp_panel_url() : home_url('/');
     }
     return $redirect_to;
 }, 10, 3);

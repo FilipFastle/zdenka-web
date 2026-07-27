@@ -3,8 +3,8 @@ defined('ABSPATH') || exit;
 
 add_action('wp_enqueue_scripts', function() {
     // Fonty sú self-hostované v main.css (@font-face) – žiadne Google servery
-    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',[],'3.18.0');
-    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.18.0',true);
+    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',[],'3.18.1');
+    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.18.1',true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.svg','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0]);
 });
 
@@ -18,6 +18,13 @@ add_action('after_setup_theme', function() {
 });
 
 add_filter('body_class',function($c){$c[]='zdenka-theme';return $c;});
+
+/** Existuje stránka Referencie? (v menu ju ukazujeme len ak áno) */
+function zc_has_referencie() {
+    static $has = null;
+    if ($has === null) $has = (bool) get_page_by_path('referencie');
+    return $has;
+}
 
 add_filter('theme_page_templates', function($t) {
     $t['templates/page-home.php']         = 'Homepage';
