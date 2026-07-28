@@ -320,6 +320,24 @@ function zc_hub_tools_page() {
                 <tr><td>COOKIE_DOMAIN</td><td><?php echo $cookie
                     ? '<span class="zch-warn">nastavená (' . esc_html(COOKIE_DOMAIN) . ') – subdoména panela sa zrušila, riadok vo wp-config.php môžeš zmazať</span>'
                     : 'nenastavená (správne)'; ?></td></tr>
+                <tr><td>Hero fotky</td><td><?php
+                    if (!function_exists('zc_photo_id')) { echo '—'; }
+                    else {
+                        $rows = [];
+                        foreach (['hero' => 'široká', 'portrait' => 'portrét'] as $w => $lbl) {
+                            $pid = zc_photo_id($w);
+                            if (!$pid) { $rows[] = $lbl . ': <span class="zch-warn">nenastavená</span>'; continue; }
+                            $s1 = wp_get_attachment_image_src($pid, 'zc-1440');
+                            $ok = $s1 && !empty($s1[3]);
+                            $full = wp_get_attachment_image_src($pid, 'full');
+                            $dim = $full ? ($full[1] . '×' . $full[2] . ' px') : '';
+                            $rows[] = $lbl . ': ' . esc_html($dim) . ' · ' . ($ok
+                                ? '<span class="zch-ok">zmenšeniny hotové</span>'
+                                : '<span class="zch-bad">chýbajú zmenšeniny – spusti „Prepočítať veľkosti fotiek"</span>');
+                        }
+                        echo implode('<br>', $rows);
+                    }
+                ?></td></tr>
                 <tr><td>Formát zmenšenín</td><td><?php
                     $webp_ok = !function_exists('zc_webp_supported') || zc_webp_supported();
                     if (!$webp_ok) {

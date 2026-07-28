@@ -92,11 +92,14 @@ add_action('wp_footer', function () {
     ?>
 <script>
 (function(){
+    // Naviažeme sa až keď má prehliadač voľno – meranie klikov nemá
+    // čo robiť v čase, keď sa stránka ešte vykresľuje.
+    var start = function(){
     function push(name, extra){
         window.dataLayer = window.dataLayer || [];
         window.dataLayer.push(Object.assign({event: name}, extra || {}));
     }
-    // Kliky na telefón, e-mail a WhatsApp
+    // Kliky na telefón, e-mail a WhatsApp (pasívne – nezdržuje vykresľovanie)
     document.addEventListener('click', function(e){
         var a = e.target.closest && e.target.closest('a[href]');
         if (!a) return;
@@ -104,7 +107,7 @@ add_action('wp_footer', function () {
         if (href.indexOf('tel:') === 0)          push('kontakt_telefon');
         else if (href.indexOf('mailto:') === 0)  push('kontakt_email');
         else if (href.indexOf('wa.me') > -1)     push('kontakt_whatsapp');
-    }, true);
+    }, {passive: true});
 
     // Odoslané formuláre témy (kontakt, odhad, ebook)
     document.addEventListener('submit', function(e){
@@ -118,6 +121,9 @@ add_action('wp_footer', function () {
         push('generate_lead', (e.detail || {}));
     });
     document.addEventListener('zc:ebook-sent', function(){ push('ebook_stiahnuty'); });
+    };
+    if ('requestIdleCallback' in window) requestIdleCallback(start, {timeout: 3000});
+    else window.addEventListener('load', start, {once: true});
 })();
 </script>
     <?php

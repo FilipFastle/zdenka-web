@@ -11,8 +11,8 @@ add_action('wp_enqueue_scripts', function() {
     $use_min = get_option('zc_min_css', '1') === '1'
             && file_exists($dir . '/assets/css/main.min.css');
     $css = $use_min ? '/assets/css/main.min.css' : '/assets/css/main.css';
-    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.24.1');
-    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.24.1', true);
+    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.25.0');
+    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.25.0', true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.png','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0]);
 });
 
@@ -348,12 +348,50 @@ function zc_photo_id($which) {
  */
 function zc_photo_sized($which, $size = 'zc-1440') {
     $id = zc_photo_id($which);
-    if ($id) {
-        $src = wp_get_attachment_image_src($id, $size);
-        if ($src && !empty($src[0])) return $src[0];
+    if (!$id) return zc_photo($which);
+
+    // POZOR: keď žiadaná veľkosť neexistuje, WordPress ticho vráti ORIGINÁL.
+    // Práve preto sa na mobile sťahovala fotka z fotoaparátu, hoci sme si
+    // pýtali zmenšeninu. Štvrtá hodnota návratu hovorí, či ide naozaj
+    // o zmenšeninu – ak nie, skúšame postupne menšie, ktoré existujú.
+    foreach ([$size, 'zc-1440', 'large', 'medium_large', 'medium'] as $try) {
+        $src = wp_get_attachment_image_src($id, $try);
+        if ($src && !empty($src[0]) && !empty($src[3])) return $src[0];
     }
-    return zc_photo($which);
+
+    // Žiadna zmenšenina neexistuje – originál je posledná možnosť
+    $full = wp_get_attachment_image_src($id, 'full');
+    return (!empty($full[0])) ? $full[0] : zc_photo($which);
 }
+
+/**
+ * Dopočíta chýbajúce veľkosti pre fotky z Prispôsobiť.
+ * Bez nich by hero siahol po origináli – a to je na mobile ten najväčší
+ * súbor na stránke. Beží len vo wp-admine a pre každú fotku najviac raz.
+ */
+add_action('admin_init', function () {
+    if (!current_user_can('upload_files')) return;
+
+    foreach (['hero', 'portrait', 'card'] as $which) {
+        $id = zc_photo_id($which);
+        if (!$id) continue;
+
+        $key = 'zc_photofix_' . $id;
+        if (get_transient($key)) continue;
+
+        $src = wp_get_attachment_image_src($id, 'zc-1440');
+        if ($src && !empty($src[3])) { set_transient($key, 1, WEEK_IN_SECONDS); continue; }
+
+        $file = get_attached_file($id);
+        if ($file && file_exists($file)) {
+            require_once ABSPATH . 'wp-admin/includes/image.php';
+            $meta = wp_generate_attachment_metadata($id, $file);
+            if ($meta && !is_wp_error($meta)) wp_update_attachment_metadata($id, $meta);
+        }
+        set_transient($key, 1, DAY_IN_SECONDS);
+        return; // vždy len jedna fotka na načítanie, nech to nezdrží admin
+    }
+});
 
 // Líniové SVG ikony pre tému (náhrada za emoji). Ak je aktívny plugin, použije jeho sadu.
 function zc_svg($name, $size = 24) {
