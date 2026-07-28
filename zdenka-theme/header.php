@@ -18,7 +18,7 @@
 
         <!-- Logo -->
         <a href="<?php echo home_url(); ?>" class="zc-logo">
-            <img src="<?php echo get_stylesheet_directory_uri(); ?>/assets/images/zc-logo.svg"
+            <img src="<?php echo get_stylesheet_directory_uri(); ?>/assets/images/zc-logo.png"
                  class="zc-logo-svg" alt="ZC"
                  width="38" height="38"
                  style="width:38px;height:38px;object-fit:contain;flex-shrink:0;transition:filter .3s">

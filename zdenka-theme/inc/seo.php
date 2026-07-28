@@ -12,7 +12,7 @@ add_action('wp_head', function() {
     if (function_exists('zc_photo')) {
         $default_img = zc_photo('hero') ?: zc_photo('portrait');
     }
-    if (!$default_img) $default_img = get_stylesheet_directory_uri() . '/assets/images/zc-logo.svg';
+    if (!$default_img) $default_img = get_stylesheet_directory_uri() . '/assets/images/zc-logo.png';
 
     $title = wp_get_document_title();
     if (is_singular())          $url = get_permalink();

@@ -11,7 +11,7 @@ add_action('wp_head', function () {
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="<?php echo esc_attr(zc_agent('name', 'Mgr. Zdenka Cibuľová')); ?>">
-<link rel="apple-touch-icon" href="<?php echo $theme_uri; ?>/assets/images/zc-logo.svg">
+<link rel="apple-touch-icon" href="<?php echo $theme_uri; ?>/assets/images/zc-logo.png">
 <script>
 /* Service worker DOČASNE VYPNUTÝ — a aktívne odregistrovaný, aby sa vyčistili
    staré verzie, ktoré mohli cachovať stránky s neplatnými tokenmi formulárov. */

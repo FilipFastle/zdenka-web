@@ -2,7 +2,7 @@
 defined('ABSPATH') || exit;
 // Page transition – outputs in <head> priority 1 (before everything else)
 add_action('wp_head', function () {
-    $logo = get_stylesheet_directory_uri() . '/assets/images/zc-logo.svg';
+    $logo = get_stylesheet_directory_uri() . '/assets/images/zc-logo.png';
     $logo_e = esc_url($logo);
 ?>
 <!-- Preload SVG so it's ready before first click -->

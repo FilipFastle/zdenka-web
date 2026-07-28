@@ -8,7 +8,7 @@
         <!-- Brand -->
         <div>
             <a href="<?php echo home_url(); ?>" class="zc-footer-logo" style="display:flex;align-items:center;gap:10px;text-decoration:none">
-                <img src="<?php echo get_stylesheet_directory_uri(); ?>/assets/images/zc-logo.svg"
+                <img src="<?php echo get_stylesheet_directory_uri(); ?>/assets/images/zc-logo.png"
                      style="width:36px;height:36px;object-fit:contain;filter:brightness(0);flex-shrink:0" alt="ZC">
                 <span>
                     <?php echo esc_html(zc_agent('name', 'Mgr. Zdenka Cibuľová')); ?>

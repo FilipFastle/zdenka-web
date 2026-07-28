@@ -8,7 +8,16 @@ $email=zc_agent('email',get_option('admin_email'));
 $name=zc_agent('name','Mgr. Zdenka Cibuľová');
 $title=zc_agent('title','Realitná maklérka');
 ?>
-<?php $zc_hero_portrait = function_exists('zc_photo') ? zc_photo('portrait') : ''; ?>
+<?php
+/* Hero je CSS pozadie, kde srcset nefunguje – preto si veľkosť vyberáme sami
+   podľa obrazovky. Bez toho sa na mobil sťahoval originál z fotoaparátu. */
+$zc_sized = function ($which, $size) {
+    return function_exists('zc_photo_sized') ? zc_photo_sized($which, $size)
+         : (function_exists('zc_photo') ? zc_photo($which) : '');
+};
+$zc_hero_portrait    = $zc_sized('portrait', 'large');      // ~1024 px, mobil
+$zc_hero_portrait_2x = $zc_sized('portrait', 'zc-1440');    // mobil s retinou
+?>
 <style>
 /* Sticky hero – zvyšok stránky sa naň pri scrolle nasunie ako opona */
 .zc-home-hero{height:100vh;min-height:560px;margin-top:calc(-1 * var(--hh,72px));position:sticky;top:0;z-index:0;overflow:hidden;display:flex;align-items:center}
@@ -43,6 +52,9 @@ $title=zc_agent('title','Realitná maklérka');
 @media(max-width:768px){
     /* fotka bez brightness filtra; tvár hore ostáva čistá, scrim je len dole pod textom */
     .zc-hero-bg{background-image:url('<?php echo esc_url($zc_hero_portrait); ?>') !important;background-position:center 18% !important;transform-origin:center 25%;filter:none !important}
+<?php if ($zc_hero_portrait_2x && $zc_hero_portrait_2x !== $zc_hero_portrait): ?>
+    @media(min-resolution:2dppx){.zc-hero-bg{background-image:url('<?php echo esc_url($zc_hero_portrait_2x); ?>') !important}}
+<?php endif; ?>
     .zc-home-hero{align-items:flex-end}
     .zc-hero-text{padding:calc(var(--hh,60px) + 24px) 22px 80px;text-shadow:0 2px 16px rgba(0,0,0,.65)}
     /* menší nadpis nezasahuje do tváre */
@@ -71,11 +83,15 @@ $title=zc_agent('title','Realitná maklérka');
 <div class="zc-home-hero" id="zcHomeHero">
     <?php
     // Hero fotka: Customizer (Fotky maklérky) → featured image stránky → tmavé pozadie
-    $zc_hero_img = function_exists('zc_photo') ? zc_photo('hero') : '';
-    if (!$zc_hero_img && has_post_thumbnail()) $zc_hero_img = get_the_post_thumbnail_url(null, 'full');
+    $zc_hero_img    = $zc_sized('hero', 'zc-1440');           // bežné monitory
+    $zc_hero_img_big = $zc_sized('hero', 'zc-2048');           // veľké monitory
+    if (!$zc_hero_img && has_post_thumbnail()) $zc_hero_img = get_the_post_thumbnail_url(null, 'large');
     ?>
     <?php if($zc_hero_img): ?>
     <div class="zc-hero-bg" id="zcHeroBg" style="background-image:url('<?php echo esc_url($zc_hero_img); ?>')"></div>
+    <?php if ($zc_hero_img_big && $zc_hero_img_big !== $zc_hero_img): ?>
+    <style>@media(min-width:1441px){.zc-hero-bg{background-image:url('<?php echo esc_url($zc_hero_img_big); ?>')}}</style>
+    <?php endif; ?>
     <?php else: ?><div class="zc-hero-bg" id="zcHeroBg" style="background:#1C1A18"></div><?php endif; ?>
     <div class="zc-hero-overlay"></div>
     <div class="zc-hero-text">

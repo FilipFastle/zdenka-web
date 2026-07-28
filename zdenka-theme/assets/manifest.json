@@ -9,7 +9,7 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/wp-content/themes/zdenka-theme/assets/images/zc-logo.svg",
+      "src": "/wp-content/themes/zdenka-theme/assets/images/zc-logo.png",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

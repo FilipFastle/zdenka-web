@@ -2,10 +2,14 @@
 defined('ABSPATH') || exit;
 
 add_action('wp_enqueue_scripts', function() {
-    // Fonty sú self-hostované v main.css (@font-face) – žiadne Google servery
-    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',[],'3.21.0');
-    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.21.0',true);
-    wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.svg','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0]);
+    // Fonty sú self-hostované v main.css (@font-face) – žiadne Google servery.
+    // Používame zmenšenú verziu štýlov; pôvodný main.css ostáva v téme na úpravy.
+    $dir = get_stylesheet_directory();
+    $uri = get_stylesheet_directory_uri();
+    $css = file_exists($dir . '/assets/css/main.min.css') ? '/assets/css/main.min.css' : '/assets/css/main.css';
+    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.22.0');
+    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.22.0', true);
+    wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.png','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0]);
 });
 
 add_action('after_setup_theme', function() {
@@ -23,6 +27,32 @@ add_action('after_setup_theme', function() {
 });
 
 add_filter('body_class',function($c){$c[]='zdenka-theme';return $c;});
+
+/**
+ * Nepoužívaný JavaScript z WordPressu preč.
+ * Emoji skript (~15 kB) prekresľuje emoji na obrázky – tento web ich nepoužíva.
+ * wp-embed.js slúži na vkladanie iných WordPress stránok, tiež netreba.
+ */
+add_action('init', function () {
+    if (is_admin()) return;
+    remove_action('wp_head', 'print_emoji_detection_script', 7);
+    remove_action('wp_print_styles', 'print_emoji_styles');
+    remove_action('admin_print_scripts', 'print_emoji_detection_script');
+    remove_action('admin_print_styles', 'print_emoji_styles');
+    remove_filter('the_content_feed', 'wp_staticize_emoji');
+    remove_filter('comment_text_rss', 'wp_staticize_emoji');
+    remove_filter('wp_mail', 'wp_staticize_emoji_for_email');
+    add_filter('emoji_svg_url', '__return_false');
+    add_filter('tiny_mce_plugins', function ($p) {
+        return is_array($p) ? array_diff($p, ['wpemoji']) : [];
+    });
+});
+
+add_action('wp_footer', function () {
+    if (is_admin()) return;
+    wp_dequeue_script('wp-embed');
+}, 1);
+
 
 /** Existuje stránka Referencie? (v menu ju ukazujeme len ak áno) */
 function zc_has_referencie() {
@@ -290,6 +320,36 @@ function zc_photo($which, $fallback = '') {
 }
 
 function zc_agent($k,$f='') { return get_theme_mod('zc_agent_'.$k,$f)?:$f; }
+
+/**
+ * ID fotky z Prispôsobiť (aby sa dali použiť zmenšeniny).
+ * Hľadanie podľa adresy je dopyt do databázy, preto si ho pamätáme.
+ */
+function zc_photo_id($which) {
+    $url = get_theme_mod('zc_photo_' . $which, '');
+    if (!$url) return 0;
+    $key = 'zc_photoid_' . md5($url);
+    $id  = get_transient($key);
+    if ($id === false) {
+        $id = (int) attachment_url_to_postid($url);
+        set_transient($key, $id, WEEK_IN_SECONDS);
+    }
+    return (int) $id;
+}
+
+/**
+ * Adresa fotky v rozumnej veľkosti.
+ * Hero sa vkladá cez CSS background, kde srcset nefunguje – bez tohto by sa
+ * na mobil sťahoval originál z fotoaparátu (aj niekoľko MB).
+ */
+function zc_photo_sized($which, $size = 'zc-1440') {
+    $id = zc_photo_id($which);
+    if ($id) {
+        $src = wp_get_attachment_image_src($id, $size);
+        if ($src && !empty($src[0])) return $src[0];
+    }
+    return zc_photo($which);
+}
 
 // Líniové SVG ikony pre tému (náhrada za emoji). Ak je aktívny plugin, použije jeho sadu.
 function zc_svg($name, $size = 24) {
@@ -675,11 +735,23 @@ add_action('wp_head', function () {
     );
 }, 20);
 
-// Preload hero fotky na úvode (rýchlejší LCP)
+// Preload hero fotky na úvode (rýchlejší LCP).
+// Dôležité: preloadujeme presne tú adresu, ktorú potom použije CSS, a to
+// zvlášť pre mobil a pre počítač – inak si prehliadač stiahne obe fotky.
 add_action('wp_head', function() {
-    if (!is_front_page() || !function_exists('zc_photo')) return;
-    $hero = zc_photo('hero');
-    if ($hero) echo '<link rel="preload" as="image" href="' . esc_url($hero) . '" fetchpriority="high">' . "\n";
+    if (!is_front_page() || !function_exists('zc_photo_sized')) return;
+
+    $portrait = zc_photo_sized('portrait', 'large');
+    $desktop  = zc_photo_sized('hero', 'zc-1440');
+
+    if ($portrait) {
+        printf('<link rel="preload" as="image" href="%s" media="(max-width:768px)" fetchpriority="high">%s',
+            esc_url($portrait), "\n");
+    }
+    if ($desktop) {
+        printf('<link rel="preload" as="image" href="%s" media="(min-width:769px)" fetchpriority="high">%s',
+            esc_url($desktop), "\n");
+    }
 }, 1);
 
 

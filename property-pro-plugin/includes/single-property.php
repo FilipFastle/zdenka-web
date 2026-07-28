@@ -381,15 +381,12 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
             $pp_first = ($pp_slide_i === 0);
             echo wp_get_attachment_image($img_id, 'full', false, [
                 /* Hero je vysoký na celú obrazovku a fotka sa oreže cez
-                   object-fit:cover. Koľko z nej treba, teda nezávisí od šírky
-                   okna, ale od jeho pomeru strán: čím je okno užšie a vyššie,
-                   tým širšia fotka sa musí načítať (vidno z nej len stred).
-                   Široký monitor si tak vypýta veľkú fotku podľa svojej šírky,
-                   telefón na výšku primerane väčšiu, než je sám. */
-                'sizes'         => '(min-aspect-ratio: 16/9) 100vw, '
-                                 . '(min-aspect-ratio: 4/3) 120vw, '
-                                 . '(min-aspect-ratio: 1/1) 150vw, '
-                                 . '(min-aspect-ratio: 3/4) 200vw, 250vw',
+                   object-fit:cover, takže z nej treba viac, než je šírka okna.
+                   Na telefóne preto pýtame ~1100 px – dosť na ostrý obraz, ale
+                   nie 2500 px, ktoré by na mobilných dátach trvali večnosť.
+                   Veľký monitor si vypýta fotku podľa svojej skutočnej šírky. */
+                'sizes'         => '(max-width: 768px) 1100px, '
+                                 . '(max-width: 1200px) 1500px, 100vw',
                 'loading'       => $pp_first ? 'eager' : 'lazy',
                 'decoding'      => 'async',
                 'fetchpriority' => $pp_first ? 'high' : 'auto',

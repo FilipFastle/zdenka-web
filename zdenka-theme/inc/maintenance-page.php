@@ -6,7 +6,7 @@ $phone  = zc_agent('phone', '+421 907 579 742');
 $wa     = preg_replace('/[^0-9]/', '', zc_agent('wa','421907579742'));
 $email  = zc_agent('email', get_option('admin_email'));
 $msg    = get_option('zc_maintenance_msg', 'Web sa momentálne aktualizuje. Ozvite sa mi priamo.');
-$logo   = get_stylesheet_directory_uri() . '/assets/images/zc-logo.svg';
+$logo   = get_stylesheet_directory_uri() . '/assets/images/zc-logo.png';
 ?><!DOCTYPE html>
 <html lang="sk">
 <head>

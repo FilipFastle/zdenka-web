@@ -39,8 +39,8 @@ add_action('template_redirect', function() {
         ['year','Ročník', get_post_meta($id,'_property_rocnik',true), ''],
         ['condition','Stav', get_post_meta($id,'_property_stav',true), ''],
     ];
-    $logo = get_stylesheet_directory_uri() . '/assets/images/zc-logo.svg';
-    if (!file_exists(get_stylesheet_directory() . '/assets/images/zc-logo.svg')) $logo = '';
+    $logo = get_stylesheet_directory_uri() . '/assets/images/zc-logo.png';
+    if (!file_exists(get_stylesheet_directory() . '/assets/images/zc-logo.png')) $logo = '';
     ?><!DOCTYPE html>
 <html lang="sk"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
