@@ -156,7 +156,16 @@ add_action('template_redirect', function () {
 add_shortcode('realitny_panel', function() {
     if (!is_user_logged_in()) return panel_login_page();
     if (!current_user_can('edit_posts')) return '<p style="text-align:center;padding:40px;color:#e74c3c">Nemáš prístup.</p>';
-    wp_enqueue_media();
+
+    // Pri úprave ponuky povieme knižnici médií, ku ktorej ponuke práve pracujeme.
+    // Nahraté fotky sa tak rovno pripnú k ponuke a server ich zaradí do jej
+    // priečinka – nemusí sa čakať na uloženie formulára.
+    $pp_edit_id = intval($_GET['id'] ?? 0);
+    $pp_media   = ((($_GET['action'] ?? '') === 'edit') && $pp_edit_id
+                   && get_post_type($pp_edit_id) === 'property'
+                   && current_user_can('edit_post', $pp_edit_id))
+                ? ['post' => $pp_edit_id] : [];
+    wp_enqueue_media($pp_media);
     wp_enqueue_editor(); // native TinyMCE for panel forms
     return panel_dashboard();
 });

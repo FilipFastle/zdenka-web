@@ -148,8 +148,12 @@ Vrátenie sa samo zapíše do denníka, takže je vidieť aj to, kto čo vrátil
 ## Priečinky v Médiách
 WordPress priečinky nepozná — všetko hádže do jednej kopy podľa dátumu. Preto sme ich dorobili.
 
-**Fotky ponúk sa triedia samy.** Pri každom uložení ponuky (z panela aj z wp-adminu) sa
-titulná fotka aj celá galéria zaradia do priečinka `Ponuky → Názov ponuky`. Nemusíš robiť nič.
+**Fotky ponúk sa triedia samy.** Pri **úprave existujúcej ponuky** dostane fotka priečinok
+`Ponuky → Názov ponuky` **hneď pri nahratí** — nemusíš čakať na uloženie. Pri **novej ponuke**
+sa fotky zaradia vo chvíli, keď ju prvýkrát uložíš (dovtedy ponuka ešte nemá ani názov).
+Platí to rovnako pre panel aj wp-admin.
+
+Keď ponuku premenuješ, premenuje sa aj jej priečinok — nevznikne druhý s tými istými fotkami.
 
 Kde to použiješ:
 - **Médiá → Priečinky** — vytváranie a premenovanie, aj vnorené priečinky.

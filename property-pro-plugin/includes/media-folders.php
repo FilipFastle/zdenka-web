@@ -104,8 +104,12 @@ function zc_folder_sync_property($post_id) {
     if (!$post || $post->post_type !== 'property') return;
     if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) return;
 
-    $title = trim($post->post_title) ?: ('Ponuka #' . $post_id);
-    $folder = zc_folder_get_or_create($title, zc_folder_root_ponuky());
+    // Ak už priečinok pre túto ponuku poznáme, držíme sa ho – aj keď sa
+    // ponuka medzitým premenovala. Inak by pribúdali priečinky navyše.
+    $folder = (int) get_post_meta($post_id, '_property_folder_id', true);
+    if (!$folder || !term_exists($folder, ZC_FOLDER_TAX)) {
+        $folder = zc_folder_get_or_create(zc_folder_name_for_property($post), zc_folder_root_ponuky());
+    }
     if (!$folder) return;
 
     $ids = [];
@@ -127,6 +131,48 @@ function zc_folder_sync_property($post_id) {
     update_post_meta($post_id, '_property_folder_id', $folder);
 }
 add_action('save_post_property', 'zc_folder_sync_property', 20);
+
+/** Názov priečinka pre ponuku. */
+function zc_folder_name_for_property($post) {
+    $title = is_object($post) ? trim((string) $post->post_title) : '';
+    return $title !== '' ? $title : ('Ponuka #' . (is_object($post) ? $post->ID : 0));
+}
+
+/**
+ * Zaradenie hneď pri nahratí súboru.
+ *
+ * Keď maklérka nahráva fotky priamo z úpravy ponuky, WordPress ich pripne
+ * k tejto ponuke (post_parent). Priečinok jej teda vieme dať okamžite –
+ * nemusí čakať na uloženie formulára.
+ */
+add_action('add_attachment', function ($att_id) {
+    $parent = (int) get_post_field('post_parent', $att_id);
+    if (!$parent) return;
+
+    $post = get_post($parent);
+    if (!$post || $post->post_type !== 'property') return;
+
+    $folder = zc_folder_get_or_create(zc_folder_name_for_property($post), zc_folder_root_ponuky());
+    if ($folder) wp_set_object_terms($att_id, [$folder], ZC_FOLDER_TAX, true);
+});
+
+/**
+ * Keď sa ponuka premenuje, premenujeme aj jej priečinok –
+ * inak by po každej zmene názvu vznikol druhý priečinok s tými istými fotkami.
+ */
+add_action('post_updated', function ($post_id, $after, $before) {
+    if (!$after || $after->post_type !== 'property') return;
+    if ($before->post_title === $after->post_title) return;
+
+    $folder = (int) get_post_meta($post_id, '_property_folder_id', true);
+    if (!$folder || !term_exists($folder, ZC_FOLDER_TAX)) return;
+
+    $new_name = zc_folder_name_for_property($after);
+    $current  = get_term($folder, ZC_FOLDER_TAX);
+    if (!$current || is_wp_error($current) || $current->name === $new_name) return;
+
+    wp_update_term($folder, ZC_FOLDER_TAX, ['name' => $new_name, 'slug' => '']);
+}, 10, 3);
 
 /* ─────────────── Filtrovanie v zozname médií ─────────────── */
 
