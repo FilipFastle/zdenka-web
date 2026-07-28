@@ -128,6 +128,23 @@ Pri každom zázname vidíš čas, používateľa, jeho rolu, IP adresu a čoho 
 Dá sa filtrovať podľa udalosti, používateľa aj textu, a stiahnuť do CSV pre Excel.
 Záznamy sa **automaticky mažú po 30 dňoch** (dá sa zmeniť v nastavení dole na stránke).
 
+### Vrátenie zmeny — do 7 dní
+Pri každej zmene sa uloží aj to, **ako obsah vyzeral predtým**. V poslednom stĺpci denníka
+je preto tlačidlo **Vrátiť**, ktoré zmenu vezme späť:
+
+- **natrvalo zmazaná ponuka** sa obnoví aj s pôvodným ID, všetkými parametrami a fotkami,
+- **prepísaná ponuka** sa vráti do stavu pred úpravou (aj metadáta, ktoré medzitým pribudli, sa odstránia),
+- **zmazaná alebo skrytá recenzia** sa vráti,
+- **zmenené nastavenie** sa vráti na pôvodnú hodnotu,
+- **zmenená rola používateľa** sa vráti späť.
+
+Lehota je **7 dní** a dá sa zmeniť dole v nastavení. Po jej uplynutí sa uložené stavy zahodia
+(záznam v denníku ostane, len sa už nedá vrátiť) — databáza tak zbytočne nerastie.
+Zaškrtávatko **Len vrátiteľné** vyfiltruje zmeny, ktoré sa ešte dajú vziať späť.
+Vrátenie sa samo zapíše do denníka, takže je vidieť aj to, kto čo vrátil.
+
+> Vytvorenie nového obsahu sa nevracia — na to slúži bežné zmazanie.
+
 ## Denné zálohovanie panela
 **Web Zdenky → Zálohy** — každý deň o 3:20 sa uloží celý obsah panela:
 

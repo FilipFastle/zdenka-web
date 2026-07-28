@@ -1543,6 +1543,14 @@ function zcr_audit($what, $who = '', $id = 0) {
     if (function_exists('zc_audit_log')) zc_audit_log('review', $who, $what, (int) $id);
 }
 
+/** Odloží podobu recenzie pred zmenou, nech sa zmena dá vrátiť. */
+function zcr_audit_snapshot($id) {
+    global $wpdb;
+    if (!function_exists('zc_audit_stage') || !$id) return;
+    $row = $wpdb->get_row($wpdb->prepare('SELECT * FROM ' . zcr_table() . ' WHERE id = %d', (int) $id), ARRAY_A);
+    if ($row) zc_audit_stage('review', $row);
+}
+
 function zcr_panel_handle_post() {
     static $done = null;
     if ($done !== null) return $done;
@@ -1592,6 +1600,7 @@ function zcr_panel_handle_post() {
             'published'   => empty($_POST['published']) ? 0 : 1,
         ];
         if ($id) {
+            zcr_audit_snapshot($id);
             $r = $wpdb->update($t, $data, ['id' => $id]);
             if ($r === false) return $done = $fail($wpdb->last_error);
             zcr_audit('Upravená recenzia', $name, $id);
@@ -1607,6 +1616,7 @@ function zcr_panel_handle_post() {
     if ($is_del) {
         $id   = intval($_POST['zcr_id']);
         $gone = $wpdb->get_var($wpdb->prepare("SELECT author_name FROM {$t} WHERE id=%d", $id));
+        zcr_audit_snapshot($id);
         $wpdb->delete($t, ['id' => $id]);
         zcr_audit('Zmazaná recenzia', (string) $gone, $id);
         return $done = 'deleted';
@@ -1615,6 +1625,7 @@ function zcr_panel_handle_post() {
     $id  = intval($_POST['zcr_id']);
     $who = (string) $wpdb->get_var($wpdb->prepare("SELECT author_name FROM {$t} WHERE id=%d", $id));
     $cur = (int) $wpdb->get_var($wpdb->prepare("SELECT published FROM {$t} WHERE id=%d", $id));
+    zcr_audit_snapshot($id);
     $wpdb->update($t, ['published' => $cur ? 0 : 1], ['id' => $id]);
     zcr_audit($cur ? 'Recenzia skrytá z webu' : 'Recenzia zobrazená na webe', $who, $id);
     return $done = $cur ? 'hidden' : 'shown';
