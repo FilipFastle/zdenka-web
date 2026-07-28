@@ -6,9 +6,13 @@ add_action('wp_enqueue_scripts', function() {
     // Používame zmenšenú verziu štýlov; pôvodný main.css ostáva v téme na úpravy.
     $dir = get_stylesheet_directory();
     $uri = get_stylesheet_directory_uri();
-    $css = file_exists($dir . '/assets/css/main.min.css') ? '/assets/css/main.min.css' : '/assets/css/main.css';
-    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.22.0');
-    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.22.0', true);
+    // Keby zmenšené štýly niekedy robili problém, dajú sa jedným klikom
+    // vypnúť vo Web Zdenky → Nástroje a web hneď beží na pôvodnom main.css.
+    $use_min = get_option('zc_min_css', '1') === '1'
+            && file_exists($dir . '/assets/css/main.min.css');
+    $css = $use_min ? '/assets/css/main.min.css' : '/assets/css/main.css';
+    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.22.1');
+    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.22.1', true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.png','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0]);
 });
 

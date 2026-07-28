@@ -266,6 +266,13 @@ function zc_hub_tools_page() {
             case 'transients':
                 $msg = zc_hub_clear_transients() . ' dočasných záznamov zmazaných (Google recenzie, kurzy mien…).';
                 break;
+            case 'mincss':
+                $on = get_option('zc_min_css', '1') === '1' ? '0' : '1';
+                update_option('zc_min_css', $on);
+                $msg = $on === '1'
+                    ? 'Zmenšené štýly sú zapnuté (rýchlejšie načítanie).'
+                    : 'Zmenšené štýly sú vypnuté – web beží na pôvodnom main.css.';
+                break;
             case 'thumbs':
                 $msg = zc_hub_regenerate_thumbs(15);
                 break;
@@ -358,6 +365,10 @@ function zc_hub_tools_page() {
                 <button class="button" name="zc_tool" value="cache">Vynulovať cache webu</button>
                 <button class="button" name="zc_tool" value="transients">Zmazať dočasné dáta</button>
                 <button class="button" name="zc_tool" value="thumbs">Prepočítať veľkosti fotiek</button>
+                <button class="button" name="zc_tool" value="mincss"><?php
+                    echo get_option('zc_min_css', '1') === '1'
+                        ? 'Vypnúť zmenšené štýly' : 'Zapnúť zmenšené štýly';
+                ?></button>
                 <button class="button button-primary" name="zc_tool" value="mail">Poslať testovací e-mail</button>
             </form>
             <p style="color:#6b6560;font-size:12.5px;margin-bottom:0">
