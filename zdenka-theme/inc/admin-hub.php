@@ -133,6 +133,7 @@ function zc_hub_page() {
             zc_hub_card('Newsletter', 'Odberatelia, kampane a rozposielanie ponúk.', admin_url('admin.php?page=zc-newsletter'), '✉', zc_hub_has('zc-newsletter'));
             zc_hub_card('Ebook', 'PDF lead-magnet a jeho formulár.', admin_url('admin.php?page=zc-ebook'), '📘', zc_hub_has('zc-ebook'));
             zc_hub_card('Realitný panel', 'Jednoduchá správa pre maklérku (bez wp-adminu).', $panel ? get_permalink($panel) : '', '⌂', (bool) $panel);
+            zc_hub_card('Priečinky fotiek', 'Médiá roztriedené po ponukách.', admin_url('edit-tags.php?taxonomy=zc_media_folder'), '📁', taxonomy_exists('zc_media_folder'));
             ?>
         </div>
 

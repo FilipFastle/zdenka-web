@@ -145,6 +145,22 @@ Vrátenie sa samo zapíše do denníka, takže je vidieť aj to, kto čo vrátil
 
 > Vytvorenie nového obsahu sa nevracia — na to slúži bežné zmazanie.
 
+## Priečinky v Médiách
+WordPress priečinky nepozná — všetko hádže do jednej kopy podľa dátumu. Preto sme ich dorobili.
+
+**Fotky ponúk sa triedia samy.** Pri každom uložení ponuky (z panela aj z wp-adminu) sa
+titulná fotka aj celá galéria zaradia do priečinka `Ponuky → Názov ponuky`. Nemusíš robiť nič.
+
+Kde to použiješ:
+- **Médiá → Priečinky** — vytváranie a premenovanie, aj vnorené priečinky.
+- **Médiá → Knižnica** — nový rozbaľovací zoznam *Všetky priečinky* na filtrovanie
+  a stĺpec *Priečinky*. Cez hromadné akcie presunieš naraz viac fotiek.
+- **V okne na výber fotky** (v paneli aj v editore ponuky) je v hornom rozbaľovacom
+  zozname vidieť priečinky s ikonou 📁 — pri desiatkach ponúk to šetrí najviac času.
+
+> Fotka môže byť vo viacerých priečinkoch naraz a priečinky nič nepresúvajú na disku —
+> ide o označenie, takže sa nemôže stať, že sa niekde stratí odkaz na súbor.
+
 ## Denné zálohovanie panela
 **Web Zdenky → Zálohy** — každý deň o 3:20 sa uloží celý obsah panela:
 

@@ -1159,6 +1159,8 @@ add_action('template_redirect', function() {
     update_post_meta($pid,'_property_video_url',esc_url_raw($_POST['video_url']??''));
     $ams=isset($_POST['amenities'])?array_map('sanitize_text_field',$_POST['amenities']):[];
     update_post_meta($pid,'_property_amenities',$ams);
+    // Fotky ponuky zaradíme do jej priečinka v Médiách (meta sú už uložené)
+    if (function_exists('zc_folder_sync_property')) zc_folder_sync_property($pid);
     wp_redirect(pp_panel_url('action=list&saved=1&pid='.$pid));exit;
 });
 
