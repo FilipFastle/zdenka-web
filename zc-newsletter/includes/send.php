@@ -119,10 +119,10 @@ add_action('zcn_do_scheduled', function($key) {
 }, 10, 1);
 
 function zcn_build_newsletter_email($subject, $body_html, $token, $name = '') {
-    $unsub    = zcn_unsubscribe_url($token);
-    $greeting = $name ? '<p style="font-size:15px;color:#2C2825;margin:0 0 20px;font-family:\'DM Sans\',Arial,sans-serif">Dobrý deň <strong>' . esc_html($name) . '</strong>,</p>' : '';
-
+    $unsub = zcn_unsubscribe_url($token);
+    // Oslovenie sem nedopĺňame – píše ho maklérka v texte kampane.
+    // Ak ho chce mať s menom, použije v texte premennú {meno}.
     $footer = 'Dostávate tento e-mail pretože ste prihlásení na odber noviniek. · <a href="' . esc_url($unsub) . '" style="color:#9A8660">Odhlásiť sa</a><br>';
 
-    return zcn_email_wrap($subject, $greeting . $body_html, $footer);
+    return zcn_email_wrap($subject, $body_html, $footer);
 }

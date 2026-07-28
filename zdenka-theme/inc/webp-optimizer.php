@@ -1,6 +1,17 @@
 <?php
 // ── WebP Image Optimizer ─────────────────────────────────────────────────
 
+/**
+ * Kvalita zmenšených verzií fotiek.
+ * WordPress ich robí na 82 %, čo je pri veľkých fotkách nehnuteľností
+ * viditeľné. 90 % je stále rozumná veľkosť súboru a znateľne ostrejšie.
+ * Platí len pre novo nahraté (alebo znova vygenerované) fotky.
+ */
+add_filter('jpeg_quality', function () { return 90; });
+add_filter('wp_editor_set_quality', function ($q, $mime) {
+    return $mime === 'image/webp' ? 88 : 90;
+}, 10, 2);
+
 // Convert image to WebP on upload
 add_filter('wp_handle_upload', function($upload) {
     if (!in_array($upload['type'], ['image/jpeg','image/png','image/gif'])) return $upload;

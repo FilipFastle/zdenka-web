@@ -66,7 +66,7 @@ $all_images = []; $images_json = [];
 foreach ($raw_ids as $img_id) {
     $img_id = intval($img_id);
     if ($img_id <= 0) continue;
-    $src = wp_get_attachment_image_src($img_id, 'large');
+    $src = wp_get_attachment_image_src($img_id, 'full');
     if (!$src) continue;
     if (in_array($img_id, $all_images)) continue;
     $all_images[]  = $img_id;
@@ -368,9 +368,21 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
 <div class="pp-hero<?php echo $all_images ? '' : ' pp-hero--nophoto' ?>" id="ppHero">
     <?php if ($all_images): ?>
     <div class="pp-hero-track" id="ppTrack">
-        <?php foreach ($all_images as $img_id): ?>
+        <?php foreach ($all_images as $pp_slide_i => $img_id): ?>
         <div class="pp-hero-slide">
-            <?php echo wp_get_attachment_image($img_id, 'large', false, ['loading'=>'eager','decoding'=>'async']); ?>
+            <?php
+            /* Slajd je cez celú šírku okna. Pri veľkosti „large" (max 1024 px)
+               povie WordPress prehliadaču sizes="…1024px" a ten stiahne malú
+               fotku, ktorú potom roztiahne na 1900 px – odtiaľ tá rozmazanosť.
+               Preto plná veľkosť a sizes=100vw, nech si prehliadač vyberie sám. */
+            $pp_first = ($pp_slide_i === 0);
+            echo wp_get_attachment_image($img_id, 'full', false, [
+                'sizes'         => '100vw',
+                'loading'       => $pp_first ? 'eager' : 'lazy',
+                'decoding'      => 'async',
+                'fetchpriority' => $pp_first ? 'high' : 'auto',
+            ]);
+            ?>
         </div>
         <?php endforeach; ?>
     </div>
@@ -541,7 +553,12 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
         <div class="pp-gallery">
             <?php foreach ($all_images as $i => $img_id): ?>
             <div class="pp-gal-item" data-i="<?php echo $i ?>" onclick="ppLbOpen(<?php echo $i ?>)">
-                <?php echo wp_get_attachment_image($img_id,'medium',false,['loading'=>'lazy']) ?>
+                <?php /* Stĺpce v galérii sú široké ~300 px, na retine 600 px – „medium"
+                         (300 px) by bola mäkká, preto necháme prehliadač vybrať z väčších. */ ?>
+                <?php echo wp_get_attachment_image($img_id, 'large', false, [
+                    'loading' => 'lazy',
+                    'sizes'   => '(max-width:600px) 46vw, (max-width:900px) 31vw, 300px',
+                ]) ?>
             </div>
             <?php endforeach; ?>
         </div>

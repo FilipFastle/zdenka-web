@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ZC Newsletter
  * Description: Vlastný newsletter pre zdenkacibulova.sk – databáza v WP, double opt-in, markdown editor, unsubscribe link.
- * Version: 1.5.4
+ * Version: 1.6.0
  * Author: Filip
  */
 defined('ABSPATH') || exit;

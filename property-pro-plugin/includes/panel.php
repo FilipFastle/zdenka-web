@@ -573,10 +573,17 @@ function toast(msg,ok){
     t.classList.add('show');
     setTimeout(function(){t.classList.remove('show')},3000);
 }
+// Titulná fotka ide cez celú šírku obrazovky – malá predloha bude rozmazaná
+function pnlCheckSize(a){
+    if (a && a.width && a.width < 1600) {
+        toast('Pozor: fotka má len ' + a.width + ' px na šírku. Na celú obrazovku bude mäkká – ideál je aspoň 2000 px.');
+    }
+}
 function selCover(){
     var f=wp.media({title:'Cover foto',button:{text:'Nastav'},multiple:false});
     f.on('select',function(){
         var a=f.state().get('selection').first().toJSON();
+        pnlCheckSize(a);
         document.getElementById('cv').value=a.id;
         var t=a.sizes.thumbnail||a.sizes.full;
         document.getElementById('cv-pre').innerHTML='<div class="gp-thumb"><img src="'+t.url+'"><button type="button" class="gp-rm" onclick="rmCv()">✕</button></div>';
@@ -590,6 +597,7 @@ function selGal(){
         var p=document.getElementById('gal-pre');
         f.state().get('selection').forEach(function(a){
             a=a.toJSON();
+            pnlCheckSize(a);
             if(!g.includes(a.id)){
                 g.push(a.id);
                 var t=a.sizes.thumbnail||a.sizes.full;

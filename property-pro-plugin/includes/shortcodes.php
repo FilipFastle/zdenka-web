@@ -269,8 +269,12 @@ function render_property_card() {
                      tabindex=-1, aby klávesnica nemala tri rovnaké zastávky na jednej karte. */ ?>
             <a href="<?php the_permalink() ?>" class="zc-prop-imglink" tabindex="-1" aria-hidden="true">
             <?php
-            if ($cover_id) echo wp_get_attachment_image($cover_id,'medium',false,['loading'=>'lazy']);
-            elseif (has_post_thumbnail()) the_post_thumbnail('medium',['loading'=>'lazy']);
+            /* Karta má na PC cez 400 px, na retine 800 px. Veľkosť „medium" má
+               300 px – preto pôsobili fotky mäkko. Dáme prehliadaču správne
+               „sizes" a on si z ponuky vyberie dosť veľkú fotku sám. */
+            $img_attr = ['loading' => 'lazy', 'sizes' => '(max-width:560px) 92vw, (max-width:900px) 46vw, 31vw'];
+            if ($cover_id) echo wp_get_attachment_image($cover_id, 'large', false, $img_attr);
+            elseif (has_post_thumbnail()) the_post_thumbnail('large', $img_attr);
             else echo '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#F5F1EA;color:#ccc"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>';
             ?>
             </a>
@@ -351,7 +355,13 @@ add_shortcode('property_carousel', function($atts) {
         $typ      = get_post_meta($id,'_property_typ',true);
         $typ_labels = ['predaj'=>'Na predaj','prenajom'=>'Na prenájom','pozemok'=>'Pozemok'];
         $typ_colors = ['predaj'=>'#B8A47A','prenajom'=>'#FFFFFF','pozemok'=>'#6a9e77'];
-        $img = $cover_id ? wp_get_attachment_image($cover_id,'large',false,['style'=>'position:absolute;inset:0;width:100%;height:100%;object-fit:cover']) : (has_post_thumbnail() ? get_the_post_thumbnail(null,'large',['style'=>'position:absolute;inset:0;width:100%;height:100%;object-fit:cover']) : '');
+        $slide_attr = [
+            'style' => 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover',
+            'sizes' => '100vw',
+        ];
+        $img = $cover_id
+            ? wp_get_attachment_image($cover_id, 'full', false, $slide_attr)
+            : (has_post_thumbnail() ? get_the_post_thumbnail(null, 'full', $slide_attr) : '');
         $slides[] = ['img'=>$img,'title'=>get_the_title(),'cena'=>$cena,'lokalita'=>$lokalita,'typ'=>$typ_labels[$typ]??'','typ_color'=>$typ_colors[$typ]??'#B8A47A','typ_text'=>$typ==='pozemok'?'#fff':'#1C1A18','url'=>get_permalink()];
     }
     wp_reset_postdata();

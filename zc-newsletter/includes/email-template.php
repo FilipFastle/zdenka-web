@@ -1,5 +1,54 @@
 <?php
 defined('ABSPATH') || exit;
+/**
+ * Vizitka maklérky do päty e-mailu – telefón, e-mail a WhatsApp na jeden klik.
+ * Údaje sa berú z Prispôsobiť → Maklérka – Kontakt.
+ */
+function zcn_signature_html() {
+    $agent = function_exists('zc_agent') ? 'zc_agent' : null;
+    $name  = $agent ? zc_agent('name',  'Zdenka Cibuľová')  : 'Zdenka Cibuľová';
+    $role  = $agent ? zc_agent('title', 'Realitná maklérka') : 'Realitná maklérka';
+    $phone = $agent ? zc_agent('phone', '') : '';
+    $email = $agent ? zc_agent('email', '') : get_option('admin_email');
+    $wa    = preg_replace('/[^0-9]/', '', (string) ($agent ? zc_agent('wa', '') : ''));
+
+    $rows = '';
+    if ($phone) {
+        $rows .= '<div class="sig-row" style="font-size:13px;color:#5B534A;line-height:2">Telefón: '
+               . '<a href="tel:' . esc_attr(preg_replace('/[^0-9+]/', '', $phone)) . '"'
+               . ' style="color:#7C5E33;text-decoration:none;font-weight:600">' . esc_html($phone) . '</a></div>';
+    }
+    if ($email && is_email($email)) {
+        $rows .= '<div class="sig-row" style="font-size:13px;color:#5B534A;line-height:2">E-mail: '
+               . '<a href="mailto:' . esc_attr($email) . '"'
+               . ' style="color:#7C5E33;text-decoration:none;font-weight:600">' . esc_html($email) . '</a></div>';
+    }
+    if ($wa) {
+        $rows .= '<div class="sig-row" style="font-size:13px;color:#5B534A;line-height:2">WhatsApp: '
+               . '<a href="https://wa.me/' . esc_attr($wa) . '"'
+               . ' style="color:#7C5E33;text-decoration:none;font-weight:600">Napísať správu</a></div>';
+    }
+    if (!$rows) return '';
+
+    return '
+  <tr>
+    <td style="padding:0 36px 8px">
+      <table class="sig-box" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="background:#FBF8F2;border:1px solid #E0D8CE;border-radius:14px">
+        <tr>
+          <td style="padding:18px 22px">
+            <div class="sig-name" style="font-family:Georgia,\'Times New Roman\',serif;font-size:17px;font-weight:700;color:#1C1A18">'
+              . esc_html($name) . '</div>
+            <div class="sig-role" style="font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:#9A8660;margin:3px 0 10px">'
+              . esc_html($role) . '</div>
+            ' . $rows . '
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>';
+}
+
 function zcn_email_wrap($subject, $content, $footer_extra = '') {
     $site    = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : (get_bloginfo('name') ?: 'Zdenka Cibuľová');
     $url     = home_url();
@@ -28,6 +77,11 @@ body  { margin:0; padding:0; background:#F2EEE8; }
     .footer-text { color:#6B6560 !important; }
     .footer-link { color:#7A7068 !important; }
     .chip { background:#2e2b27 !important; color:#9A8660 !important; }
+    .sig-box  { background:#2a2724 !important; border-color:#3a352f !important; }
+    .sig-name { color:#ffffff !important; }
+    .sig-role { color:#C9B38A !important; }
+    .sig-row  { color:#d1cbc3 !important; }
+    .sig-row a { color:#C9B38A !important; }
 }
 @media only screen and (max-width: 620px) {
     .outer  { padding: 16px !important; }
@@ -73,6 +127,9 @@ body  { margin:0; padding:0; background:#F2EEE8; }
       ' . $content . '
     </td>
   </tr>
+
+  <!-- Vizitka maklérky -->
+  ' . zcn_signature_html() . '
 
   <!-- Divider -->
   <tr>
