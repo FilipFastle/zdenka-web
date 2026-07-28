@@ -3,8 +3,8 @@ defined('ABSPATH') || exit;
 
 add_action('wp_enqueue_scripts', function() {
     // Fonty sú self-hostované v main.css (@font-face) – žiadne Google servery
-    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',[],'3.18.2');
-    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.18.2',true);
+    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',[],'3.19.0');
+    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.19.0',true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.svg','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0]);
 });
 
@@ -149,6 +149,26 @@ add_action('customize_register',function($wpc) {
     $wpc->add_section('zc_misc',['title'=>'Ostatné nastavenia','priority'=>34]);
     $wpc->add_setting('zc_czk_rate',['default'=>25.2,'sanitize_callback'=>function($v){return (float)str_replace(',','.',$v);}]);
     $wpc->add_control('zc_czk_rate',['label'=>'Kurz EUR → CZK (prepínač meny na ponukách)','section'=>'zc_misc','type'=>'text']);
+
+    // ── Miestne SEO (Google) ────────────────────────────────────────────
+    // Tieto údaje idú do štruktúrovaných dát pre Google. Musia sa presne
+    // zhodovať s firemným profilom na Google – inak si ich Google „nespáruje".
+    $wpc->add_section('zc_localseo',['title'=>'Miestne SEO (Google)','priority'=>33.7,
+        'description'=>'Adresa, hodiny a poloha pre Google. Vyplň rovnako ako vo firemnom profile na Google.']);
+    foreach([
+        'zc_addr_street' => ['Ulica a číslo','text','Napr. Námestie SNP 1'],
+        'zc_addr_city'   => ['Mesto','text','Banská Bystrica'],
+        'zc_addr_zip'    => ['PSČ','text','974 01'],
+        'zc_addr_region' => ['Kraj','text','Banskobystrický kraj'],
+        'zc_geo_lat'     => ['Zemepisná šírka','text','Z Google Máp: klik pravým na miesto → prvý riadok, napr. 48.7359'],
+        'zc_geo_lng'     => ['Zemepisná dĺžka','text','Druhé číslo, napr. 19.1462'],
+        'zc_open_hours'  => ['Otváracie hodiny','text','Formát pre Google: Mo-Fr 09:00-17:00'],
+        'zc_area_served' => ['Kde pôsobíš','text','Mestá oddelené čiarkou: Banská Bystrica, Zvolen, Brezno'],
+        'zc_gsc_verify'  => ['Overovací kód Search Console','text','Len hodnota z content="…", nie celý riadok'],
+    ] as $id=>[$lbl,$type,$desc]) {
+        $wpc->add_setting($id,['default'=>'','sanitize_callback'=>'sanitize_text_field']);
+        $wpc->add_control($id,['label'=>$lbl,'section'=>'zc_localseo','type'=>$type,'description'=>$desc]);
+    }
 
     // Štartovacia hlasitosť videí — aby po spustení „nehúkalo"
     $wpc->add_setting('zc_video_volume',['default'=>50,'sanitize_callback'=>'absint']);

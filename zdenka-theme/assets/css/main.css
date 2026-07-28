@@ -935,3 +935,10 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
     .zc-nav { gap: 10px; }
     .zc-nav a { letter-spacing: .3px; }
 }
+
+/* ── Fotka na karte ponuky je odkaz ────────────────────────────────────
+   Ľudia klikajú najprv na fotku, až potom na tlačidlo. Odkaz leží pod
+   štítkami aj pod srdiečkom a porovnaním, takže tie fungujú ďalej. */
+.zc-prop-imglink { display: block; width: 100%; height: 100%; position: relative; z-index: 1; }
+.zc-prop-imglink:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.zc-prop-card:hover .zc-prop-imglink { cursor: pointer; }

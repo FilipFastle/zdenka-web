@@ -265,11 +265,15 @@ function render_property_card() {
     ob_start(); ?>
     <div class="zc-prop-card<?php echo $sale === 'predane' ? ' is-sold' : '' ?>">
         <div class="zc-prop-img">
+            <?php /* Na fotku sa klikne ako prvé – nech otvorí ponuku rovnako ako tlačidlo.
+                     tabindex=-1, aby klávesnica nemala tri rovnaké zastávky na jednej karte. */ ?>
+            <a href="<?php the_permalink() ?>" class="zc-prop-imglink" tabindex="-1" aria-hidden="true">
             <?php
             if ($cover_id) echo wp_get_attachment_image($cover_id,'medium',false,['loading'=>'lazy']);
             elseif (has_post_thumbnail()) the_post_thumbnail('medium',['loading'=>'lazy']);
             else echo '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#F5F1EA;color:#ccc"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>';
             ?>
+            </a>
             <div class="zc-prop-badges">
                 <?php if ($typ_label): ?><span class="zc-prop-badge <?php echo esc_attr($typ) ?>"><?php echo $typ_label ?></span><?php endif; ?>
                 <?php if (pp_is_new($id) && !$sale): ?><span class="zc-prop-badge is-new">Nové</span><?php endif; ?>
@@ -358,7 +362,9 @@ add_shortcode('property_carousel', function($atts) {
     .prop-sc{position:relative;border-radius:14px;overflow:hidden;background:#111}
     .prop-sc-track{display:flex;transition:transform .55s cubic-bezier(.4,0,.2,1)}
     .prop-sc-slide{min-width:100%;position:relative;aspect-ratio:16/9;max-height:500px;overflow:hidden;background:#111}
-    .prop-sc-overlay{position:absolute;inset:0;background:linear-gradient(transparent 35%,rgba(0,0,0,.78));z-index:1}
+    .prop-sc-imglink{position:absolute;inset:0;display:block;z-index:0}
+    /* prekrytie len farbí, klik prejde na fotku pod ním */
+    .prop-sc-overlay{position:absolute;inset:0;background:linear-gradient(transparent 35%,rgba(0,0,0,.78));z-index:1;pointer-events:none}
     .prop-sc-info{position:absolute;bottom:0;left:0;right:0;padding:clamp(18px,4vw,48px);color:#fff;z-index:2}
     .prop-sc-badge{display:inline-block;padding:5px 13px;border-radius:50px;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
     .prop-sc-title{font-size:clamp(16px,3vw,26px);font-weight:700;margin-bottom:7px;font-family:var(--serif,'Playfair Display',serif);text-shadow:0 2px 10px rgba(0,0,0,.5)}
@@ -375,7 +381,9 @@ add_shortcode('property_carousel', function($atts) {
         <div class="prop-sc-track" id="<?php echo $uid ?>T">
         <?php foreach ($slides as $s): ?>
         <div class="prop-sc-slide">
+            <a href="<?php echo esc_url($s['url']) ?>" class="prop-sc-imglink" tabindex="-1" aria-hidden="true">
             <?php echo $s['img'] ?: '<div style="position:absolute;inset:0;background:#2c2c2c;display:flex;align-items:center;justify-content:center;color:#555"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>'; ?>
+            </a>
             <div class="prop-sc-overlay"></div>
             <div class="prop-sc-info">
                 <?php if ($s['typ']): ?><span class="prop-sc-badge" style="background:<?php echo $s['typ_color'] ?>;color:<?php echo $s['typ_text'] ?>"><?php echo $s['typ'] ?></span><?php endif; ?>

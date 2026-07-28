@@ -90,6 +90,10 @@ add_action('wp_head', function() {
         echo '<meta ' . $attr . ' content="' . esc_attr($t['content']) . '">' . "\n";
     }
 
+    // Overenie Google Search Console (stačí hodnota z content="…")
+    $gsc = trim((string) get_theme_mod('zc_gsc_verify', ''));
+    if ($gsc) echo '<meta name="google-site-verification" content="' . esc_attr($gsc) . '">' . "\n";
+
     // JSON-LD: realitná maklérka (site-wide)
     $agent_ld = [
         '@context'  => 'https://schema.org',
@@ -98,10 +102,46 @@ add_action('wp_head', function() {
         'url'       => home_url('/'),
         'image'     => $default_img,
         'telephone' => zc_agent('phone', ''),
-        'areaServed'=> ['Banská Bystrica', 'Zvolen'],
     ];
     $email = zc_agent('email', '');
     if ($email) $agent_ld['email'] = $email;
+
+    // Adresa, poloha a hodiny – bez nich sa Google k miestnym výsledkom stavia vlažne
+    $street = get_theme_mod('zc_addr_street', '');
+    $city   = get_theme_mod('zc_addr_city', '');
+    $zip    = get_theme_mod('zc_addr_zip', '');
+    $region = get_theme_mod('zc_addr_region', '');
+    if ($street || $city) {
+        $addr = ['@type' => 'PostalAddress', 'addressCountry' => 'SK'];
+        if ($street) $addr['streetAddress']   = $street;
+        if ($city)   $addr['addressLocality'] = $city;
+        if ($zip)    $addr['postalCode']      = $zip;
+        if ($region) $addr['addressRegion']   = $region;
+        $agent_ld['address'] = $addr;
+    }
+
+    $lat = (float) str_replace(',', '.', (string) get_theme_mod('zc_geo_lat', ''));
+    $lng = (float) str_replace(',', '.', (string) get_theme_mod('zc_geo_lng', ''));
+    if ($lat && $lng) {
+        $agent_ld['geo'] = ['@type' => 'GeoCoordinates', 'latitude' => $lat, 'longitude' => $lng];
+    }
+
+    $hours = trim((string) get_theme_mod('zc_open_hours', ''));
+    if ($hours) $agent_ld['openingHours'] = $hours;
+
+    $area = trim((string) get_theme_mod('zc_area_served', ''));
+    $agent_ld['areaServed'] = $area
+        ? array_values(array_filter(array_map('trim', explode(',', $area))))
+        : ['Banská Bystrica', 'Zvolen'];
+
+    // Prepojenie na profily – Google si podľa nich overí, že ide o tú istú firmu
+    if (function_exists('zc_social_links')) {
+        $same = [];
+        foreach (zc_social_links() as $s) {
+            if (!empty($s['url'])) $same[] = $s['url'];
+        }
+        if ($same) $agent_ld['sameAs'] = $same;
+    }
 
     echo '<script type="application/ld+json">' . wp_json_encode($agent_ld, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "</script>\n";
     if ($property_ld) {
