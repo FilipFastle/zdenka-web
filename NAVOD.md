@@ -101,10 +101,15 @@ tlačidlo *Všetky referencie →*.
 Shortcody: `[zc_reviews]`, `[zc_reviews layout="mosaic" clamp="0"]`, `[zc_reviews carousel="1"]`.
 
 ## Recenzie v realitnom paneli — prerobené
-- Pridanie/úprava cez okno, ktoré sa **nezavrie pri označovaní textu** (starý problém).
-- Po uložení sa stránka presmeruje — obnovenie (F5) už nepridá recenziu druhýkrát.
-- Karty s náhľadom, prepínač *Na webe / Skrytá* jedným klikom, šípky na poradie,
-  počet recenzií a priemerné hodnotenie, zrozumiteľné hlášky pri chybe.
+Otravné okno je preč. Formulár sa otvorí priamo na stránke a **celá správa recenzií
+funguje bez JavaScriptu** — takže ju nezhodí žiadny iný skript na stránke.
+
+- Zoznam je v riadkoch cez celú šírku, nie v mriežke.
+- Prepínač *Na webe / Skrytá* jedným klikom, šípky na poradie, počet a priemerné hodnotenie.
+- Formuláre idú na `admin-post.php`, takže sa odoslané dáta nemôžu cestou stratiť.
+- Rovnaké odoslanie sa nespracuje dvakrát — dvojklik ani F5 nepridá recenziu znova.
+- Keď sa niečo pokazí, panel napíše presný dôvod. Pod zoznamom je aj rozbaľovacia
+  **Diagnostika** (vidí ju len správca) so stavom stránky panela, tabuľky a posledného odoslania.
 
 ## Subdoména panela zrušená
 Plugin **ZC Panel doména** sme odstránili. Ak máš v `wp-config.php` riadky
