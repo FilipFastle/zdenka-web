@@ -235,7 +235,13 @@ if (form) {
                 fmsg.style.borderColor = res.success ? 'rgba(34,197,94,.25)' : 'rgba(239,68,68,.25)';
                 fmsg.textContent = res.data.message;
             }
-            if (res.success) form.reset();
+            if (res.success) {
+                form.reset();
+                // Pre Správcu značiek Google – z tejto udalosti si spravíš konverziu
+                document.dispatchEvent(new CustomEvent('zc:form-sent', {
+                    detail: { form_name: form.getAttribute('data-zc-form') || 'kontakt' }
+                }));
+            }
             btn.textContent = orig; btn.disabled = false;
         })
         .catch(function () {

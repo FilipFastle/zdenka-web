@@ -119,6 +119,39 @@ Aby sa recenzie z máp ukazovali priamo na webe:
 
 ---
 
+## 3b. Správca značiek Google (GTM)
+
+Kód GTM **nevkladaj do súborov témy** – pri aktualizácii by zmizol.
+Namiesto toho: *Prispôsobiť → **Miestne SEO (Google)** → Správca značiek Google*
+a vlož len ID kontajnera, napr. `GTM-XXXXXXX`. Web si oba kusy kódu (hlavičku
+aj `<noscript>` za `<body>`) doplní sám a na správne miesta.
+
+Kontrola: **Web Zdenky → Nástroje** ukáže, či je GTM načítaný.
+
+### Čo už web posiela do dataLayer
+Nemusíš nič programovať, v GTM len vytvoríš spúšťače:
+
+| Premenná / udalosť | Kedy |
+|--------------------|------|
+| `page_type` | `home`, `listings`, `property`, `contact`, `valuation`, `reviews` |
+| `property_id`, `property_type`, `city`, `value`, `currency` | na detaile ponuky |
+| `generate_lead` | odoslaný kontaktný formulár alebo dopyt na ponuku |
+| `ebook_stiahnuty` | stiahnutý ebook |
+| `kontakt_telefon`, `kontakt_email`, `kontakt_whatsapp` | klik na telefón, e-mail, WhatsApp |
+
+V GTM: *Spúšťače → Nový → Vlastná udalosť* → názov udalosti presne ako v tabuľke.
+Potom značku GA4 „Udalosť" naviaž na tento spúšťač.
+
+### GTM a súhlas s cookies
+GTM sa načíta vždy – on sám nemeria, len spravuje značky. Meranie gatuje
+**Consent Mode v2**, ktorý zapneš v CookieYes (viď časť 6). V GTM potom pri každej
+značke nastav *Rozšírené nastavenia → Ďalšie nastavenia súhlasu* → vyžadovať
+`analytics_storage` (pre GA4), resp. `ad_storage` pre reklamné značky.
+
+> Realitný panel sa nemeria zámerne – je to pracovný nástroj, nie web pre návštevníkov.
+> Kým si v GTM ladíš značky, nechaj vypnuté *„Nemerať prihlásených redaktorov"*,
+> inak ti nepôjde režim náhľadu.
+
 ## 4. Google Analytics 4
 
 Analytics **nenasadzuj priamo do témy** — musí ho spúšťať až súhlas s cookies.

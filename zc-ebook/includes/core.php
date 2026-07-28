@@ -241,6 +241,8 @@ function zc_ebook_assets() {
                     msg.textContent=res.data.message||'Hotovo! PDF vám otváram…';
                     if(res.data.pdf){window.open(res.data.pdf,'_blank','noopener');}
                     form.reset();
+                    /* Pre Správcu značiek Google – konverzia „stiahnutý ebook" */
+                    document.dispatchEvent(new CustomEvent('zc:ebook-sent'));
                     setTimeout(close,2600);
                 }else{
                     msg.className='zc-ebook-msg err';

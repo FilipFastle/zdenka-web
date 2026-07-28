@@ -3,8 +3,8 @@ defined('ABSPATH') || exit;
 
 add_action('wp_enqueue_scripts', function() {
     // Fonty sú self-hostované v main.css (@font-face) – žiadne Google servery
-    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',[],'3.20.0');
-    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.20.0',true);
+    wp_enqueue_style('zdenka-main', get_stylesheet_directory_uri().'/assets/css/main.css',[],'3.21.0');
+    wp_enqueue_script('zdenka-js', get_stylesheet_directory_uri().'/assets/js/main.js',[],'3.21.0',true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.svg','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0]);
 });
 
@@ -200,10 +200,16 @@ add_action('customize_register',function($wpc) {
         'zc_open_hours'  => ['Otváracie hodiny','text','Formát pre Google: Mo-Fr 09:00-17:00'],
         'zc_area_served' => ['Kde pôsobíš','text','Mestá oddelené čiarkou: Banská Bystrica, Zvolen, Brezno'],
         'zc_gsc_verify'  => ['Overovací kód Search Console','text','Len hodnota z content="…", nie celý riadok'],
+        'zc_gtm_id'      => ['Správca značiek Google (GTM)','text','ID kontajnera v tvare GTM-XXXXXXX. Kód sa vloží sám do hlavičky aj za <body>.'],
     ] as $id=>[$lbl,$type,$desc]) {
         $wpc->add_setting($id,['default'=>'','sanitize_callback'=>'sanitize_text_field']);
         $wpc->add_control($id,['label'=>$lbl,'section'=>'zc_localseo','type'=>$type,'description'=>$desc]);
     }
+    $wpc->add_setting('zc_gtm_skip_admins',['default'=>false,'sanitize_callback'=>function($v){return (bool)$v;}]);
+    $wpc->add_control('zc_gtm_skip_admins',[
+        'label'=>'Nemerať prihlásených redaktorov','section'=>'zc_localseo','type'=>'checkbox',
+        'description'=>'Nechaj vypnuté, kým si v GTM ladíš značky – režim náhľadu inak nebude fungovať.',
+    ]);
 
     // Štartovacia hlasitosť videí — aby po spustení „nehúkalo"
     $wpc->add_setting('zc_video_volume',['default'=>50,'sanitize_callback'=>'absint']);
@@ -652,6 +658,7 @@ require_once get_stylesheet_directory() . '/inc/preview-role.php';
 require_once get_stylesheet_directory() . '/inc/admin-hub.php';
 require_once get_stylesheet_directory() . '/inc/privacy.php';
 require_once get_stylesheet_directory() . '/inc/seo.php';
+require_once get_stylesheet_directory() . '/inc/analytics.php';
 // Ebook je teraz samostatný plugin (zc-ebook). Ak je aktívny, poskytuje
 // zc_ebook_* funkcie aj shortcode [zc_ebook]; téma ich používa cez function_exists.
 

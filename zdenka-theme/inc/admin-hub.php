@@ -306,6 +306,14 @@ function zc_hub_tools_page() {
                 <tr><td>COOKIE_DOMAIN</td><td><?php echo $cookie
                     ? '<span class="zch-warn">nastavená (' . esc_html(COOKIE_DOMAIN) . ') – subdoména panela sa zrušila, riadok vo wp-config.php môžeš zmazať</span>'
                     : 'nenastavená (správne)'; ?></td></tr>
+                <tr><td>Správca značiek Google</td><td><?php
+                    if (!function_exists('zc_gtm_id') || !zc_gtm_id()) {
+                        echo '<span class="zch-warn">nenastavený</span> – ID vlož v Prispôsobiť → Miestne SEO';
+                    } else {
+                        echo '<span class="zch-ok">' . esc_html(zc_gtm_id()) . '</span>';
+                        if (get_theme_mod('zc_gtm_skip_admins', false)) echo ' · prihlásení redaktori sa nemerajú';
+                    }
+                ?></td></tr>
                 <tr><td>Notifikácie chodia na</td><td><?php echo $recips ? esc_html(implode(', ', $recips)) : '<span class="zch-warn">nikam</span>'; ?></td></tr>
                 <?php if (function_exists('pp_panel_page_id')):
                     $pid   = pp_panel_page_id();
