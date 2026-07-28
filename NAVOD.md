@@ -112,6 +112,36 @@ Plugin **ZC Panel doména** sme odstránili. Ak máš v `wp-config.php` riadky
 spôsobovali zacyklené prihlasovanie. Panel beží normálne na
 `zdenkacibulova.sk/realitny-panel/`. Kontrolu nájdeš vo **Web Zdenky → Nástroje**.
 
+## Bezpečnostný denník
+**Web Zdenky → Denník** — kto sa kedy prihlásil, z akej IP a čo zmenil.
+
+Zaznamenáva sa: prihlásenie, **neúspešné prihlásenie**, odhlásenie, vytvorenie a
+úprava obsahu, presun do koša aj trvalé zmazanie, nahraté súbory, recenzie, zmeny
+používateľov a rolí, zapnutie/vypnutie pluginov a zmeny nastavení (stará → nová hodnota).
+
+Pri každom zázname vidíš čas, používateľa, jeho rolu, IP adresu a čoho sa to týkalo.
+Dá sa filtrovať podľa udalosti, používateľa aj textu, a stiahnuť do CSV pre Excel.
+Záznamy sa **automaticky mažú po 30 dňoch** (dá sa zmeniť v nastavení dole na stránke).
+
+## Denné zálohovanie panela
+**Web Zdenky → Zálohy** — každý deň o 3:20 sa uloží celý obsah panela:
+
+- ponuky (vrátane všetkých parametrov a odkazov na fotky),
+- formuláre a dopyty,
+- recenzie,
+- odberatelia newslettera, šablóny a kampane,
+- nastavenia pluginov aj vzhľad z Prispôsobiť.
+
+Drží sa **posledných 30 záloh**, staršie sa automaticky mažú (počet sa dá zmeniť).
+Zálohy sú v `wp-content/uploads/zc-zalohy/` a sú chránené — stiahnuť sa dajú len
+prihlásený cez wp-admin.
+
+Pri obnove si vyberieš, čo presne sa má vrátiť. Ponuky a formuláre sa doplnia a prepíšu
+podľa zálohy (nič navyše sa nemaže), recenzie a odberatelia sa nahradia obsahom zálohy.
+
+> Fotky sa do zálohy nekopírujú — ostávajú v Médiách a záloha si na ne drží odkaz.
+> Na zálohu celého webu vrátane súborov použi nástroj hostingu alebo UpdraftPlus.
+
 ---
 
 ## Čo ešte vieme pridať — potrebuje tvoj hosting / API kľúč

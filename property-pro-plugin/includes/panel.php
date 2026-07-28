@@ -99,11 +99,33 @@ function pp_panel_page_id() {
     return $cached;
 }
 
-/** Adresa panela (voliteľne s query reťazcom). */
+/** Adresa panela (voliteľne s query reťazcom). Vždy vráti úplnú adresu. */
 function pp_panel_url($query = '') {
     $id  = pp_panel_page_id();
-    $url = $id ? get_permalink($id) : home_url('/realitny-panel/');
+    $url = $id ? get_permalink($id) : '';
+    if (!$url) $url = home_url('/realitny-panel/');
     return $query === '' ? $url : $url . '?' . ltrim($query, '?&');
+}
+
+/**
+ * Presmerovanie, ktoré sa nedá „stratiť".
+ * Keď už boli hlavičky odoslané, wp_safe_redirect() ticho zlyhá a používateľ
+ * ostane visieť na prázdnej stránke s odoslaným formulárom – a obnovenie (F5)
+ * ho pošle znova. Preto v takom prípade presmerujeme aspoň cez HTML.
+ */
+function pp_go($url) {
+    $url = $url ?: home_url('/');
+    if (!headers_sent()) {
+        wp_safe_redirect($url);
+        exit;
+    }
+    printf(
+        '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=%s">'
+        . '<p style="font-family:system-ui,sans-serif;padding:28px;font-size:15px">'
+        . 'Hotovo. <a href="%s">Pokračovať do panela →</a></p>',
+        esc_url($url), esc_url($url)
+    );
+    exit;
 }
 
 /** Sme práve na stránke panela? */
@@ -1516,6 +1538,11 @@ function panel_newsletter() {
  *
  * Vracia kód výsledku ('' = tento request nič neukladá). Spustí sa najviac raz.
  */
+/** Zápis do bezpečnostného denníka (ak je k dispozícii). */
+function zcr_audit($what, $who = '', $id = 0) {
+    if (function_exists('zc_audit_log')) zc_audit_log('review', $who, $what, (int) $id);
+}
+
 function zcr_panel_handle_post() {
     static $done = null;
     if ($done !== null) return $done;
@@ -1536,6 +1563,13 @@ function zcr_panel_handle_post() {
     if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $t)) !== $t) {
         if (function_exists('zcr_install')) zcr_install();
         if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $t)) !== $t) return $done = 'notable';
+    }
+
+    // Rovnaké odoslanie spracujeme len raz
+    $token = preg_replace('/[^a-f0-9]/', '', (string) ($_POST['zcr_token'] ?? ''));
+    if ($token) {
+        if (get_transient('zcr_tok_' . $token)) return $done = 'dup';
+        set_transient('zcr_tok_' . $token, 1, 30 * MINUTE_IN_SECONDS);
     }
 
     $fail = function ($msg) {
@@ -1559,21 +1593,30 @@ function zcr_panel_handle_post() {
         ];
         if ($id) {
             $r = $wpdb->update($t, $data, ['id' => $id]);
-            return $done = ($r === false) ? $fail($wpdb->last_error) : 'saved';
+            if ($r === false) return $done = $fail($wpdb->last_error);
+            zcr_audit('Upravená recenzia', $name, $id);
+            return $done = 'saved';
         }
         $data['sort_order'] = (int) $wpdb->get_var("SELECT COALESCE(MAX(sort_order),0)+1 FROM {$t}");
         $wpdb->insert($t, $data);
-        return $done = $wpdb->insert_id ? 'added' : $fail($wpdb->last_error);
+        if (!$wpdb->insert_id) return $done = $fail($wpdb->last_error);
+        zcr_audit('Pridaná recenzia', $name, $wpdb->insert_id);
+        return $done = 'added';
     }
 
     if ($is_del) {
-        $wpdb->delete($t, ['id' => intval($_POST['zcr_id'])]);
+        $id   = intval($_POST['zcr_id']);
+        $gone = $wpdb->get_var($wpdb->prepare("SELECT author_name FROM {$t} WHERE id=%d", $id));
+        $wpdb->delete($t, ['id' => $id]);
+        zcr_audit('Zmazaná recenzia', (string) $gone, $id);
         return $done = 'deleted';
     }
 
     $id  = intval($_POST['zcr_id']);
+    $who = (string) $wpdb->get_var($wpdb->prepare("SELECT author_name FROM {$t} WHERE id=%d", $id));
     $cur = (int) $wpdb->get_var($wpdb->prepare("SELECT published FROM {$t} WHERE id=%d", $id));
     $wpdb->update($t, ['published' => $cur ? 0 : 1], ['id' => $id]);
+    zcr_audit($cur ? 'Recenzia skrytá z webu' : 'Recenzia zobrazená na webe', $who, $id);
     return $done = $cur ? 'hidden' : 'shown';
 }
 
@@ -1587,8 +1630,7 @@ define('ZCR_PANEL_ACTION', 'zcr_panel');
 
 function zcr_panel_post_endpoint() {
     $code = zcr_panel_handle_post();
-    wp_safe_redirect(pp_panel_url('action=reviews' . ($code !== '' ? '&zcr_msg=' . $code : '')));
-    exit;
+    pp_go(pp_panel_url('action=reviews' . ($code !== '' ? '&zcr_msg=' . $code : '')));
 }
 add_action('admin_post_' . ZCR_PANEL_ACTION,        'zcr_panel_post_endpoint');
 add_action('admin_post_nopriv_' . ZCR_PANEL_ACTION, 'zcr_panel_post_endpoint');
@@ -1598,6 +1640,9 @@ function zcr_panel_form_fields($id = 0) {
     wp_nonce_field('zcr_panel', '_zcrnonce');
     echo '<input type="hidden" name="action" value="' . esc_attr(ZCR_PANEL_ACTION) . '">';
     echo '<input type="hidden" name="zcr_id" value="' . (int) $id . '">';
+    // Jednorazový kľúč – to isté odoslanie sa nikdy nespracuje dvakrát
+    // (dvojklik, opätovné odoslanie po F5, pomalé pripojenie…)
+    echo '<input type="hidden" name="zcr_token" value="' . esc_attr(md5(uniqid('zcr', true))) . '">';
 }
 
 /**
@@ -1607,8 +1652,7 @@ function zcr_panel_form_fields($id = 0) {
 add_action('template_redirect', function () {
     $code = zcr_panel_handle_post();
     if ($code === '' || headers_sent()) return; // ak sa už tlačilo, hlášku vypíše panel
-    wp_safe_redirect(pp_panel_url('action=reviews&zcr_msg=' . $code));
-    exit;
+    pp_go(pp_panel_url('action=reviews&zcr_msg=' . $code));
 }, 6);
 
 function panel_reviews() {
@@ -1627,6 +1671,7 @@ function panel_reviews() {
         'deleted' => 'Recenzia vymazaná.',
         'shown'   => 'Recenzia sa už zobrazuje na webe.',
         'hidden'  => 'Recenzia je skrytá – na webe ju nikto neuvidí.',
+        'dup'     => 'Toto odoslanie už bolo spracované – recenzia sa nepridala druhýkrát.',
     ];
     // Kód výsledku príde z presmerovania; ak presmerovanie nestihlo prebehnúť
     // (hlavička už bola odoslaná), spracujeme formulár aj tu – nikdy sa nestratí.

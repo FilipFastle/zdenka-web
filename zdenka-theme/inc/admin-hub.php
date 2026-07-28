@@ -148,6 +148,14 @@ function zc_hub_page() {
             zc_hub_card('Nástroje', 'Stav systému, cache, test e-mailu.', admin_url('admin.php?page=zc-nastroje'), '🛠', true);
             ?>
         </div>
+
+        <div class="zch-sec">Dohľad</div>
+        <div class="zch-grid">
+            <?php
+            zc_hub_card('Bezpečnostný denník', 'Kto sa prihlásil, odkiaľ a čo zmenil.', admin_url('admin.php?page=zc-dennik'), '📋', zc_hub_has('zc-dennik'));
+            zc_hub_card('Zálohy', 'Denná záloha celého panela.', admin_url('admin.php?page=zc-zalohy'), '💾', zc_hub_has('zc-zalohy'));
+            ?>
+        </div>
         <?php endif; ?>
     </div>
     <?php
