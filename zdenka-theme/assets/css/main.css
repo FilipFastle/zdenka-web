@@ -387,8 +387,10 @@ ul { list-style: none; }
 .zc-prop-title a:hover { color: var(--accent-txt); }
 .zc-prop-location { font-size: 13px; color: var(--muted); margin-bottom: 9px; display: flex; align-items: center; gap: 4px; }
 .zc-prop-specs { display: flex; gap: 12px; font-size: 12px; color: var(--muted); margin-bottom: 12px; flex-wrap: wrap; }
+/* Cena bezpätkovým písmom – čísla sú v ňom čitateľnejšie než v pätkovom */
 .zc-prop-price {
-    font-family: var(--serif); font-size: 21px; font-weight: 800;
+    font-family: var(--sans); font-size: 21px; font-weight: 800;
+    font-variant-numeric: tabular-nums; letter-spacing: -.2px;
     color: var(--dark); padding-top: 12px; border-top: 1px solid var(--border);
     margin-top: auto; margin-bottom: 12px;
 }

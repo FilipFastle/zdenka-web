@@ -62,7 +62,7 @@ body{font-family:'DM Sans',Arial,sans-serif;color:#2C2825;background:#fff;line-h
 h1{font-family:'Playfair Display',serif;font-size:26px;margin-bottom:6px}
 .loc{color:#6B6560;font-size:14px;margin-bottom:14px}
 .cover{width:100%;height:360px;object-fit:cover;border-radius:12px;margin-bottom:20px}
-.price{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:#7C5E33;margin-bottom:4px}
+.price{font-family:'DM Sans',Arial,Helvetica,sans-serif;font-size:30px;font-weight:700;color:#7C5E33;margin-bottom:4px}
 .perm2{color:#6B6560;font-size:13px;margin-bottom:20px}
 .specs{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#E2DACE;border-radius:10px;overflow:hidden;margin-bottom:24px}
 .spec{background:#fff;padding:14px 8px;text-align:center}

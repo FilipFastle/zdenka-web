@@ -657,7 +657,7 @@ add_shortcode('porovnanie', function () {
     .zc-cmp-th a:hover{color:#B8A47A}
     .zc-cmp-x{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid #E2DACE;color:#999;cursor:pointer;font-size:12px;line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.1)}
     .zc-cmp-x:hover{color:#dc2626;border-color:#dc2626}
-    .zc-cmp-price{font-weight:800;color:#7C5E33;font-family:var(--serif,'Playfair Display',serif)}
+    .zc-cmp-price{font-weight:800;color:#7C5E33;font-family:var(--sans,'DM Sans',sans-serif);font-variant-numeric:tabular-nums}
     .zc-cmp-dash{color:#ccc}
     </style>
     <script>

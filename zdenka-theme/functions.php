@@ -11,8 +11,8 @@ add_action('wp_enqueue_scripts', function() {
     $use_min = get_option('zc_min_css', '1') === '1'
             && file_exists($dir . '/assets/css/main.min.css');
     $css = $use_min ? '/assets/css/main.min.css' : '/assets/css/main.css';
-    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.24.0');
-    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.24.0', true);
+    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.24.1');
+    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.24.1', true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.png','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0]);
 });
 

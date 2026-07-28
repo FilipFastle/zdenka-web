@@ -289,7 +289,8 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
 .pp-price-lbl { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#6B6560; margin-bottom:5px; font-family:var(--sans,sans-serif); }
 .pp-price-val {
     font-size:30px; font-weight:900; color:#7C5E33; line-height:1;
-    letter-spacing:-1px; font-family:var(--serif,serif);
+    letter-spacing:-.5px; font-family:var(--sans,'DM Sans',sans-serif);
+    font-variant-numeric:tabular-nums;
 }
 .pp-price-body { padding:16px 18px 18px; display:flex; flex-direction:column; gap:10px; }
 

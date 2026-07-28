@@ -241,7 +241,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .prop-item-badge{position:absolute;bottom:10px;left:10px;background:var(--accent);color:var(--dark);font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:50px}
 .prop-item-body{padding:15px 16px;display:flex;flex-direction:column;flex:1}
 .prop-item-title{font-family:var(--serif);font-size:15px;font-weight:700;color:var(--dark);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.prop-item-price{font-size:17px;font-weight:800;color:var(--accent-txt);font-family:var(--serif);margin-bottom:10px}
+.prop-item-price{font-size:17px;font-weight:800;color:var(--accent-txt);font-family:var(--sans);font-variant-numeric:tabular-nums;margin-bottom:10px}
 .prop-item-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 14px;border-radius:var(--r-sm);font-size:11px;font-weight:700;border:none;cursor:pointer;text-decoration:none;font-family:var(--sans);letter-spacing:.3px;transition:all .2s}
 .btn-primary{background:var(--accent);color:var(--dark)}
