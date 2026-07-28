@@ -4,7 +4,9 @@
 <meta charset="<?php bloginfo('charset'); ?>">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <?php $zc_fdir = get_stylesheet_directory_uri() . '/assets/fonts'; ?>
-<link rel="preload" href="<?php echo esc_url($zc_fdir); ?>/DMSans.woff2" as="font" type="font/woff2" crossorigin>
+<?php /* Prednostne sťahujeme len nadpisové písmo – to je nad ohybom najviditeľnejšie.
+         DM Sans si prehliadač vypýta sám z CSS a nekradne linku hero fotke,
+         ktorá určuje, kedy sa stránka tvári načítaná (LCP). */ ?>
 <link rel="preload" href="<?php echo esc_url($zc_fdir); ?>/PlayfairDisplay.woff2" as="font" type="font/woff2" crossorigin>
 <?php wp_head(); ?>
 

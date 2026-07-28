@@ -266,6 +266,13 @@ function zc_hub_tools_page() {
             case 'transients':
                 $msg = zc_hub_clear_transients() . ' dočasných záznamov zmazaných (Google recenzie, kurzy mien…).';
                 break;
+            case 'webp':
+                $on = get_option('zc_webp_sizes', '1') === '1' ? '0' : '1';
+                update_option('zc_webp_sizes', $on);
+                $msg = $on === '1'
+                    ? 'Zmenšeniny sa budú ukladať ako WebP. Spusti ešte „Prepočítať veľkosti fotiek", nech sa prerobia aj staršie.'
+                    : 'Zmenšeniny sa budú ukladať ako JPEG.';
+                break;
             case 'mincss':
                 $on = get_option('zc_min_css', '1') === '1' ? '0' : '1';
                 update_option('zc_min_css', $on);
@@ -313,6 +320,16 @@ function zc_hub_tools_page() {
                 <tr><td>COOKIE_DOMAIN</td><td><?php echo $cookie
                     ? '<span class="zch-warn">nastavená (' . esc_html(COOKIE_DOMAIN) . ') – subdoména panela sa zrušila, riadok vo wp-config.php môžeš zmazať</span>'
                     : 'nenastavená (správne)'; ?></td></tr>
+                <tr><td>Formát zmenšenín</td><td><?php
+                    $webp_ok = !function_exists('zc_webp_supported') || zc_webp_supported();
+                    if (!$webp_ok) {
+                        echo '<span class="zch-warn">server nepodporuje WebP – používa sa JPEG</span>';
+                    } elseif (get_option('zc_webp_sizes', '1') === '1') {
+                        echo '<span class="zch-ok">WebP</span> · asi o tretinu menšie súbory než JPEG';
+                    } else {
+                        echo 'JPEG';
+                    }
+                ?></td></tr>
                 <tr><td>Správca značiek Google</td><td><?php
                     if (!function_exists('zc_gtm_id') || !zc_gtm_id()) {
                         echo '<span class="zch-warn">nenastavený</span> – ID vlož v Prispôsobiť → Miestne SEO';
@@ -365,6 +382,10 @@ function zc_hub_tools_page() {
                 <button class="button" name="zc_tool" value="cache">Vynulovať cache webu</button>
                 <button class="button" name="zc_tool" value="transients">Zmazať dočasné dáta</button>
                 <button class="button" name="zc_tool" value="thumbs">Prepočítať veľkosti fotiek</button>
+                <button class="button" name="zc_tool" value="webp"><?php
+                    echo get_option('zc_webp_sizes', '1') === '1'
+                        ? 'Vypnúť WebP zmenšeniny' : 'Zapnúť WebP zmenšeniny';
+                ?></button>
                 <button class="button" name="zc_tool" value="mincss"><?php
                     echo get_option('zc_min_css', '1') === '1'
                         ? 'Vypnúť zmenšené štýly' : 'Zapnúť zmenšené štýly';

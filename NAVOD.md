@@ -145,6 +145,27 @@ Vrátenie sa samo zapíše do denníka, takže je vidieť aj to, kto čo vrátil
 
 > Vytvorenie nového obsahu sa nevracia — na to slúži bežné zmazanie.
 
+## Rýchlosť webu
+Po väčšej optimalizácii je vo **Web Zdenky → Nástroje** pár vecí, o ktorých je dobré vedieť.
+
+**Po každej inštalácii novej témy spusti „Prepočítať veľkosti fotiek."**
+Bez toho nové (menšie a ostrejšie) verzie fotiek neexistujú a web siahne po origináli.
+Beží po dávkach, klikaj kým nenapíše „hotovo".
+
+| Tlačidlo | Čo robí |
+|----------|---------|
+| Prepočítať veľkosti fotiek | dorobí k starším fotkám WebP a veľkosti 1440/2048 px |
+| Zapnúť/vypnúť WebP zmenšeniny | WebP je asi o tretinu menší než JPEG pri rovnakej kvalite |
+| Vypnúť zmenšené štýly | keby po aktualizácii čokoľvek vyzeralo divne, web hneď beží na pôvodnom CSS |
+
+Čo najviac ovplyvňuje rýchlosť na mobile, v poradí:
+1. **veľkosť hero fotky** – je cez celú obrazovku, takže je to najväčší súbor na stránke,
+2. cudzie skripty (CookieYes, Správca značiek) – tie web nevie ovplyvniť,
+3. všetko ostatné je už zoptimalizované.
+
+> Ak nahrávaš hero fotku, netreba 6000 px z fotoaparátu. Úplne stačí **2500 px na dlhšej
+> strane** – web si z nej aj tak spraví menšie verzie a originál len zaberá miesto.
+
 ## Priečinky v Médiách
 WordPress priečinky nepozná — všetko hádže do jednej kopy podľa dátumu. Preto sme ich dorobili.
 

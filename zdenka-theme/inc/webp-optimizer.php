@@ -8,6 +8,31 @@
  * Platí len pre novo nahraté (alebo znova vygenerované) fotky.
  */
 add_filter('jpeg_quality', function () { return 90; });
+
+/**
+ * Zmenšeniny sa ukladajú ako WebP.
+ * Pri rovnakej kvalite je WebP zhruba o tretinu menší než JPEG, čo je pri
+ * hero fotke na mobilných dátach ten najväčší rozdiel. Originál ostáva
+ * nedotknutý – WebP sa robí len z odvodených veľkostí.
+ */
+add_filter('image_editor_output_format', function ($formats) {
+    if (get_option('zc_webp_sizes', '1') !== '1') return $formats;
+    if (!function_exists('imagewebp') && !class_exists('Imagick')) return $formats;
+
+    $formats['image/jpeg'] = 'image/webp';
+    $formats['image/png']  = 'image/webp';
+    return $formats;
+});
+
+/** Podporuje tento server vôbec WebP? (pre stránku Nástroje) */
+function zc_webp_supported() {
+    if (function_exists('imagewebp')) return true;
+    if (class_exists('Imagick')) {
+        $f = @Imagick::queryFormats('WEBP');
+        return !empty($f);
+    }
+    return false;
+}
 add_filter('wp_editor_set_quality', function ($q, $mime) {
     return $mime === 'image/webp' ? 88 : 90;
 }, 10, 2);
