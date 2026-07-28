@@ -637,7 +637,6 @@ form textarea[style*="rgba(255,255,255,.08)"]:focus {
 
 /* ── HERO – better mobile ── */
 @media (max-width: 768px) {
-    .zc-home-hero { height: 100vh; height: 100svh; }
     .zc-hero-text { padding: calc(var(--hh) + 48px) 24px 56px; }
     .zc-hero-h1 { font-size: clamp(30px, 9vw, 44px); }
     .zc-hero-btns { gap: 10px; }
@@ -891,14 +890,15 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
     .zc-hero-text { max-width: 880px; padding-left: 120px; }
     .zc-hero-h1   { font-size: 80px; }
     .zc-hero-p    { font-size: 22px; }
-    /* na extrémne širokých obrazovkách hero nie je zbytočne vysoký */
-    .zc-home-hero { max-height: 1100px; }
 }
-/* Nízke, veľmi široké okná (21:9) – hero drží tvár v zábere, nie príliš vysoké */
+/* Nízke, veľmi široké okná (21:9) – hero drží tvár v zábere.
+   Výšku tu zámerne NEobmedzujeme: hero má vždy vyplniť celú obrazovku.
+   Predtým tu bol max-height a pri oddialení (Ctrl -) sa okno „stalo"
+   ultraširokým, hero prestal siahať po spodok a dole svietilo pozadie. */
 @media (min-aspect-ratio: 2/1) and (min-width: 1200px) {
-    .zc-home-hero { height: 100vh; max-height: 960px; }
     .zc-hero-bg { background-position: 62% 30%; }
 }
+
 
 /* ═══ HERO EBOOK TLAČIDLO – „dýchanie" + jemný zlatý glow ═══════════
    Zobrazí sa len keď je v hero tlačidlo „Ebook PDF zdarma" (ebook zapnutý). */

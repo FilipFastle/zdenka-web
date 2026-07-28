@@ -20,7 +20,10 @@ $zc_hero_portrait_2x = $zc_sized('portrait', 'zc-1440');    // mobil s retinou
 ?>
 <style>
 /* Sticky hero – zvyšok stránky sa naň pri scrolle nasunie ako opona */
+/* Hero vždy vyplní celé okno – aj keď si používateľ stránku oddiali.
+   dvh berie do úvahy lištu prehliadača na mobile, vh je záloha pre staršie. */
 .zc-home-hero{height:100vh;min-height:560px;margin-top:calc(-1 * var(--hh,72px));position:sticky;top:0;z-index:0;overflow:hidden;display:flex;align-items:center}
+@supports(height:100dvh){.zc-home-hero{height:100dvh}}
 .zc-home-hero ~ section{position:relative;z-index:2}
 .zc-home-hero ~ footer.zc-footer{position:relative;z-index:2}
 .zc-hero-bg{position:absolute;inset:0;background-size:cover;background-position:67% center;background-repeat:no-repeat;will-change:transform;transform-origin:67% 35%}
