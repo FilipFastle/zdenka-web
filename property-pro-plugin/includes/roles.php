@@ -50,8 +50,10 @@ add_filter('show_admin_bar', function ($show) {
 add_action('admin_init', function () {
     if (!pp_is_agent() || current_user_can('manage_options')) return;
     if (wp_doing_ajax()) return;
+    // Tieto koncové body maklérka potrebuje – cez ne odosiela formuláre
+    // z panela a nahráva fotky. Bez admin-post.php by sa nič neuložilo.
     $script = basename($_SERVER['PHP_SELF'] ?? '');
-    if (in_array($script, ['admin-ajax.php', 'async-upload.php', 'media-upload.php'], true)) return;
+    if (in_array($script, ['admin-ajax.php', 'admin-post.php', 'async-upload.php', 'media-upload.php'], true)) return;
 
     wp_safe_redirect(function_exists('pp_panel_url') ? pp_panel_url() : home_url('/'));
     exit;

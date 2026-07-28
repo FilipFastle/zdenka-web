@@ -59,50 +59,62 @@ function zcr_move_review($id, $dir) {
     return true;
 }
 
-// AJAX pre šípky
-add_action('wp_ajax_zcr_move', function () {
-    check_ajax_referer('zcr_nonce', 'nonce');
-    if (!current_user_can('edit_posts')) wp_send_json_error(['message' => 'Bez oprávnenia.']);
-    $id  = intval($_POST['id'] ?? 0);
-    $dir = ($_POST['dir'] ?? '') === 'up' ? 'up' : 'down';
-    if (!$id) wp_send_json_error(['message' => 'Neplatné ID.']);
-    wp_send_json_success(['moved' => zcr_move_review($id, $dir)]);
-});
+/**
+ * Presun cez admin-post.php – obyčajný odkaz, žiadny JavaScript.
+ * Šípky tak fungujú aj vtedy, keď na stránke zlyhá iný skript.
+ */
+function zcr_move_endpoint() {
+    $id  = intval($_GET['id'] ?? 0);
+    $dir = ($_GET['dir'] ?? '') === 'up' ? 'up' : 'down';
+    if (!current_user_can('edit_posts')) wp_die('Bez oprávnenia.');
+    if (!$id || !wp_verify_nonce($_GET['_wpnonce'] ?? '', 'zcr_move_' . $id)) wp_die('Neplatná požiadavka.');
+
+    zcr_move_review($id, $dir);
+
+    $back = wp_get_referer();
+    wp_safe_redirect($back ?: admin_url('admin.php?page=zc-reviews'));
+    exit;
+}
+add_action('admin_post_zcr_move', 'zcr_move_endpoint');
 
 /**
- * Tlačidlá ↑ ↓ pre jeden riadok. JS a štýly sa vypíšu len raz.
+ * Šípky ↑ ↓ pre jeden riadok. Štýly sa vypíšu len raz.
  */
 function zcr_order_controls($id, $is_first = false, $is_last = false) {
     static $printed = false;
+    $id = (int) $id;
     ob_start();
     if (!$printed) {
         $printed = true;
         ?>
         <style>
         .zcr-ord{display:inline-flex;gap:4px}
-        .zcr-ord button{width:26px;height:26px;line-height:1;padding:0;cursor:pointer;
+        .zcr-ord a,.zcr-ord span{width:26px;height:26px;line-height:24px;text-align:center;
+            display:inline-block;text-decoration:none;
             border:1px solid #d5cec2;background:#fff;border-radius:6px;color:#7C5E33;font-size:13px}
-        .zcr-ord button:hover:not(:disabled){background:#B8A47A;color:#1C1A18;border-color:#B8A47A}
-        .zcr-ord button:disabled{opacity:.35;cursor:default}
+        .zcr-ord a:hover{background:#B8A47A;color:#1C1A18;border-color:#B8A47A}
+        .zcr-ord span{opacity:.35}
         </style>
-        <script>
-        window.zcrMove=function(id,dir,btn){
-            var d=new FormData();
-            d.append('action','zcr_move'); d.append('id',id); d.append('dir',dir);
-            d.append('nonce', window.zcrNonce || '<?php echo wp_create_nonce('zcr_nonce'); ?>');
-            if(btn){btn.disabled=true;}
-            fetch('<?php echo esc_url(admin_url('admin-ajax.php')); ?>',{method:'POST',body:d,credentials:'same-origin'})
-              .then(function(r){return r.json()})
-              .then(function(){location.reload()})
-              .catch(function(){if(btn)btn.disabled=false;});
-        };
-        </script>
         <?php
     }
+    $link = function ($dir) use ($id) {
+        return esc_url(wp_nonce_url(
+            admin_url('admin-post.php?action=zcr_move&id=' . $id . '&dir=' . $dir),
+            'zcr_move_' . $id
+        ));
+    };
     ?>
     <span class="zcr-ord">
-        <button type="button" title="Posunúť vyššie" onclick="zcrMove(<?php echo (int) $id; ?>,'up',this)" <?php disabled($is_first, true); ?>>&#9650;</button>
-        <button type="button" title="Posunúť nižšie" onclick="zcrMove(<?php echo (int) $id; ?>,'down',this)" <?php disabled($is_last, true); ?>>&#9660;</button>
+        <?php if ($is_first): ?>
+        <span title="Už je najvyššie">&#9650;</span>
+        <?php else: ?>
+        <a href="<?php echo $link('up'); ?>" title="Posunúť vyššie">&#9650;</a>
+        <?php endif; ?>
+        <?php if ($is_last): ?>
+        <span title="Už je najnižšie">&#9660;</span>
+        <?php else: ?>
+        <a href="<?php echo $link('down'); ?>" title="Posunúť nižšie">&#9660;</a>
+        <?php endif; ?>
     </span>
     <?php
     return ob_get_clean();
@@ -111,21 +123,28 @@ function zcr_order_controls($id, $is_first = false, $is_last = false) {
 /**
  * Nastavenia zobrazovania – použiteľné vo wp-admine aj v paneli.
  */
+function zcr_disp_save_endpoint() {
+    if (!current_user_can('edit_posts')) wp_die('Bez oprávnenia.');
+    check_admin_referer('zcr_disp', 'zcr_disp_nonce');
+    $o = sanitize_key($_POST['display_order'] ?? 'manual');
+    update_option('zcr_display_order', in_array($o, ['manual','newest','rating','random'], true) ? $o : 'manual');
+    $p = sanitize_key($_POST['google_position'] ?? 'after');
+    update_option('zcr_google_position', in_array($p, ['after','before','mixed'], true) ? $p : 'after');
+
+    $back = wp_get_referer() ?: admin_url('admin.php?page=zc-reviews');
+    wp_safe_redirect(add_query_arg('zcr_disp_ok', '1', remove_query_arg('zcr_disp_ok', $back)));
+    exit;
+}
+add_action('admin_post_zcr_disp_save', 'zcr_disp_save_endpoint');
+
 function zcr_display_settings_box() {
-    $saved = false;
-    if (isset($_POST['zcr_disp_save']) && isset($_POST['zcr_disp_nonce'])
-        && wp_verify_nonce($_POST['zcr_disp_nonce'], 'zcr_disp') && current_user_can('edit_posts')) {
-        $o = sanitize_key($_POST['display_order'] ?? 'manual');
-        update_option('zcr_display_order', in_array($o, ['manual','newest','rating','random'], true) ? $o : 'manual');
-        $p = sanitize_key($_POST['google_position'] ?? 'after');
-        update_option('zcr_google_position', in_array($p, ['after','before','mixed'], true) ? $p : 'after');
-        $saved = true;
-    }
+    $saved = !empty($_GET['zcr_disp_ok']);
     ob_start(); ?>
     <div class="zcr-disp">
         <?php if ($saved): ?><div class="zcr-disp-ok">Nastavenie uložené.</div><?php endif; ?>
-        <form method="post" class="zcr-disp-form">
+        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="zcr-disp-form">
             <?php wp_nonce_field('zcr_disp', 'zcr_disp_nonce'); ?>
+            <input type="hidden" name="action" value="zcr_disp_save">
             <label>Poradie recenzií
                 <select name="display_order">
                     <option value="manual" <?php selected(zcr_display_order(), 'manual'); ?>>Vlastné (šípkami nižšie)</option>

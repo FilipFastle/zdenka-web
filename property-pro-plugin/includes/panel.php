@@ -1578,8 +1578,31 @@ function zcr_panel_handle_post() {
 }
 
 /**
- * Po uložení presmerujeme späť – obnovenie stránky (F5) tak nepridá
- * recenziu druhýkrát a v adrese neostane odoslaný formulár.
+ * Formuláre recenzií odosielame na admin-post.php – to je oficiálny cieľ
+ * WordPressu na formuláre z frontendu. Nezávisí od šablóny, permalinku ani
+ * od slugu stránky, nikdy sa nekešuje a nezasiahne ho kanonické presmerovanie
+ * (to pri POST-e zahodí odoslané dáta a vyzerá to ako obyčajné obnovenie stránky).
+ */
+define('ZCR_PANEL_ACTION', 'zcr_panel');
+
+function zcr_panel_post_endpoint() {
+    $code = zcr_panel_handle_post();
+    wp_safe_redirect(pp_panel_url('action=reviews' . ($code !== '' ? '&zcr_msg=' . $code : '')));
+    exit;
+}
+add_action('admin_post_' . ZCR_PANEL_ACTION,        'zcr_panel_post_endpoint');
+add_action('admin_post_nopriv_' . ZCR_PANEL_ACTION, 'zcr_panel_post_endpoint');
+
+/** Skryté polia, ktoré patria do každého formulára recenzií v paneli. */
+function zcr_panel_form_fields($id = 0) {
+    wp_nonce_field('zcr_panel', '_zcrnonce');
+    echo '<input type="hidden" name="action" value="' . esc_attr(ZCR_PANEL_ACTION) . '">';
+    echo '<input type="hidden" name="zcr_id" value="' . (int) $id . '">';
+}
+
+/**
+ * Poistka: keby sa formulár aj tak odoslal na stránku panela (staršia
+ * vyrovnávacia pamäť prehliadača), spracujeme ho aj tam a presmerujeme späť.
  */
 add_action('template_redirect', function () {
     $code = zcr_panel_handle_post();
@@ -1623,19 +1646,34 @@ function panel_reviews() {
     }
 
     // Ak by tabuľka chýbala, skúsime ju vytvoriť – panel tak nezostane prázdny
-    if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $t)) !== $t && function_exists('zcr_install')) {
+    $has_table = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $t)) === $t;
+    if (!$has_table && function_exists('zcr_install')) {
         zcr_install();
+        $has_table = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $t)) === $t;
     }
 
-    $edit_id = intval($_GET['edit_review'] ?? 0);
+    $base     = pp_panel_url('action=reviews');
+    $endpoint = admin_url('admin-post.php');
+    $edit_id  = intval($_GET['edit_review'] ?? 0);
+    $adding  = isset($_GET['new_review']);
     $zcr_ord = function_exists('zcr_order_sql') ? zcr_order_sql() : 'sort_order ASC, id ASC';
     if ($zcr_ord === 'RAND()') $zcr_ord = 'sort_order ASC, id ASC'; // v paneli chceme stabilné poradie
-    $rows    = $wpdb->get_results("SELECT * FROM {$t} ORDER BY {$zcr_ord}");
+    $rows    = $has_table ? $wpdb->get_results("SELECT * FROM {$t} ORDER BY {$zcr_ord}") : [];
+    $rows    = $rows ?: [];
     $manual  = function_exists('zcr_display_order') && zcr_display_order() === 'manual';
-    $shown   = 0;
+
+    $shown = 0;
     foreach ($rows as $r) if ($r->published) $shown++;
     $avg = 0;
     if ($rows) { foreach ($rows as $r) $avg += (int) $r->rating; $avg = round($avg / count($rows), 1); }
+
+    // Upravovaná recenzia
+    $cur = null;
+    if ($edit_id) {
+        foreach ($rows as $r) if ((int) $r->id === $edit_id) { $cur = $r; break; }
+        if (!$cur) { $edit_id = 0; $err = $err ?: 'Recenzia sa nenašla – možno ju už niekto vymazal.'; }
+    }
+    $show_form = $adding || $cur;
     ?>
 
     <?php if ($msg): ?>
@@ -1650,15 +1688,70 @@ function panel_reviews() {
             <h2>Recenzie</h2>
             <p><?php echo count($rows) ?> celkom · <?php echo $shown ?> na webe<?php if ($rows): ?> · priemer <?php echo esc_html($avg) ?> ★<?php endif; ?></p>
         </div>
-        <button type="button" class="btn btn-primary rev-add" onclick="zcrOpen()"><?php echo pp_svg('plus',16) ?> Pridať recenziu</button>
+        <?php if (!$show_form): ?>
+        <a href="<?php echo esc_url($base . '&new_review=1') ?>" class="btn btn-primary rev-add"><?php echo pp_svg('plus',16) ?> Pridať recenziu</a>
+        <?php endif; ?>
     </div>
+
+    <?php if ($show_form):
+        $f_name   = $cur ? $cur->author_name : '';
+        $f_role   = $cur ? $cur->author_role : '';
+        $f_body   = $cur ? $cur->body        : '';
+        $f_rating = $cur ? (int) $cur->rating : 5;
+        $f_pub    = $cur ? (int) $cur->published : 1;
+    ?>
+    <form method="post" action="<?php echo esc_url($endpoint) ?>" class="rev-form-card">
+        <?php zcr_panel_form_fields($cur ? (int) $cur->id : 0); ?>
+        <input type="hidden" name="avatar_url" value="<?php echo $cur ? esc_attr($cur->avatar_url) : '' ?>">
+
+        <div class="rev-form-head"><?php echo $cur ? 'Upraviť recenziu' : 'Nová recenzia' ?></div>
+
+        <div class="rev-form-body">
+            <div class="rev-f2">
+                <label class="rev-f">
+                    <span class="rev-f-lbl">Meno klienta <b>*</b></span>
+                    <input type="text" name="author_name" required autofocus placeholder="Jana Nováková" value="<?php echo esc_attr($f_name) ?>">
+                </label>
+                <label class="rev-f">
+                    <span class="rev-f-lbl">Typ spolupráce <small>(voliteľné)</small></span>
+                    <input type="text" name="author_role" placeholder="Predaj bytu" value="<?php echo esc_attr($f_role) ?>">
+                </label>
+            </div>
+
+            <label class="rev-f">
+                <span class="rev-f-lbl">Text recenzie <b>*</b></span>
+                <textarea name="body" rows="5" required placeholder="Napíš, čo klient povedal…"><?php echo esc_textarea($f_body) ?></textarea>
+            </label>
+
+            <div class="rev-f">
+                <span class="rev-f-lbl">Hodnotenie</span>
+                <div class="rev-starpick">
+                    <?php for ($i = 5; $i >= 1; $i--): ?>
+                    <input type="radio" id="zcrst<?php echo $i ?>" name="rating" value="<?php echo $i ?>" <?php checked($f_rating, $i) ?>>
+                    <label for="zcrst<?php echo $i ?>" title="<?php echo $i ?> z 5">★</label>
+                    <?php endfor; ?>
+                </div>
+            </div>
+
+            <label class="rev-check">
+                <input type="checkbox" name="published" value="1" <?php checked($f_pub, 1) ?>>
+                <span>Zobraziť na webe</span>
+            </label>
+        </div>
+
+        <div class="rev-form-foot">
+            <a href="<?php echo esc_url($base) ?>" class="btn btn-ghost">Zrušiť</a>
+            <button type="submit" name="zcr_panel_save" value="1" class="btn btn-primary">Uložiť recenziu</button>
+        </div>
+    </form>
+    <?php endif; ?>
 
     <?php if (function_exists('zcr_display_settings_box')) echo zcr_display_settings_box(); ?>
 
     <?php if ($rows): ?>
     <div class="rev-list">
         <?php $last = count($rows) - 1; foreach ($rows as $i => $r): ?>
-        <div class="rev-row<?php echo $r->published ? '' : ' is-hidden' ?>">
+        <div class="rev-row<?php echo $r->published ? '' : ' is-hidden' ?><?php echo ($edit_id === (int) $r->id) ? ' is-editing' : '' ?>">
             <?php if ($manual): ?>
             <div class="rev-row-ord"><?php echo zcr_order_controls($r->id, $i === 0, $i === $last); ?></div>
             <?php endif; ?>
@@ -1674,29 +1767,27 @@ function panel_reviews() {
             </div>
 
             <div class="rev-row-actions">
-                <button type="button" class="btn btn-ghost" onclick="zcrEdit(<?php echo (int) $r->id ?>)"><?php echo pp_svg('pen',13) ?> Upraviť</button>
-                <form method="post" class="rev-inline">
-                    <?php wp_nonce_field('zcr_panel','_zcrnonce') ?>
-                    <input type="hidden" name="zcr_id" value="<?php echo (int) $r->id ?>">
+                <a href="<?php echo esc_url($base . '&edit_review=' . (int) $r->id) ?>" class="btn btn-ghost"><?php echo pp_svg('pen',13) ?> Upraviť</a>
+                <form method="post" action="<?php echo esc_url($endpoint) ?>" class="rev-inline">
+                    <?php zcr_panel_form_fields((int) $r->id); ?>
                     <button type="submit" name="zcr_panel_toggle" value="1" class="btn btn-ghost">
                         <?php echo $r->published ? 'Skryť' : 'Zobraziť' ?>
                     </button>
                 </form>
-                <form method="post" class="rev-inline" onsubmit="return confirm('Naozaj vymazať túto recenziu?')">
-                    <?php wp_nonce_field('zcr_panel','_zcrnonce') ?>
-                    <input type="hidden" name="zcr_id" value="<?php echo (int) $r->id ?>">
+                <form method="post" action="<?php echo esc_url($endpoint) ?>" class="rev-inline" onsubmit="return confirm('Naozaj vymazať túto recenziu?')">
+                    <?php zcr_panel_form_fields((int) $r->id); ?>
                     <button type="submit" name="zcr_panel_delete" value="1" class="btn btn-danger" title="Zmazať"><?php echo pp_svg('trash',13) ?></button>
                 </form>
             </div>
         </div>
         <?php endforeach; ?>
     </div>
-    <?php else: ?>
+    <?php elseif (!$show_form): ?>
     <div class="rev-empty">
         <div class="rev-empty-ic"><?php echo pp_svg('star',44) ?></div>
         <h3>Zatiaľ žiadne recenzie</h3>
-        <p>Pridajte prvú spokojnú klientku alebo klienta – na webe sa zobrazí hneď.</p>
-        <button type="button" class="btn btn-primary" onclick="zcrOpen()"><?php echo pp_svg('plus',16) ?> Pridať prvú recenziu</button>
+        <p>Pridaj prvú spokojnú klientku alebo klienta – na webe sa zobrazí hneď.</p>
+        <a href="<?php echo esc_url($base . '&new_review=1') ?>" class="btn btn-primary"><?php echo pp_svg('plus',16) ?> Pridať prvú recenziu</a>
     </div>
     <?php endif; ?>
 
@@ -1707,51 +1798,30 @@ function panel_reviews() {
         alebo ako mozaika <code>[zc_reviews layout="mosaic"]</code>.
     </p>
 
-    <!-- MODAL -->
-    <div id="zcrModal" class="rev-modal" hidden>
-        <div class="rev-modal-bg" data-zcr-close></div>
-        <div class="rev-modal-box" role="dialog" aria-modal="true" aria-labelledby="zcrModalTitle">
-            <div class="rev-modal-head">
-                <h3 id="zcrModalTitle">Nová recenzia</h3>
-                <button type="button" class="rev-x" data-zcr-close aria-label="Zavrieť">&times;</button>
-            </div>
-            <form method="post" class="rev-form" id="zcrForm">
-                <?php wp_nonce_field('zcr_panel','_zcrnonce') ?>
-                <input type="hidden" name="zcr_id" id="zcrId" value="0">
-                <input type="hidden" name="avatar_url" id="zcrAvatar" value="">
-
-                <label class="rev-f">Meno klienta <span>*</span>
-                    <input type="text" name="author_name" id="zcrName" required placeholder="Jana Nováková">
-                </label>
-                <label class="rev-f">Typ spolupráce <small>(voliteľné)</small>
-                    <input type="text" name="author_role" id="zcrRole" placeholder="Predaj bytu">
-                </label>
-                <label class="rev-f">Text recenzie <span>*</span>
-                    <textarea name="body" id="zcrBody" rows="5" required placeholder="Napíšte, čo klient povedal…"></textarea>
-                </label>
-
-                <div class="rev-f">
-                    <span class="rev-f-lbl">Hodnotenie</span>
-                    <div class="rev-starpick" id="pnlStars">
-                        <?php for ($i = 1; $i <= 5; $i++): ?>
-                        <button type="button" onclick="pnlSetRating(<?php echo $i ?>)" data-v="<?php echo $i ?>" aria-label="<?php echo $i ?> hviezdičiek">★</button>
-                        <?php endfor; ?>
-                    </div>
-                    <input type="hidden" name="rating" id="pnlRating" value="5">
-                </div>
-
-                <label class="rev-check">
-                    <input type="checkbox" name="published" id="zcrPub" value="1" checked>
-                    <span>Zobraziť na webe</span>
-                </label>
-
-                <div class="rev-modal-foot">
-                    <button type="button" class="btn btn-ghost" data-zcr-close>Zrušiť</button>
-                    <button type="submit" name="zcr_panel_save" value="1" class="btn btn-primary">Uložiť recenziu</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <?php if (current_user_can('manage_options')):
+        $ppid  = function_exists('pp_panel_page_id') ? pp_panel_page_id() : 0;
+        $ppage = $ppid ? get_post($ppid) : null;
+    ?>
+    <details class="rev-diag">
+        <summary>Diagnostika (vidí len správca)</summary>
+        <table>
+            <tr><td>Stránka panela</td><td><?php echo $ppage
+                ? '#' . (int) $ppid . ' · slug „' . esc_html($ppage->post_name) . '" · ' . esc_html(get_permalink($ppid))
+                : 'NENAŠLA SA'; ?></td></tr>
+            <tr><td>Cieľ formulárov</td><td><?php echo esc_html($endpoint) ?></td></tr>
+            <tr><td>Návrat po uložení</td><td><?php echo esc_html($base) ?></td></tr>
+            <tr><td>Tabuľka <?php echo esc_html($t) ?></td><td><?php echo $has_table ? 'existuje' : 'CHÝBA'; ?> · <?php echo count($rows) ?> záznamov</td></tr>
+            <tr><td>Výsledok posledného odoslania</td><td><?php echo $code !== '' ? esc_html($code) : 'nič sa neodosielalo'; ?></td></tr>
+            <tr><td>Prijaté POST polia</td><td><?php echo $_POST ? esc_html(implode(', ', array_keys($_POST))) : 'žiadne'; ?></td></tr>
+            <tr><td>Prihlásený</td><td><?php
+                $u = wp_get_current_user();
+                echo esc_html($u->user_login) . ' · rola: ' . esc_html(implode(', ', (array) $u->roles)) . ' · ';
+                echo current_user_can('edit_posts') ? 'smie upravovať' : 'NEMÁ oprávnenie edit_posts';
+            ?></td></tr>
+        </table>
+        <p>Ak sa recenzia neuloží, odfoť túto tabuľku – je v nej presne vidieť, kde sa to zaseklo.</p>
+    </details>
+    <?php endif; ?>
 
     <style>
     .pnl-note{padding:12px 16px;border-radius:var(--r-sm);margin-bottom:18px;font-size:14px;font-weight:600}
@@ -1761,6 +1831,40 @@ function panel_reviews() {
     .rev-head h2{font-family:var(--serif);font-size:22px;color:var(--dark);margin:0}
     .rev-head p{margin:4px 0 0;font-size:13px;color:var(--muted)}
     .rev-add{padding:11px 20px}
+
+    /* Formulár priamo na stránke – bez okna a bez JavaScriptu */
+    .rev-form-card{background:var(--white);border:1.5px solid var(--accent);border-radius:var(--r);
+        margin-bottom:20px;overflow:hidden;box-shadow:var(--sh)}
+    .rev-form-head{padding:14px 20px;background:var(--section);border-bottom:1px solid var(--border);
+        font-family:var(--serif);font-size:17px;font-weight:700;color:var(--dark)}
+    .rev-form-body{padding:20px}
+    .rev-form-foot{padding:14px 20px;background:var(--section);border-top:1px solid var(--border);
+        display:flex;gap:10px;justify-content:flex-end}
+    .rev-form-foot .btn{padding:11px 22px}
+    .rev-f2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .rev-f{display:block;margin-bottom:15px}
+    .rev-f-lbl{display:block;margin-bottom:6px;font-size:11px;font-weight:700;
+        text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+    .rev-f-lbl b{color:var(--accent-txt)}
+    .rev-f-lbl small{font-weight:400;text-transform:none;letter-spacing:0}
+    .rev-f input[type=text],.rev-f textarea{display:block;width:100%;padding:11px 13px;
+        border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);
+        font-size:14.5px;color:var(--text);background:var(--white)}
+    .rev-f input[type=text]:focus,.rev-f textarea:focus{outline:none;border-color:var(--accent);
+        box-shadow:0 0 0 3px rgba(184,164,122,.15)}
+    .rev-f textarea{resize:vertical;min-height:110px;line-height:1.6}
+    /* Hviezdičky ako prepínače – fungujú aj bez JavaScriptu */
+    .rev-starpick{display:inline-flex;flex-direction:row-reverse;justify-content:flex-end}
+    .rev-starpick input{position:absolute;opacity:0;width:0;height:0}
+    .rev-starpick label{font-size:30px;line-height:1;padding:0 2px;cursor:pointer;
+        color:#E0D8CE;transition:color .12s,transform .12s}
+    .rev-starpick label:hover,.rev-starpick label:hover ~ label{color:var(--accent-dk)}
+    .rev-starpick label:hover{transform:scale(1.12)}
+    .rev-starpick input:checked ~ label{color:var(--accent)}
+    .rev-starpick input:focus-visible + label{outline:2px solid var(--accent);border-radius:4px}
+    .rev-check{display:flex;align-items:center;gap:9px;cursor:pointer;font-size:14px;color:var(--dark)}
+    .rev-check input{accent-color:var(--accent);width:17px;height:17px}
+
     /* Zoznam v riadkoch – jedna recenzia = jeden riadok cez celú šírku */
     .rev-list{background:var(--white);border:1px solid var(--border);border-radius:var(--r);
         overflow:hidden;box-shadow:var(--sh-sm)}
@@ -1770,6 +1874,7 @@ function panel_reviews() {
     .rev-row:hover{background:#FCFBF8}
     .rev-row.is-hidden{background:#FBFAF7}
     .rev-row.is-hidden .rev-row-main{opacity:.6}
+    .rev-row.is-editing{background:#FBF6EC;box-shadow:inset 3px 0 0 var(--accent)}
     .rev-row-ord{flex-shrink:0;padding-top:2px}
     .rev-row-main{flex:1;min-width:0}
     .rev-row-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:5px}
@@ -1785,40 +1890,22 @@ function panel_reviews() {
     .rev-badge.on{background:#f0fdf4;color:#15803d}
     .rev-badge.off{background:#f1f5f9;color:#94a3b8}
     .rev-inline{display:inline}
+
     .rev-empty{padding:56px 24px;text-align:center;background:var(--white);border:1px solid var(--border);border-radius:var(--r)}
     .rev-empty-ic{color:var(--accent);opacity:.5;margin-bottom:12px}
     .rev-empty h3{font-family:var(--serif);font-size:19px;color:var(--dark);margin:0 0 6px}
     .rev-empty p{font-size:14px;color:var(--muted);margin:0 0 18px}
-    .rev-hint{font-size:11.5px;color:var(--muted);margin-top:16px}
+    .rev-hint{font-size:11.5px;color:var(--muted);margin-top:16px;line-height:1.7}
     .rev-hint code{background:var(--section);padding:2px 7px;border-radius:4px}
-    /* Modal */
-    .rev-modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto}
-    .rev-modal[hidden]{display:none}
-    .rev-modal-bg{position:fixed;inset:0;background:rgba(20,16,12,.55);backdrop-filter:blur(2px)}
-    .rev-modal-box{position:relative;background:#fff;border-radius:18px;max-width:520px;width:100%;margin:auto;
-        box-shadow:0 24px 64px rgba(0,0,0,.3);animation:revUp .25s cubic-bezier(.2,.7,.2,1)}
-    @keyframes revUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-    .rev-modal-head{display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:1px solid var(--border)}
-    .rev-modal-head h3{font-family:var(--serif);font-size:19px;margin:0;color:var(--dark)}
-    .rev-x{background:var(--section);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--muted);font-size:20px;line-height:1}
-    .rev-x:hover{background:var(--border);color:var(--dark)}
-    .rev-form{padding:20px 22px 22px}
-    .rev-f{display:block;margin-bottom:14px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-    .rev-f span{color:var(--accent-txt)}
-    .rev-f small{font-weight:400;text-transform:none;letter-spacing:0}
-    .rev-f-lbl{display:block;margin-bottom:8px}
-    .rev-f input[type=text],.rev-f textarea{display:block;width:100%;margin-top:6px;padding:11px 13px;
-        border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14.5px;
-        color:var(--text);text-transform:none;letter-spacing:0;font-weight:400;background:var(--white)}
-    .rev-f input:focus,.rev-f textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(184,164,122,.15)}
-    .rev-f textarea{resize:vertical;min-height:110px;line-height:1.6}
-    .rev-starpick{display:flex;gap:4px}
-    .rev-starpick button{background:none;border:none;padding:0;font-size:30px;line-height:1;cursor:pointer;color:#E0D8CE;transition:color .15s,transform .15s}
-    .rev-starpick button:hover{transform:scale(1.12)}
-    .rev-check{display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13.5px;color:var(--dark);margin-bottom:20px}
-    .rev-check input{accent-color:var(--accent);width:17px;height:17px}
-    .rev-modal-foot{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
-    .rev-modal-foot .btn{padding:12px 22px}
+
+    .rev-diag{margin-top:18px;background:var(--white);border:1px solid var(--border);
+        border-radius:var(--r);padding:12px 16px;font-size:12.5px;color:var(--muted)}
+    .rev-diag summary{cursor:pointer;font-weight:700;color:var(--accent-txt)}
+    .rev-diag table{width:100%;margin-top:10px;border-collapse:collapse}
+    .rev-diag td{padding:5px 6px;border-bottom:1px solid var(--border);vertical-align:top;word-break:break-all}
+    .rev-diag td:first-child{width:34%;color:var(--text);font-weight:600}
+    .rev-diag p{margin:10px 0 0}
+
     @media(max-width:820px){
         .rev-row{flex-wrap:wrap}
         .rev-row-actions{width:100%;justify-content:flex-start}
@@ -1827,66 +1914,11 @@ function panel_reviews() {
     @media(max-width:640px){
         .rev-head{flex-direction:column}
         .rev-add{width:100%;justify-content:center}
+        .rev-f2{grid-template-columns:1fr}
         .rev-row{padding:14px}
         .rev-row-actions .btn{flex:1;justify-content:center}
-        .rev-modal{padding:12px}
-        .rev-modal-foot .btn{flex:1;justify-content:center}
+        .rev-form-foot .btn{flex:1;justify-content:center}
     }
     </style>
-
-    <script>
-    (function(){
-        var modal = document.getElementById('zcrModal');
-        var data  = <?php echo wp_json_encode(array_map(function($r){return ['id'=>(int)$r->id,'author_name'=>$r->author_name,'author_role'=>$r->author_role,'body'=>$r->body,'rating'=>(int)$r->rating,'avatar_url'=>$r->avatar_url,'published'=>(int)$r->published];}, $rows)); ?>;
-
-        function stars(v){
-            modal.querySelectorAll('#pnlStars button').forEach(function(s){
-                s.style.color = parseInt(s.dataset.v,10) <= v ? '#B8A47A' : '#E0D8CE';
-            });
-        }
-        function open(){ modal.hidden = false; document.body.style.overflow='hidden';
-            setTimeout(function(){ var f=document.getElementById('zcrName'); if(f) f.focus(); }, 30); }
-        function close(){ modal.hidden = true; document.body.style.overflow=''; }
-
-        window.zcrOpen = function(){
-            document.getElementById('zcrModalTitle').textContent = 'Nová recenzia';
-            document.getElementById('zcrForm').reset();
-            document.getElementById('zcrId').value = '0';
-            document.getElementById('zcrAvatar').value = '';
-            document.getElementById('zcrPub').checked = true;
-            document.getElementById('pnlRating').value = '5'; stars(5);
-            open();
-        };
-        window.zcrEdit = function(id){
-            var r = data.filter(function(x){ return x.id === id; })[0];
-            if (!r) return;
-            document.getElementById('zcrModalTitle').textContent = 'Upraviť recenziu';
-            document.getElementById('zcrId').value    = r.id;
-            document.getElementById('zcrName').value  = r.author_name || '';
-            document.getElementById('zcrRole').value  = r.author_role || '';
-            document.getElementById('zcrBody').value  = r.body || '';
-            document.getElementById('zcrAvatar').value= r.avatar_url || '';
-            document.getElementById('zcrPub').checked = !!r.published;
-            document.getElementById('pnlRating').value= r.rating; stars(r.rating);
-            open();
-        };
-        window.pnlSetRating = function(v){ document.getElementById('pnlRating').value = v; stars(v); };
-
-        /* Zatváranie: len keď klik ZAČAL aj SKONČIL mimo okna.
-           Bez toho by sa modal zavrel pri označovaní textu, keď myš pustíš mimo. */
-        var downOutside = false;
-        modal.addEventListener('mousedown', function(e){
-            downOutside = e.target.hasAttribute('data-zcr-close');
-        });
-        modal.addEventListener('click', function(e){
-            if (e.target.hasAttribute('data-zcr-close') && downOutside) close();
-            downOutside = false;
-        });
-        document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
-
-        <?php if ($edit_id): ?>window.zcrEdit(<?php echo (int) $edit_id ?>);<?php endif; ?>
-        <?php if (isset($_GET['new_review'])): ?>window.zcrOpen();<?php endif; ?>
-    })();
-    </script>
     <?php
 }
