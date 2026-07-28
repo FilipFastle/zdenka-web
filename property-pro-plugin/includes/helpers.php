@@ -184,3 +184,84 @@ function pp_bump_views($pid) {
     update_post_meta($pid, '_property_views', $views + 1);
     @setcookie($ck, '1', time() + DAY_IN_SECONDS, defined('COOKIEPATH') ? COOKIEPATH : '/');
 }
+
+/* ───────────────────────── Maklérka pri ponuke ─────────────────────────
+   Ponuku môže do systému zapísať ktokoľvek (napr. webmaster cez panel),
+   ale na webe má byť vždy podpísaná maklérka. Preto sa autor príspevku
+   berie až ako posledná možnosť a všetky údaje sa ťahajú z jedného
+   zdroja – nemôže sa stať, že sedí meno, ale telefón je cudzí.        */
+
+/** Zoznam používateľov, ktorí sa dajú priradiť ako maklér/ka. */
+function pp_agent_candidates() {
+    $roles = ['administrator', 'editor', 'author'];
+    if (defined('PP_AGENT_ROLE')) $roles[] = PP_AGENT_ROLE;
+    return get_users(['role__in' => $roles, 'orderby' => 'display_name']);
+}
+
+/** Predvolená maklérka – z Prispôsobiť, inak prvý účet s rolou makléra. */
+function pp_default_agent_id() {
+    $set = (int) get_theme_mod('zc_agent_user', 0);
+    if ($set && get_userdata($set)) return $set;
+
+    if (defined('PP_AGENT_ROLE')) {
+        $found = get_users(['role' => PP_AGENT_ROLE, 'number' => 1, 'fields' => 'ID']);
+        if ($found) return (int) $found[0];
+    }
+    return 0;
+}
+
+/** Koho ukázať pri konkrétnej ponuke. */
+function pp_agent_id_for($post_id) {
+    $id = (int) get_post_meta($post_id, '_property_agent_id', true);
+    if ($id && get_userdata($id)) return $id;
+
+    $def = pp_default_agent_id();
+    if ($def) return $def;
+
+    return (int) get_post_field('post_author', $post_id);
+}
+
+/**
+ * Kontaktné údaje maklérky pre ponuku.
+ * Poradie: jej WP profil → nastavenie v Prispôsobiť → prázdne.
+ */
+function pp_agent_data($post_id) {
+    $uid  = pp_agent_id_for($post_id);
+    $user = $uid ? get_userdata($uid) : null;
+    $mod  = function ($k, $d = '') {
+        return function_exists('zc_agent') ? zc_agent($k, $d) : $d;
+    };
+
+    $name = $user ? $user->display_name : '';
+    if (!$name) $name = $mod('name', 'Realitná maklérka');
+
+    return [
+        'id'    => $uid,
+        'name'  => $name,
+        'title' => get_user_meta($uid, 'property_title', true) ?: $mod('title', 'Realitná maklérka'),
+        'phone' => get_user_meta($uid, 'property_phone', true) ?: $mod('phone', ''),
+        'wa'    => preg_replace('/[^0-9]/', '',
+                    get_user_meta($uid, 'property_whatsapp', true) ?: $mod('wa', '')),
+        'email' => get_user_meta($uid, 'property_email', true)
+                    ?: ($mod('email', '') ?: ($user ? $user->user_email : '')),
+        'photo' => (int) get_user_meta($uid, 'property_photo_id', true),
+    ];
+}
+
+/**
+ * Fotka maklérky. Keď nemá vlastnú v profile, použije sa portrét
+ * z Prispôsobiť – prázdny krúžok s Gravatarom nevyzerá dobre.
+ */
+function pp_agent_photo_html($agent, $size = 144) {
+    if (!empty($agent['photo'])) {
+        return wp_get_attachment_image($agent['photo'], 'thumbnail', false,
+            ['alt' => esc_attr($agent['name'])]);
+    }
+    if (function_exists('zc_photo')) {
+        $url = zc_photo('card') ?: zc_photo('portrait');
+        if ($url) {
+            return '<img src="' . esc_url($url) . '" alt="' . esc_attr($agent['name']) . '" loading="lazy">';
+        }
+    }
+    return get_avatar($agent['id'], $size);
+}

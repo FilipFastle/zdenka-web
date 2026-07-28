@@ -21,7 +21,8 @@ $poschodie   = get_post_meta($id, '_property_poschodie', true);
 $rocnik      = get_post_meta($id, '_property_rocnik', true);
 $stav        = get_post_meta($id, '_property_stav', true);
 $amenities   = get_post_meta($id, '_property_amenities', true) ?: [];
-$agent_id    = get_post_meta($id, '_property_agent_id', true) ?: get_post_field('post_author', $id);
+$agent_id    = function_exists('pp_agent_id_for') ? pp_agent_id_for($id)
+             : (get_post_meta($id, '_property_agent_id', true) ?: get_post_field('post_author', $id));
 
 // Auto-format price with €
 function zc_format_price($raw) {
@@ -45,14 +46,15 @@ $note_int   = get_post_meta($id, '_property_poznamka', true);
 pp_bump_views($id);
 $views      = (int) get_post_meta($id, '_property_views', true);
 
-// Meno maklérky: z WP profilu priradenej maklérky (Users → Profil → Zobrazovať
-// meno ako). Web tak zvládne aj viac maklérov – každá ponuka ukáže svojho.
-$agent_name  = get_the_author_meta('display_name', $agent_id) ?: 'Realitná maklérka';
-$agent_phone = get_user_meta($agent_id, 'property_phone', true) ?: '+421 907 579 742';
-$agent_wa    = get_user_meta($agent_id, 'property_whatsapp', true) ?: '421907579742';
-$agent_email = get_user_meta($agent_id, 'property_email', true) ?: get_the_author_meta('user_email', $agent_id);
-$agent_photo = get_user_meta($agent_id, 'property_photo_id', true); // optional manual override
-$agent_title = get_user_meta($agent_id, 'property_title', true) ?: 'Realitná maklérka';
+// Údaje maklérky: najprv z jej WP profilu, inak z Prispôsobiť → Maklérka.
+// Všetko z jedného zdroja – nemôže sa stať, že sedí meno, ale telefón je cudzí.
+$agent       = pp_agent_data($id);
+$agent_name  = $agent['name'];
+$agent_phone = $agent['phone'];
+$agent_wa    = $agent['wa'];
+$agent_email = $agent['email'];
+$agent_photo = $agent['photo'];
+$agent_title = $agent['title'];
 
 $types     = ['predaj' => 'Na predaj', 'prenajom' => 'Na prenájom', 'pozemok' => 'Pozemok'];
 $typ_label = $types[$typ] ?? 'Ponuka';
@@ -211,8 +213,9 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
 .pp-spec-label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:#6B6560; }
 
 /* Description */
-.pp-desc { font-size:15px; line-height:1.85; color:#2C2C2C; }
-.pp-desc p { margin-bottom:14px; }
+/* Riadkovanie a medzery riadi Prispôsobiť → Text (premenné --zc-lh, --zc-para) */
+.pp-desc { font-size:15px; line-height:var(--zc-lh,1.85); color:#2C2C2C; }
+.pp-desc p { margin-bottom:var(--zc-para,14px); }
 
 /* Amenities */
 .am-group { margin-bottom:20px; }
@@ -377,7 +380,16 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
                Preto plná veľkosť a sizes=100vw, nech si prehliadač vyberie sám. */
             $pp_first = ($pp_slide_i === 0);
             echo wp_get_attachment_image($img_id, 'full', false, [
-                'sizes'         => '100vw',
+                /* Hero je vysoký na celú obrazovku a fotka sa oreže cez
+                   object-fit:cover. Koľko z nej treba, teda nezávisí od šírky
+                   okna, ale od jeho pomeru strán: čím je okno užšie a vyššie,
+                   tým širšia fotka sa musí načítať (vidno z nej len stred).
+                   Široký monitor si tak vypýta veľkú fotku podľa svojej šírky,
+                   telefón na výšku primerane väčšiu, než je sám. */
+                'sizes'         => '(min-aspect-ratio: 16/9) 100vw, '
+                                 . '(min-aspect-ratio: 4/3) 120vw, '
+                                 . '(min-aspect-ratio: 1/1) 150vw, '
+                                 . '(min-aspect-ratio: 3/4) 200vw, 250vw',
                 'loading'       => $pp_first ? 'eager' : 'lazy',
                 'decoding'      => 'async',
                 'fetchpriority' => $pp_first ? 'high' : 'auto',
@@ -616,10 +628,9 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
     <div class="pp-agent">
         <div class="pp-agent-avatar">
             <?php
-            // Fotka maklérky z jej WP profilu: nahratá profilová fotka
-            // (Users → Profil → Profilová fotka), inak Gravatar podľa e-mailu.
-            if ($agent_photo) echo wp_get_attachment_image($agent_photo, 'thumbnail', false, ['alt' => esc_attr($agent_name)]);
-            else echo get_avatar($agent_id, 144);
+            // Fotka z profilu maklérky; keď tam nie je, portrét z Prispôsobiť.
+            // Prázdny krúžok s Gravatarom je až posledná možnosť.
+            echo pp_agent_photo_html($agent, 144);
             ?>
         </div>
         <div class="pp-agent-name"><?php echo esc_html($agent_name) ?></div>

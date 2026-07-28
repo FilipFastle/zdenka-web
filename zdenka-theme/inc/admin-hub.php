@@ -266,6 +266,9 @@ function zc_hub_tools_page() {
             case 'transients':
                 $msg = zc_hub_clear_transients() . ' dočasných záznamov zmazaných (Google recenzie, kurzy mien…).';
                 break;
+            case 'thumbs':
+                $msg = zc_hub_regenerate_thumbs(15);
+                break;
             case 'mail':
                 $to = function_exists('zc_notify_to') ? zc_notify_to('contact') : [get_option('admin_email')];
                 $ok = wp_mail($to, 'Testovací e-mail z webu', 'Ak čítaš túto správu, odosielanie e-mailov funguje.');
@@ -346,15 +349,62 @@ function zc_hub_tools_page() {
                 <button class="button" name="zc_tool" value="rewrite">Obnoviť trvalé odkazy</button>
                 <button class="button" name="zc_tool" value="cache">Vynulovať cache webu</button>
                 <button class="button" name="zc_tool" value="transients">Zmazať dočasné dáta</button>
+                <button class="button" name="zc_tool" value="thumbs">Prepočítať veľkosti fotiek</button>
                 <button class="button button-primary" name="zc_tool" value="mail">Poslať testovací e-mail</button>
             </form>
             <p style="color:#6b6560;font-size:12.5px;margin-bottom:0">
                 Obnovenie odkazov pomôže, keď stránka hlási „nenájdené“.
                 Vynulovanie cache použi po väčšej zmene vzhľadu.
+                <strong>Prepočítanie veľkostí</strong> dorobí k starším fotkám väčšie verzie pre
+                veľké monitory – beží po dávkach, klikaj, kým nenapíše „hotovo“.
             </p>
         </div>
     </div>
     <?php
+}
+
+/**
+ * Dorobí chýbajúce veľkosti k už nahratým fotkám.
+ * Beží po dávkach, aby stránka nespadla na časový limit – postup si pamätá.
+ */
+function zc_hub_regenerate_thumbs($batch = 15) {
+    require_once ABSPATH . 'wp-admin/includes/image.php';
+
+    $all = get_posts([
+        'post_type'      => 'attachment',
+        'post_mime_type' => 'image',
+        'post_status'    => 'inherit',
+        'numberposts'    => -1,
+        'fields'         => 'ids',
+    ]);
+    $total = count($all);
+    if (!$total) return 'Na webe nie sú žiadne fotky.';
+
+    $done = array_map('intval', (array) get_option('zc_regen_done', []));
+    $todo = array_values(array_diff($all, $done));
+
+    if (!$todo) {
+        delete_option('zc_regen_done');
+        return 'Hotovo – všetkých ' . $total . ' fotiek má prepočítané veľkosti.';
+    }
+
+    foreach (array_slice($todo, 0, $batch) as $id) {
+        $file = get_attached_file($id);
+        if ($file && file_exists($file)) {
+            $meta = wp_generate_attachment_metadata($id, $file);
+            if ($meta && !is_wp_error($meta)) wp_update_attachment_metadata($id, $meta);
+        }
+        $done[] = (int) $id;
+    }
+    update_option('zc_regen_done', $done, false);
+
+    $left = $total - count($done);
+    if ($left <= 0) {
+        delete_option('zc_regen_done');
+        return 'Hotovo – prepočítaných ' . $total . ' fotiek.';
+    }
+    return 'Prepočítané ' . count($done) . ' z ' . $total . '. Zostáva ' . $left
+         . ' – klikni na tlačidlo znova.';
 }
 
 function zc_hub_clear_transients() {

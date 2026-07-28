@@ -207,17 +207,25 @@ function render_amenities_meta_box($post) {
 
 function render_agent_meta_box($post) {
     $agent_id = get_post_meta($post->ID, '_property_agent_id', true);
-    $users = get_users(['role__in' => ['administrator','editor','author']]);
+    // Rola „Realitný maklér" tu predtým chýbala, takže Zdenka nebola na výber
+    $users   = function_exists('pp_agent_candidates')
+             ? pp_agent_candidates()
+             : get_users(['role__in' => ['administrator','editor','author']]);
+    $default = function_exists('pp_default_agent_id') ? pp_default_agent_id() : 0;
+    $def_u   = $default ? get_userdata($default) : null;
     ?>
     <div style="display:flex;flex-direction:column;gap:10px">
         <label style="font-size:12px;font-weight:600;color:#666;text-transform:uppercase">Priradená maklérka</label>
         <select name="prop_agent_id" style="padding:9px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px">
-            <option value="">Autor príspevku</option>
+            <option value="">Predvolená<?php echo $def_u ? ' (' . esc_html($def_u->display_name) . ')' : '' ?></option>
             <?php foreach ($users as $u): ?>
             <option value="<?php echo $u->ID ?>" <?php selected($agent_id, $u->ID) ?>><?php echo esc_html($u->display_name) ?></option>
             <?php endforeach; ?>
         </select>
-        <p style="font-size:12px;color:#999">Telefón, WhatsApp a email sa nastavujú v Profile používateľa.</p>
+        <p style="font-size:12px;color:#999">
+            Telefón, WhatsApp, e-mail aj fotka sa berú z Profilu daného používateľa.
+            Čo tam nie je vyplnené, doplní sa z <em>Prispôsobiť → Maklérka – Kontakt</em>.
+        </p>
     </div>
     <?php
 }
