@@ -261,15 +261,21 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
 }
 .pp-cta-btn:hover { filter:brightness(1.1); transform:translateY(-1px); }
 
-/* Kontakt + doplnok vedľa seba – len keď je do ponuky vložený shortcode */
+/* Kontakt vľavo + Short (zvislé video) alebo doplnok vpravo.
+   Bez videa aj bez doplnku ostáva formulár cez celú šírku ako doteraz. */
 .pp-cta-split {
-    display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);
+    display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);
     gap:26px; align-items:start;
 }
 .pp-cta-split .pp-cta-main { min-width:0; }
+.pp-cta-side {
+    min-width:0; display:flex; flex-direction:column; gap:18px;
+    padding-left:26px; border-left:1px solid #E2DACE;
+}
+/* Short v stĺpci: drží pomer 9:16 a nikdy nepretečie */
+.pp-video.pp-video-side { margin:0; max-width:100%; aspect-ratio:9/16; }
 .pp-cta-extra {
     min-width:0; font-size:14px; color:#2C2C2C;
-    padding-left:26px; border-left:1px solid #E2DACE;
 }
 .pp-cta-extra > *:first-child { margin-top:0; }
 .pp-cta-extra > *:last-child { margin-bottom:0; }
@@ -277,9 +283,10 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
 .pp-cta-extra iframe { max-width:100%; border:none; }
 /* Mriežka ponúk je stavaná na širokú stránku – v užšom stĺpci ju zúžime */
 .pp-cta-extra .property-grid { grid-template-columns:1fr; gap:16px; }
-@media (max-width:900px) {
+@media (max-width:720px) {
     .pp-cta-split { grid-template-columns:1fr; gap:22px; }
-    .pp-cta-extra { padding-left:0; padding-top:22px; border-left:none; border-top:1px solid #E2DACE; }
+    .pp-cta-side { padding-left:0; padding-top:22px; border-left:none; border-top:1px solid #E2DACE; }
+    .pp-video.pp-video-side { max-width:300px; margin-left:auto; margin-right:auto; }
 }
 
 /* Video */
@@ -523,10 +530,16 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
     <?php endif; ?>
 
     <?php
-    // Doplnok vedľa kontaktu – keď je prázdny, formulár ostáva cez celú šírku
+    // Univerzálny embed – YouTube (aj Shorts), Vimeo
+    $pp_video = function_exists('zc_video_embed') ? zc_video_embed($video_url) : [];
+    // Short (zvislé video) je úzky – patrí vedľa kontaktu, nie pod neho.
+    // Bežné 16:9 video ostáva pod kontaktom cez celú šírku ako doteraz.
+    $cta_short = !empty($pp_video['url']) && !empty($pp_video['vertical']);
+    // Voliteľný doplnok (shortcode/text) z poľa pri ponuke
     $cta_extra = function_exists('pp_cta_extra_html') ? pp_cta_extra_html($id) : '';
+    $cta_side  = $cta_short || $cta_extra !== '';
     ?>
-    <div class="pp-cta<?php echo $cta_extra ? ' pp-cta-split' : '' ?>">
+    <div class="pp-cta<?php echo $cta_side ? ' pp-cta-split' : '' ?>">
         <div class="pp-cta-main">
         <div class="pp-cta-title">Mám záujem o túto nehnuteľnosť</div>
         <div class="pp-cta-sub">Zanechajte kontakt a ozveme sa vám čo najskôr</div>
@@ -573,16 +586,25 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
         </form>
         <?php endif; ?>
         </div>
-        <?php if ($cta_extra): ?>
-        <div class="pp-cta-extra zc-richtext"><?php echo $cta_extra ?></div>
+        <?php if ($cta_side): ?>
+        <div class="pp-cta-side">
+            <?php if ($cta_short): ?>
+            <div class="pp-video vertical pp-video-side">
+                <iframe src="<?php echo esc_url($pp_video['url']) ?>" allowfullscreen loading="lazy"
+                    data-zc-vol="<?php echo function_exists('zc_video_volume') ? esc_attr(zc_video_volume()) : '50' ?>"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"></iframe>
+            </div>
+            <?php endif; ?>
+            <?php if ($cta_extra): ?>
+            <div class="pp-cta-extra zc-richtext"><?php echo $cta_extra ?></div>
+            <?php endif; ?>
+        </div>
         <?php endif; ?>
     </div>
 
-    <?php
-    // Univerzálny embed – YouTube (aj Shorts), Vimeo; Shorts sa zobrazí zvislo
-    $pp_video = function_exists('zc_video_embed') ? zc_video_embed($video_url) : [];
-    if (!empty($pp_video['url'])): ?>
-    <div class="pp-video<?php echo !empty($pp_video['vertical']) ? ' vertical' : '' ?>">
+    <?php // Bežné (širokouhlé) video ostáva pod kontaktom cez celú šírku
+    if (!empty($pp_video['url']) && !$cta_short): ?>
+    <div class="pp-video">
         <iframe src="<?php echo esc_url($pp_video['url']) ?>" allowfullscreen loading="lazy"
             data-zc-vol="<?php echo function_exists('zc_video_volume') ? esc_attr(zc_video_volume()) : '50' ?>"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"></iframe>

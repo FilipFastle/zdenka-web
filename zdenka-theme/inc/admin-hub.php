@@ -155,6 +155,7 @@ function zc_hub_page() {
             <?php
             zc_hub_card('Bezpečnostný denník', 'Kto sa prihlásil, odkiaľ a čo zmenil.', admin_url('admin.php?page=zc-dennik'), '📋', zc_hub_has('zc-dennik'));
             zc_hub_card('Zálohy', 'Denná záloha celého panela.', admin_url('admin.php?page=zc-zalohy'), '💾', zc_hub_has('zc-zalohy'));
+            zc_hub_card('Indexovanie', 'Prečo web nie je v Google – presmerovania, sitemap.', admin_url('admin.php?page=zc-indexovanie'), '🔎', true);
             ?>
         </div>
         <?php endif; ?>

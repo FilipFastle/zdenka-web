@@ -745,6 +745,7 @@ require_once get_stylesheet_directory() . '/inc/privacy.php';
 require_once get_stylesheet_directory() . '/inc/seo.php';
 require_once get_stylesheet_directory() . '/inc/analytics.php';
 require_once get_stylesheet_directory() . '/inc/typography.php';
+require_once get_stylesheet_directory() . '/inc/indexing.php';
 // Ebook je teraz samostatný plugin (zc-ebook). Ak je aktívny, poskytuje
 // zc_ebook_* funkcie aj shortcode [zc_ebook]; téma ich používa cez function_exists.
 
