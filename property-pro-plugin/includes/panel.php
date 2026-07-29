@@ -993,6 +993,15 @@ function panel_form($pid) {
                     </select>
                 </div>
             </div>
+
+            <div class="pf-sep">Kontakt – doplnok vedľa formulára</div>
+            <div class="ff">
+                <label>Shortcode alebo vlastný text</label>
+                <textarea name="cta_extra" rows="4" placeholder="[property_carousel limit=&quot;3&quot;]" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:Menlo,Consolas,monospace;font-size:13px;resize:vertical"><?php echo esc_textarea($f('cta_extra')) ?></textarea>
+                <small style="color:var(--muted);font-size:12px;line-height:1.6;display:block;margin-top:6px">
+                    <?php echo esc_html(pp_cta_extra_hint()) ?> Na mobile sa doplnok zobrazí pod formulárom.
+                </small>
+            </div>
         </div>
 
         <div id="pftab_amenities" class="pf-panel" data-amtab>
@@ -1174,6 +1183,11 @@ add_action('template_redirect', function() {
     $gids=json_decode(sanitize_text_field($_POST['gallery_ids']??'[]'),true);
     update_post_meta($pid,'_property_gallery_ids',is_array($gids)?array_map('intval',$gids):[]);
     update_post_meta($pid,'_property_video_url',esc_url_raw($_POST['video_url']??''));
+    if (isset($_POST['cta_extra'])) {
+        $cta_extra = pp_cta_extra_sanitize(wp_unslash($_POST['cta_extra']));
+        if ($cta_extra === '') delete_post_meta($pid,'_property_cta_extra');
+        else                   update_post_meta($pid,'_property_cta_extra',$cta_extra);
+    }
     $ams=isset($_POST['amenities'])?array_map('sanitize_text_field',$_POST['amenities']):[];
     update_post_meta($pid,'_property_amenities',$ams);
     // Fotky ponuky zaradíme do jej priečinka v Médiách (meta sú už uložené)

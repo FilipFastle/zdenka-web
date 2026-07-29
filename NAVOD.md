@@ -186,6 +186,24 @@ Kde to použiješ:
 > Fotka môže byť vo viacerých priečinkoch naraz a priečinky nič nepresúvajú na disku —
 > ide o označenie, takže sa nemôže stať, že sa niekde stratí odkaz na súbor.
 
+## Kontakt na ponuke — doplnok vedľa formulára
+Pri každej ponuke je pole **Kontakt – doplnok vedľa formulára**:
+
+- v paneli: *Upraviť ponuku → záložka Detaily*, úplne dole,
+- vo wp-admin: pod políčkom Vybavenie, box *Kontakt – doplnok vedľa formulára*.
+
+Vložíš doň **shortcode** (napr. `[property_carousel limit="3"]`, `[property_grid …]`)
+alebo obyčajný text.
+
+- **Keď je pole vyplnené** — kontaktný formulár sa zúži do ľavého stĺpca a napravo
+  od neho sa zobrazí obsah shortcodu, oddelený tenkou linkou.
+- **Keď je pole prázdne** — formulár ostáva cez celú šírku ako doteraz. Nič sa nemení.
+- **Na mobile a menších tabletoch** sa doplnok vždy zobrazí pod formulárom, aby sa
+  text nelámal do úzkych stĺpcov.
+
+Pole je pri každej ponuke zvlášť, takže sa dá použiť len tam, kde dáva zmysel.
+Kópia ponuky (*Duplikovať*) si ho prenesie so sebou a je aj súčasťou denných záloh.
+
 ## Denné zálohovanie panela
 **Web Zdenky → Zálohy** — každý deň o 3:20 sa uloží celý obsah panela:
 

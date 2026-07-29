@@ -261,6 +261,27 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
 }
 .pp-cta-btn:hover { filter:brightness(1.1); transform:translateY(-1px); }
 
+/* Kontakt + doplnok vedľa seba – len keď je do ponuky vložený shortcode */
+.pp-cta-split {
+    display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);
+    gap:26px; align-items:start;
+}
+.pp-cta-split .pp-cta-main { min-width:0; }
+.pp-cta-extra {
+    min-width:0; font-size:14px; color:#2C2C2C;
+    padding-left:26px; border-left:1px solid #E2DACE;
+}
+.pp-cta-extra > *:first-child { margin-top:0; }
+.pp-cta-extra > *:last-child { margin-bottom:0; }
+.pp-cta-extra img { max-width:100%; height:auto; border-radius:10px; }
+.pp-cta-extra iframe { max-width:100%; border:none; }
+/* Mriežka ponúk je stavaná na širokú stránku – v užšom stĺpci ju zúžime */
+.pp-cta-extra .property-grid { grid-template-columns:1fr; gap:16px; }
+@media (max-width:900px) {
+    .pp-cta-split { grid-template-columns:1fr; gap:22px; }
+    .pp-cta-extra { padding-left:0; padding-top:22px; border-left:none; border-top:1px solid #E2DACE; }
+}
+
 /* Video */
 .pp-video { border-radius:14px; overflow:hidden; aspect-ratio:16/9; margin-bottom:22px; }
 .pp-video.vertical { aspect-ratio:9/16; max-width:340px; margin-left:auto; margin-right:auto; }
@@ -501,7 +522,12 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
     </div>
     <?php endif; ?>
 
-    <div class="pp-cta">
+    <?php
+    // Doplnok vedľa kontaktu – keď je prázdny, formulár ostáva cez celú šírku
+    $cta_extra = function_exists('pp_cta_extra_html') ? pp_cta_extra_html($id) : '';
+    ?>
+    <div class="pp-cta<?php echo $cta_extra ? ' pp-cta-split' : '' ?>">
+        <div class="pp-cta-main">
         <div class="pp-cta-title">Mám záujem o túto nehnuteľnosť</div>
         <div class="pp-cta-sub">Zanechajte kontakt a ozveme sa vám čo najskôr</div>
         <?php if (isset($_POST['cta_send']) && wp_verify_nonce($_POST['cta_nonce']??'','cta_form') && empty($_POST['cta_hpf'])):
@@ -545,6 +571,10 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
             </div>
             <button type="submit" name="cta_send" class="pp-cta-btn">Odoslať dopyt →</button>
         </form>
+        <?php endif; ?>
+        </div>
+        <?php if ($cta_extra): ?>
+        <div class="pp-cta-extra zc-richtext"><?php echo $cta_extra ?></div>
         <?php endif; ?>
     </div>
 

@@ -265,3 +265,30 @@ function pp_agent_photo_html($agent, $size = 144) {
     }
     return get_avatar($agent['id'], $size);
 }
+
+/* ── Doplnok pri kontakte na ponuke ──────────────────────────────────────
+ * Do poľa sa dá vložiť shortcode (napr. [porovnanie]) alebo vlastný text.
+ * Keď je pole prázdne, kontaktný formulár ostáva cez celú šírku.
+ */
+
+/** Uloženie – bežnému účtu bez práva na HTML necháme len bezpečné značky. */
+function pp_cta_extra_sanitize($raw) {
+    $raw = is_string($raw) ? trim($raw) : '';
+    if ($raw === '') return '';
+    return current_user_can('unfiltered_html') ? $raw : wp_kses_post($raw);
+}
+
+/** Hotový obsah na výpis; prázdny reťazec = doplnok sa nezobrazí. */
+function pp_cta_extra_html($post_id) {
+    $raw = get_post_meta($post_id, '_property_cta_extra', true);
+    if (!is_string($raw) || trim($raw) === '') return '';
+    // Rovnaké poradie ako pri obsahu stránky – odseky nerozbijú shortcode
+    $html = do_shortcode(shortcode_unautop(wpautop(trim($raw))));
+    return trim($html) === '' ? '' : $html;
+}
+
+/** Popis poľa – rovnaký vo wp-admin aj v realitnom paneli. */
+function pp_cta_extra_hint() {
+    return 'Vlož shortcode (napr. [property_carousel]) alebo vlastný text. '
+         . 'Keď je pole prázdne, kontaktný formulár ostane cez celú šírku ako doteraz.';
+}

@@ -6,6 +6,7 @@ add_action('add_meta_boxes', function() {
     add_meta_box('prop_main', 'Nehnuteľnosť', 'render_prop_main_meta', 'property', 'normal', 'high');
     add_meta_box('prop_gallery', 'Fotky & Video', 'render_gallery_meta', 'property', 'normal', 'high');
     add_meta_box('prop_amenities_box', 'Vybavenie a okolie', 'render_amenities_meta_box', 'property', 'normal', 'default');
+    add_meta_box('prop_cta_box', 'Kontakt – doplnok vedľa formulára', 'render_cta_extra_meta_box', 'property', 'normal', 'low');
     add_meta_box('prop_agent_box', 'Maklér/ka', 'render_agent_meta_box', 'property', 'side', 'default');
 });
 
@@ -205,6 +206,19 @@ function render_amenities_meta_box($post) {
     <?php
 }
 
+function render_cta_extra_meta_box($post) {
+    $val = get_post_meta($post->ID, '_property_cta_extra', true);
+    ?>
+    <p style="margin:0 0 10px;color:#555">
+        <?php echo esc_html(function_exists('pp_cta_extra_hint') ? pp_cta_extra_hint() : '') ?>
+    </p>
+    <textarea name="prop_cta_extra" rows="5" style="width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-family:Menlo,Consolas,monospace;font-size:13px;resize:vertical" placeholder="[property_carousel limit=&quot;3&quot;]"><?php echo esc_textarea($val) ?></textarea>
+    <p style="margin:10px 0 0;font-size:12px;color:#999">
+        Na mobile sa doplnok zobrazí pod formulárom.
+    </p>
+    <?php
+}
+
 function render_agent_meta_box($post) {
     $agent_id = get_post_meta($post->ID, '_property_agent_id', true);
     // Rola „Realitný maklér" tu predtým chýbala, takže Zdenka nebola na výber
@@ -249,6 +263,14 @@ add_action('save_post_property', function($post_id) {
     
     $amenities = isset($_POST['prop_amenities']) ? array_map('sanitize_text_field', $_POST['prop_amenities']) : [];
     update_post_meta($post_id, '_property_amenities', $amenities);
+
+    if (isset($_POST['prop_cta_extra'])) {
+        $extra = function_exists('pp_cta_extra_sanitize')
+               ? pp_cta_extra_sanitize(wp_unslash($_POST['prop_cta_extra']))
+               : wp_kses_post(wp_unslash($_POST['prop_cta_extra']));
+        if ($extra === '') delete_post_meta($post_id, '_property_cta_extra');
+        else               update_post_meta($post_id, '_property_cta_extra', $extra);
+    }
 }, 10, 1);
 
 // Médiá pre uploader profilovej fotky na stránke profilu
