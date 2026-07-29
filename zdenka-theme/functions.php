@@ -11,8 +11,8 @@ add_action('wp_enqueue_scripts', function() {
     $use_min = get_option('zc_min_css', '1') === '1'
             && file_exists($dir . '/assets/css/main.min.css');
     $css = $use_min ? '/assets/css/main.min.css' : '/assets/css/main.css';
-    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.25.0');
-    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.25.0', true);
+    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.26.0');
+    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.26.0', true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.png','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0]);
 });
 
@@ -195,23 +195,6 @@ add_action('customize_register',function($wpc) {
     ] as $id=>$lbl) {
         $wpc->add_setting($id,['default'=>'','sanitize_callback'=>'esc_url_raw']);
         $wpc->add_control($id,['label'=>$lbl,'section'=>'zc_social','type'=>'url']);
-    }
-
-    // ── Text z editora (popis ponuky, stránky) ──────────────────────────
-    $wpc->add_section('zc_text',['title'=>'Text – riadkovanie a medzery','priority'=>33.8,
-        'description'=>'Platí pre popis ponuky a texty písané v editore. Zmenu vidíš hneď v náhľade.']);
-    foreach([
-        'zc_lh'       => ['Riadkovanie', 1.85, 1.2, 2.4, 0.05,
-                          'Výška riadku. 1.85 je pohodlné čítanie, nižšie číslo text zhustí.'],
-        'zc_para'     => ['Medzera medzi odsekmi (px)', 14, 0, 40, 1,
-                          'Toto je tá medzera po stlačení Enter. Menšie číslo = odseky bližšie pri sebe.'],
-        'zc_list_gap' => ['Medzera medzi odrážkami (px)', 7, 0, 30, 1, ''],
-    ] as $id=>[$lbl,$def,$min,$max,$step,$desc]) {
-        $wpc->add_setting($id,['default'=>$def,'sanitize_callback'=>function($v){return (float) str_replace(',','.',$v);},'transport'=>'refresh']);
-        $wpc->add_control($id,[
-            'label'=>$lbl,'section'=>'zc_text','type'=>'number','description'=>$desc,
-            'input_attrs'=>['min'=>$min,'max'=>$max,'step'=>$step],
-        ]);
     }
 
     // Kurz EUR→CZK pre prepínač meny na ponukách
@@ -761,21 +744,9 @@ require_once get_stylesheet_directory() . '/inc/admin-hub.php';
 require_once get_stylesheet_directory() . '/inc/privacy.php';
 require_once get_stylesheet_directory() . '/inc/seo.php';
 require_once get_stylesheet_directory() . '/inc/analytics.php';
+require_once get_stylesheet_directory() . '/inc/typography.php';
 // Ebook je teraz samostatný plugin (zc-ebook). Ak je aktívny, poskytuje
 // zc_ebook_* funkcie aj shortcode [zc_ebook]; téma ich používa cez function_exists.
-
-// Riadkovanie a medzery z Prispôsobiť → premenné, ktoré používa main.css
-add_action('wp_head', function () {
-    $lh   = (float) get_theme_mod('zc_lh', 1.85);
-    $para = (float) get_theme_mod('zc_para', 14);
-    $gap  = (float) get_theme_mod('zc_list_gap', 7);
-    printf(
-        "<style id=\"zc-text-vars\">:root{--zc-lh:%s;--zc-para:%dpx;--zc-list-gap:%dpx}</style>\n",
-        esc_html(number_format($lh, 2, '.', '')),
-        (int) max(0, $para),
-        (int) max(0, $gap)
-    );
-}, 20);
 
 // Preload hero fotky na úvode (rýchlejší LCP).
 // Dôležité: preloadujeme presne tú adresu, ktorú potom použije CSS, a to

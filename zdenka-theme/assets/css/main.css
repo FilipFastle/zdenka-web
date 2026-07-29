@@ -947,35 +947,16 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 
 /* ── Text z editora (popis ponuky, stránky) ───────────────────────────
    Globálne ul{list-style:none} kvôli menu zabíjalo aj odrážky v popise
-   ponuky. Tu ich vraciame späť a zároveň dávame odstupy pod kontrolu
-   premenných, ktoré sa nastavujú v Prispôsobiť → Text. */
-:root { --zc-lh: 1.85; --zc-para: 14px; --zc-list-gap: 7px; }
-
-.pp-desc, .zc-richtext, .entry-content { line-height: var(--zc-lh); }
-.pp-desc p, .zc-richtext p, .entry-content p { margin-bottom: var(--zc-para); }
-.pp-desc p:last-child, .zc-richtext p:last-child, .entry-content p:last-child { margin-bottom: 0; }
-
+   ponuky – tu ich vraciame späť. Riadkovanie a medzery nastavuje
+   Prispôsobiť → Text (inc/typography.php), preto tu nie sú. */
 .pp-desc ul, .zc-richtext ul, .entry-content ul { list-style: disc outside; }
 .pp-desc ol, .zc-richtext ol, .entry-content ol { list-style: decimal outside; }
-.pp-desc ul, .pp-desc ol,
-.zc-richtext ul, .zc-richtext ol,
-.entry-content ul, .entry-content ol {
-    margin: 0 0 var(--zc-para); padding-left: 1.35em;
-}
-.pp-desc li, .zc-richtext li, .entry-content li {
-    margin-bottom: var(--zc-list-gap); line-height: var(--zc-lh);
-}
 .pp-desc li::marker, .zc-richtext li::marker, .entry-content li::marker { color: var(--accent); }
-.pp-desc ul ul, .pp-desc ol ol,
-.zc-richtext ul ul, .zc-richtext ol ol { margin-top: var(--zc-list-gap); margin-bottom: 0; }
 
 .pp-desc h2, .pp-desc h3, .pp-desc h4,
-.zc-richtext h2, .zc-richtext h3, .zc-richtext h4 {
-    font-family: var(--serif); margin: calc(var(--zc-para) * 1.6) 0 calc(var(--zc-para) * .6);
-    line-height: 1.3;
-}
+.zc-richtext h2, .zc-richtext h3, .zc-richtext h4 { font-family: var(--serif); }
+
 .pp-desc blockquote, .zc-richtext blockquote {
-    margin: var(--zc-para) 0; padding: 4px 0 4px 16px;
-    border-left: 3px solid var(--accent); color: var(--muted);
+    padding: 4px 0 4px 16px; border-left: 3px solid var(--accent); color: var(--muted);
 }
 .pp-desc a, .zc-richtext a { color: var(--accent-txt); text-decoration: underline; text-underline-offset: 3px; }

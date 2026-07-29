@@ -209,7 +209,9 @@ body.admin-bar .pp-hero-fav { top:calc(var(--hh,72px) + 46px); }
 .pp-spec-icon { color:#B8A47A; display:flex; align-items:center; justify-content:center; }
 .pp-hero-meta .pp-ic { vertical-align:-3px; margin-right:5px; opacity:.9; }
 .pp-hero-meta span { display:inline-flex; align-items:center; gap:5px; }
-.pp-spec-value { font-size:19px; font-weight:800; color:#1C1A18; line-height:1; font-family:var(--serif,serif); }
+/* Hodnoty parametrov bezpätkovo – sú to čísla, nie nadpisy */
+.pp-spec-value { font-size:19px; font-weight:800; color:#1C1A18; line-height:1;
+    font-family:var(--sans,'DM Sans',sans-serif); font-variant-numeric:tabular-nums; }
 .pp-spec-label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:#6B6560; }
 
 /* Description */
@@ -474,7 +476,7 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
     <div class="pp-card">
         <div class="pp-sec-title">Náklady na bývanie</div>
         <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-            <div style="font-family:var(--serif,serif);font-size:26px;font-weight:800;color:#1C1A18"><?php echo esc_html($energie) ?></div>
+            <div style="font-family:var(--sans,'DM Sans',sans-serif);font-size:26px;font-weight:800;color:#1C1A18"><?php echo esc_html($energie) ?></div>
             <div style="font-size:13px;color:#6B6560;line-height:1.6">Orientačné mesačné náklady<br>(energie, poplatky, správa)</div>
         </div>
         <p style="font-size:12px;color:#9A8660;margin:12px 0 0">Uvedené náklady sú orientačné a závisia od skutočnej spotreby.</p>
