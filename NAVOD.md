@@ -186,27 +186,29 @@ Kde to použiješ:
 > Fotka môže byť vo viacerých priečinkoch naraz a priečinky nič nepresúvajú na disku —
 > ide o označenie, takže sa nemôže stať, že sa niekde stratí odkaz na súbor.
 
-## „Priečinok už existuje" pri nahrávaní pluginu
-Nie je to chyba pluginu — takto sa bráni WordPress, keď priečinok s tým istým
-názvom už v `wp-content/plugins/` je a on ho nevie ponúknuť na prepísanie.
+## Aktualizácia nahratím .zip (a hláška „Priečinok už existuje")
+Od témy **3.36.3** stačí nahrať `.zip` cez **Pluginy → Pridať nový → Nahrať
+plugin** a dať *Nainštalovať*. Starú verziu prepíše, netreba nič mazať vopred.
 
-**Riešenie A — raz a natrvalo (odporúčam): ZC Inštalátor**
-1. Nahraj `zc-installer.zip` (Pluginy → Pridať nový → Nahrať plugin) a aktivuj.
-2. **Web Zdenky → Inštalátor** → *Nainštalovať všetko jedným klikom*.
-3. Prepíše tému aj všetkých päť pluginov naraz a rovno ich aktivuje.
+Prečo to predtým nešlo: WordPress odmieta prepísať priečinok, ktorý už existuje.
+Obrazovku *„Nahradiť aktuálnu verziu nahranou"* vie ponúknuť len vtedy, keď ten
+priečinok rozpozná ako nainštalovaný plugin. Keď v ňom ostalo torzo po predošlej
+inštalácii (napríklad po balíku s iným názvom priečinka), WordPress ho nepozná
+a skončí hláškou **„Priečinok už existuje"**, hoci ide o ten istý plugin.
 
-V inštalátore je celý balík už pribalený, takže netreba nič vyberať.
-Vie aj hromadný upload — vyberieš viac `.zip` naraz (Ctrl / Cmd).
-Po dokončení ho môžeš zmazať, na chod webu nie je potrebný.
-
-**Riešenie B — ručne**
-1. **Pluginy** → pri danom plugine *Deaktivovať*, potom *Zmazať*.
-2. Nahraj `.zip` znova a aktivuj.
+Téma preto inštalátoru pri **našich** balíkoch (`zdenka-theme`,
+`property-pro-plugin`, `zc-newsletter`, `zc-reviews`, `zc-ebook`, `zc-2fa`,
+`zc-installer`) povie, nech starý priečinok pred rozbalením zmaže — presne to
+isté, čo robí WordPress sám po kliknutí na *Nahradiť*. Cudzích pluginov
+a aktualizácií z wordpress.org sa to netýka.
 
 > **Odberatelia, recenzie, ponuky ani dopyty sa tým nestratia.** Žiadny z týchto
-> pluginov nemá odinštalačný skript — dáta žijú v databáze webu a mazanie
-> priečinka sa ich nedotkne. Napriek tomu je pred väčším zásahom rozumné
-> stiahnuť si zálohu (Web Zdenky → Zálohy).
+> pluginov nemá odinštalačný skript — dáta žijú v databáze webu a výmena
+> priečinka sa ich nedotkne.
+
+**Keby to predsa len ešte raz vypísalo hlášku** (napr. kým nemáš novú tému):
+**Pluginy** → pri danom plugine *Deaktivovať* → *Zmazať* → nahrať `.zip` znova.
+Alebo cez FTP zmazať priečinok v `wp-content/plugins/`.
 
 ## DÔLEŽITÉ pri inštalácii newslettera
 Balík newslettera musí byť v priečinku **`zc-newsletter`**. Keby ho niekedy dostaneš
