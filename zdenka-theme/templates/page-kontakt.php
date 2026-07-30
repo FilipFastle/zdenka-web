@@ -149,17 +149,6 @@ $email = zc_agent('email', get_option('admin_email'));
                             <input type="email" name="email" class="ko-input" placeholder="vas@email.sk" required>
                         </div>
                         <div class="ko-field full">
-                            <label class="ko-label">O aký typ nehnuteľnosti máte záujem?</label>
-                            <select name="newsletter_interest" class="ko-input">
-                                <option value="">Všetky ponuky / zatiaľ neviem</option>
-                                <option value="1izbovy">1-izbový byt</option>
-                                <option value="2izbovy">2-izbový byt</option>
-                                <option value="3plus_izbovy">3+-izbový byt</option>
-                                <option value="dom">Dom</option>
-                                <option value="pozemok">Pozemok</option>
-                            </select>
-                        </div>
-                        <div class="ko-field full">
                             <label class="ko-label">Zámer / Správa</label>
                             <textarea name="message" class="ko-textarea" placeholder="Napíšte dôvod kontaktu, o akú nehnuteľnosť máte záujem..."></textarea>
                         </div>

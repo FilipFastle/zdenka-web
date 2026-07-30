@@ -159,19 +159,6 @@ add_shortcode('zc_contact_form', function ($atts) {
                         <label class="zcb-contact-label">E-mail *</label>
                         <input type="email" name="email" class="zcb-contact-input" autocomplete="email" required>
                     </div>
-                    <?php if ($show_interest): ?>
-                    <div class="zcb-contact-field is-full">
-                        <label class="zcb-contact-label">O aký typ nehnuteľnosti máte záujem?</label>
-                        <select name="newsletter_interest" class="zcb-contact-input">
-                            <option value="">Všetky ponuky / zatiaľ neviem</option>
-                            <option value="1izbovy">1-izbový byt</option>
-                            <option value="2izbovy">2-izbový byt</option>
-                            <option value="3plus_izbovy">3+-izbový byt</option>
-                            <option value="dom">Dom</option>
-                            <option value="pozemok">Pozemok</option>
-                        </select>
-                    </div>
-                    <?php endif; ?>
                     <div class="zcb-contact-field is-full">
                         <label class="zcb-contact-label">Správa</label>
                         <textarea name="message" class="zcb-contact-textarea"

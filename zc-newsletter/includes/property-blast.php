@@ -126,8 +126,12 @@ function zcn_handle_property_blast() {
     }
 
     global $wpdb;
-    $subscribers = $wpdb->get_results("SELECT * FROM " . zcn_table() . " WHERE status='active'");
-    if (empty($subscribers)) wp_send_json_error(['message' => 'Žiadni aktívni odberatelia.']);
+    // Kontakty s kategóriou „Bez ponúk" dostávajú len novinky a ebook,
+    // ponuky nehnuteľností im zámerne neposielame.
+    $subscribers = $wpdb->get_results(
+        "SELECT * FROM " . zcn_table() . " WHERE status='active'" . zcn_offers_sql_where()
+    );
+    if (empty($subscribers)) wp_send_json_error(['message' => 'Žiadni odberatelia so záujmom o ponuky.']);
 
     $sent = 0; $failed = 0;
     foreach ($subscribers as $sub) {

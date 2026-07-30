@@ -5,12 +5,22 @@ defined('ABSPATH') || exit;
  * Údaje sa berú z Prispôsobiť → Maklérka – Kontakt.
  */
 function zcn_signature_html() {
-    $agent = function_exists('zc_agent') ? 'zc_agent' : null;
-    $name  = $agent ? zc_agent('name',  'Mgr. Zdenka Cibuľová')  : 'Mgr. Zdenka Cibuľová';
-    $role  = $agent ? zc_agent('title', 'Realitná maklérka') : 'Realitná maklérka';
-    $phone = $agent ? zc_agent('phone', '') : '';
-    $email = $agent ? zc_agent('email', '') : get_option('admin_email');
-    $wa    = preg_replace('/[^0-9]/', '', (string) ($agent ? zc_agent('wa', '') : ''));
+    // Údaje maklérky majú jeden zdroj: pp_agent_data() = profil používateľa,
+    // čo tam chýba, doplní Prispôsobiť. Predtým sa čítalo len z Prispôsobiť,
+    // takže telefón vyplnený v profile sa do vizitky nedostal.
+    $data  = function_exists('pp_agent_data') ? pp_agent_data(0) : [];
+    $agent = function_exists('zc_agent');
+    $pick  = function ($key, $mod, $default = '') use ($data, $agent) {
+        $value = trim((string) ($data[$key] ?? ''));
+        if ($value !== '') return $value;
+        return $agent ? (string) zc_agent($mod, $default) : $default;
+    };
+
+    $name  = $pick('name',  'name',  'Mgr. Zdenka Cibuľová');
+    $role  = $pick('title', 'title', 'Realitná maklérka');
+    $phone = $pick('phone', 'phone');
+    $email = $pick('email', 'email', get_option('admin_email'));
+    $wa    = preg_replace('/[^0-9]/', '', $pick('wa', 'wa'));
 
     $rows = '';
     if ($phone) {

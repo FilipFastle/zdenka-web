@@ -29,6 +29,14 @@ function zcn_install() {
 }
 
 function zcn_interests() {
+    return zcn_offer_interests() + [
+        // Nechce ponuky – dostane len novinky, ebook a informačné e-maily
+        'ziadne' => 'Bez ponúk – iba novinky a ebook',
+    ];
+}
+
+/** Kategórie, ktoré znamenajú záujem o nehnuteľnosti. */
+function zcn_offer_interests() {
     return [
         '1izbovy'       => '1-izbový byt',
         '2izbovy'       => '2-izbový byt',
@@ -36,6 +44,19 @@ function zcn_interests() {
         'dom'           => 'Dom',
         'pozemok'       => 'Pozemok',
     ];
+}
+
+/** Má tento kontakt dostávať ponuky nehnuteľností? */
+function zcn_wants_offers($interest) {
+    return zcn_sanitize_interest($interest) !== 'ziadne';
+}
+
+/**
+ * Podmienka do SQL, ktorá vynechá kontakty bez záujmu o ponuky.
+ * Prázdna kategória = „všetky ponuky", tá sa posiela.
+ */
+function zcn_offers_sql_where() {
+    return " AND (interest IS NULL OR interest <> 'ziadne')";
 }
 
 function zcn_sanitize_interest($value) {
@@ -58,6 +79,7 @@ function zcn_source_labels() {
         'detail'          => 'Dopyt z ponuky',
         'ebook'           => 'Ebook formulár',
         'manual_panel'    => 'Ručne v realitnom paneli',
+        'manual_admin'    => 'Ručne vo wp-admine',
         'manual_batch'    => 'Hromadne v realitnom paneli',
         'import'          => 'Import',
         'web'             => 'Web',

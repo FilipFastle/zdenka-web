@@ -186,6 +186,51 @@ Kde to použiješ:
 > Fotka môže byť vo viacerých priečinkoch naraz a priečinky nič nepresúvajú na disku —
 > ide o označenie, takže sa nemôže stať, že sa niekde stratí odkaz na súbor.
 
+## Newsletter — kategórie a pridávanie kontaktov
+
+### Kategórie záujmu
+| Kategória | Čo dostáva |
+|---|---|
+| *Všetky ponuky* (prázdna) | všetko — novinky, ebook aj ponuky |
+| 1-izbový / 2-izbový / 3+-izbový / Dom / Pozemok | novinky, ebook a **len ponuky svojho typu** |
+| **Bez ponúk – iba novinky a ebook** | novinky a ebook, **žiadne ponuky nehnuteľností** |
+
+Kto si stiahne **ebook**, zaradí sa automaticky do *Všetky ponuky*.
+
+Pri odosielaní si vyberáš príjemcov:
+- **Všetci aktívni odberatelia (aj bez záujmu o ponuky)** — pre novinky a oznamy,
+- **Všetci so záujmom o ponuky** — vynechá tých s kategóriou *Bez ponúk*,
+- konkrétna kategória.
+
+Tlačidlo **„Poslať odberateľom newslettera"** pri ponuke vynecháva kategóriu
+*Bez ponúk* vždy automaticky — netreba na to myslieť.
+
+### Kde sa pýtame na kategóriu
+Vo formulári sa na typ nehnuteľnosti **už nepýtame**, aby nezdržiaval toho, kto
+chce len napísať správu. Kto si zaškrtne newsletter, dostane **hneď po odoslaní
+malé okno** s výberom. Kto ho zavrie alebo zvolí *Žiadne*, ostane v kategórii
+*Bez ponúk* — novinky a ebook mu chodiť budú, ponuky nie.
+
+### Pridávanie kontaktov
+Rovnaké možnosti sú v **realitnom paneli** aj vo **wp-admine**
+(*Web Zdenky → Newsletter → Pridať kontakty*):
+
+- **Po jednom** — meno, e-mail, kategória.
+- **Viac naraz** — jeden človek na riadok vo formáte `Meno;Priezvisko;e-mail`
+  (funguje aj CSV s čiarkou/tabulátorom, aj samotný e-mail). Naraz max. 500 riadkov.
+
+Ručne pridaný kontakt sa uloží rovno ako aktívny a **nedostane žiadny e-mail** —
+ani uvítací, ani potvrdzovací. Ak chceš potvrdenie poslať, zvoľ pri pridávaní
+jedného kontaktu možnosť *Poslať potvrdzovací e-mail*.
+
+Rovnaká adresa sa nikdy nevytvorí druhýkrát — existujúci záznam sa aktualizuje
+a zdroje sa zlúčia, takže je vždy vidieť, odkiaľ kontakt prišiel.
+
+## Site Kit pre maklérku
+Rola *Realitný maklér* má vo wp-admine sprístupnenú **jedinú položku — Google
+Site Kit**, a to len na čítanie. Ostatné obrazovky wp-adminu ju presmerujú späť.
+Nastavovanie Site Kitu, pripájanie účtov ani správa modulov v tom nie sú.
+
 ## Aktualizácia nahratím .zip (a hláška „Priečinok už existuje")
 Od témy **3.36.3** stačí nahrať `.zip` cez **Pluginy → Pridať nový → Nahrať
 plugin** a dať *Nainštalovať*. Starú verziu prepíše, netreba nič mazať vopred.

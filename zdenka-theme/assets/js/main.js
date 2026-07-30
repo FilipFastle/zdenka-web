@@ -214,6 +214,81 @@ if (hero && hdr) {
     hdr.classList.remove('transparent');
 }
 
+/* ══ VÝBER TYPU PONÚK PO PRIHLÁSENÍ NA NEWSLETTER ════════════
+   Vo formulári sa na to nepýtame, aby nezdržiaval. Kto si zaškrtne
+   newsletter, dostane hneď po odoslaní malé okno s možnosťami.
+   Kto ho zavrie alebo zvolí „Žiadne", dostáva len novinky a ebook. */
+function zcInterestModal(token) {
+    var opts = (window.zcData || {}).interests || [];
+    if (!opts.length || document.getElementById('zcIntModal')) return;
+
+    var wrap = document.createElement('div');
+    wrap.id = 'zcIntModal';
+    wrap.setAttribute('role', 'dialog');
+    wrap.setAttribute('aria-modal', 'true');
+    wrap.setAttribute('aria-label', 'O aké ponuky máte záujem?');
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;' +
+        'justify-content:center;padding:20px;background:rgba(20,17,14,.55);opacity:0;transition:opacity .25s';
+
+    var buttons = opts.map(function (o) {
+        return '<button type="button" data-v="' + o.value + '" style="display:block;width:100%;text-align:left;' +
+            'padding:13px 16px;margin-bottom:8px;border:1.5px solid #E2DACE;border-radius:10px;background:#fff;' +
+            'font:600 14px/1.3 inherit;color:#2C2825;cursor:pointer;transition:border-color .15s,background .15s">' +
+            o.label + '</button>';
+    }).join('');
+
+    wrap.innerHTML =
+        '<div style="background:#fff;border-radius:16px;max-width:420px;width:100%;padding:28px 26px;' +
+        'box-shadow:0 24px 64px rgba(0,0,0,.28);font-family:inherit;max-height:90vh;overflow:auto">' +
+        '<h3 style="margin:0 0 6px;font-size:19px;color:#1C1A18">Ďakujeme za prihlásenie!</h3>' +
+        '<p style="margin:0 0 18px;font-size:13.5px;line-height:1.6;color:#6B6560">' +
+        'O aké nehnuteľnosti máte záujem? Budeme vám posielať len to, čo vás naozaj zaujíma.</p>' +
+        buttons +
+        '<div id="zcIntMsg" style="display:none;margin-top:12px;font-size:13px;color:#15803d"></div>' +
+        '<button type="button" data-close style="display:block;width:100%;margin-top:6px;padding:11px;' +
+        'border:none;background:none;color:#9A8660;font:600 12.5px/1.3 inherit;cursor:pointer">Teraz nie</button>' +
+        '</div>';
+
+    document.body.appendChild(wrap);
+    requestAnimationFrame(function () { wrap.style.opacity = '1'; });
+
+    function close() {
+        wrap.style.opacity = '0';
+        setTimeout(function () { if (wrap.parentNode) wrap.parentNode.removeChild(wrap); }, 260);
+        document.removeEventListener('keydown', onKey);
+    }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    document.addEventListener('keydown', onKey);
+
+    wrap.addEventListener('click', function (e) {
+        if (e.target === wrap || e.target.hasAttribute('data-close')) { close(); return; }
+        var btn = e.target.closest('[data-v]');
+        if (!btn) return;
+
+        wrap.querySelectorAll('[data-v]').forEach(function (b) { b.disabled = true; });
+        btn.style.borderColor = '#B8A47A';
+        btn.style.background = '#F5F1EA';
+
+        var d = new FormData();
+        d.append('action', 'zcn_set_interest');
+        d.append('nonce', (window.zcData || {}).nlNonce || '');
+        d.append('token', token);
+        d.append('interest', btn.getAttribute('data-v'));
+        fetch((window.zcData || {}).ajaxurl || '/wp-admin/admin-ajax.php', { method: 'POST', body: d })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            var m = wrap.querySelector('#zcIntMsg');
+            if (m) {
+                m.style.display = 'block';
+                m.style.color = res.success ? '#15803d' : '#dc2626';
+                m.textContent = (res.data && res.data.message) || '';
+            }
+            setTimeout(close, 1400);
+        })
+        .catch(close);
+    });
+}
+
 /* ══ CONTACT FORM ════════════════════════════════════════════ */
 document.querySelectorAll('#zcContactForm,.zc-contact-form').forEach(function (originalForm) {
     var form = originalForm.cloneNode(true);
@@ -242,6 +317,8 @@ document.querySelectorAll('#zcContactForm,.zc-contact-form').forEach(function (o
                 document.dispatchEvent(new CustomEvent('zc:form-sent', {
                     detail: { form_name: form.getAttribute('data-zc-form') || 'kontakt' }
                 }));
+                // Prihlásil sa na newsletter → opýtame sa ho na typ ponúk
+                if (res.data && res.data.interest_token) zcInterestModal(res.data.interest_token);
             }
             btn.textContent = orig; btn.disabled = false;
         })

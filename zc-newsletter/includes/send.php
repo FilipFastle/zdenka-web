@@ -12,7 +12,10 @@ function zcn_handle_send() {
     $body_md = wp_kses_post(wp_unslash($_POST['body'] ?? ''));
     $test    = !empty($_POST['test_email']) ? sanitize_email($_POST['test_email']) : '';
     $preview = !empty($_POST['preview']);
-    $interest = function_exists('zcn_sanitize_interest') ? zcn_sanitize_interest($_POST['interest'] ?? '') : '';
+    // „offers" = všetci okrem tých, ktorí si vypli ponuky nehnuteľností
+    $raw_interest = sanitize_key($_POST['interest'] ?? '');
+    $only_offers  = ($raw_interest === 'offers');
+    $interest     = $only_offers ? '' : (function_exists('zcn_sanitize_interest') ? zcn_sanitize_interest($raw_interest) : '');
 
     if (!$subject || !$body_md) {
         wp_send_json_error(['message' => 'Predmet a obsah sú povinné.']);
@@ -48,7 +51,8 @@ function zcn_handle_send() {
         $ts -= (int) (get_option('gmt_offset') * HOUR_IN_SECONDS); // datetime-local je v lokálnom čase
         $queue = get_option('zcn_scheduled', []);
         $key   = 'sch_' . time() . '_' . wp_rand(100, 999);
-        $queue[$key] = ['subject' => $subject, 'body' => $body_html, 'interest' => $interest, 'created' => current_time('mysql'), 'at' => $schedule_at];
+        $queue[$key] = ['subject' => $subject, 'body' => $body_html, 'interest' => $interest,
+                        'only_offers' => $only_offers, 'created' => current_time('mysql'), 'at' => $schedule_at];
         update_option('zcn_scheduled', $queue);
         wp_schedule_single_event($ts, 'zcn_do_scheduled', [$key]);
         wp_send_json_success(['message' => 'Newsletter naplánovaný na ' . esc_html($schedule_at) . '.']);
@@ -60,7 +64,8 @@ function zcn_handle_send() {
     if (function_exists('zcn_ensure_table_ready')) zcn_ensure_table_ready();
     $subscribers = $interest
         ? $wpdb->get_results($wpdb->prepare("SELECT * FROM " . zcn_table() . " WHERE status='active' AND interest=%s", $interest))
-        : $wpdb->get_results("SELECT * FROM " . zcn_table() . " WHERE status='active'");
+        : $wpdb->get_results("SELECT * FROM " . zcn_table() . " WHERE status='active'"
+            . ($only_offers ? zcn_offers_sql_where() : ''));
     if (empty($subscribers)) {
         wp_send_json_error(['message' => $interest
             ? 'V tejto kategórii zatiaľ nikto nie je. Skús „Všetci aktívni odberatelia".'
@@ -106,7 +111,8 @@ add_action('zcn_do_scheduled', function($key) {
     $interest = function_exists('zcn_sanitize_interest') ? zcn_sanitize_interest($item['interest'] ?? '') : '';
     $subscribers = $interest
         ? $wpdb->get_results($wpdb->prepare("SELECT * FROM " . zcn_table() . " WHERE status='active' AND interest=%s", $interest))
-        : $wpdb->get_results("SELECT * FROM " . zcn_table() . " WHERE status='active'");
+        : $wpdb->get_results("SELECT * FROM " . zcn_table() . " WHERE status='active'"
+            . (!empty($item['only_offers']) ? zcn_offers_sql_where() : ''));
     if (empty($subscribers)) return;
 
     $from_name  = function_exists('zc_agent') ? zc_agent('name', 'Mgr. Zdenka Cibuľová') : 'Mgr. Zdenka Cibuľová';

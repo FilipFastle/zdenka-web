@@ -58,23 +58,29 @@ function zcn_admin_page() {
         );
         echo '<div class="notice notice-success is-dismissible"><p>Kategória kontaktu uložená.</p></div>';
     }
+    // Pridanie jedného kontaktu – rovnaká logika ako v realitnom paneli
+    if (isset($_POST['zcn_add']) && check_admin_referer('zcn_admin')) {
+        [$msg, $ok] = zcn_add_contact(
+            wp_unslash($_POST['zcn_add_email'] ?? ''),
+            sanitize_text_field(wp_unslash($_POST['zcn_add_name'] ?? '')),
+            zcn_sanitize_interest($_POST['zcn_add_interest'] ?? ''),
+            sanitize_key($_POST['zcn_add_mode'] ?? 'active'),
+            'manual_admin'
+        );
+        printf('<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
+            $ok ? 'success' : 'error', esc_html($msg));
+    }
+
+    // Hromadné pridanie – „Meno;Priezvisko;email" na riadok
     if (isset($_POST['zcn_import']) && check_admin_referer('zcn_admin')) {
-        $emails = array_filter(array_map('trim', explode("\n", $_POST['zcn_import_emails'] ?? '')));
-        $imported = 0;
-        foreach ($emails as $email) {
-            if (!is_email($email)) continue;
-            $token = zcn_generate_token();
-            $ins = $wpdb->insert($table, [
-                'email'=>strtolower(sanitize_email($email)),
-                'status'=>'active',
-                'token'=>$token,
-                'confirmed_at'=>current_time('mysql'),
-                'source'=>'import',
-                'interest'=>zcn_sanitize_interest($_POST['zcn_import_interest'] ?? ''),
-            ]);
-            if ($ins) $imported++;
-        }
-        echo '<div class="notice notice-success is-dismissible"><p>Importovaných: <strong>' . $imported . '</strong> e-mailov.</p></div>';
+        $counts = zcn_add_contacts_bulk(
+            wp_unslash($_POST['zcn_import_emails'] ?? ''),
+            zcn_sanitize_interest($_POST['zcn_import_interest'] ?? ''),
+            'manual_admin'
+        );
+        [$msg, $ok] = zcn_bulk_notice($counts);
+        printf('<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
+            $ok ? 'success' : 'warning', esc_html($msg));
     }
     if (isset($_GET['zcn_export']) && current_user_can('manage_options')) {
         $rows = $wpdb->get_results("SELECT * FROM {$table} WHERE status='active' ORDER BY confirmed_at DESC");
@@ -129,7 +135,7 @@ function zcn_admin_page() {
 
     <!-- Tabs -->
     <div style="display:flex;gap:2px;border-bottom:2px solid #e5e7eb;margin-bottom:20px">
-    <?php foreach(['subscribers'=>'Odberatelia','send'=>'Odoslať','log'=>'História','import'=>'Import'] as $t=>$l): ?>
+    <?php foreach(['subscribers'=>'Odberatelia','send'=>'Odoslať','log'=>'História','import'=>'Pridať kontakty'] as $t=>$l): ?>
     <a href="?page=zc-newsletter&tab=<?php echo $t ?>"
        style="padding:9px 16px;text-decoration:none;font-size:13px;font-weight:600;border-radius:8px 8px 0 0;margin-bottom:-2px;
               border:1px solid <?php echo $tab===$t?'#e5e7eb':'transparent' ?>;
@@ -236,7 +242,8 @@ function zcn_admin_page() {
         <div style="margin-bottom:16px">
             <label style="display:block;font-size:11px;font-weight:700;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Príjemcovia</label>
             <select id="zcnInterest" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px">
-                <option value="">Všetci aktívni odberatelia</option>
+                <option value="">Všetci aktívni odberatelia (aj bez záujmu o ponuky)</option>
+                <option value="offers">Všetci so záujmom o ponuky</option>
                 <?php foreach (zcn_interests() as $value => $label): ?>
                 <option value="<?php echo esc_attr($value); ?>" data-count="<?php echo (int) $interest_counts[$value]; ?>"><?php echo esc_html($label); ?> (<?php echo (int) $interest_counts[$value]; ?>)</option>
                 <?php endforeach; ?>
@@ -384,23 +391,76 @@ function zcn_admin_page() {
     <?php else: ?><p style="color:#aaa;padding:32px;text-align:center">Zatiaľ nebol odoslaný žiadny newsletter.</p><?php endif; ?>
 
     <?php elseif ($tab === 'import'): ?>
-    <div style="max-width:540px">
-    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:28px">
-        <h3 style="margin:0 0 8px">Importovať odberateľov</h3>
-        <p style="color:#666;font-size:13px;margin:0 0 16px">Jeden e-mail na riadok. Importovaní budú priamo aktívni (bez potvrdenia).</p>
-        <form method="post">
-            <?php wp_nonce_field('zcn_admin') ?>
-            <textarea name="zcn_import_emails" rows="10" style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:monospace;font-size:13px" placeholder="jan@email.sk&#10;maria@email.sk&#10;peter@email.sk"></textarea>
-            <select name="zcn_import_interest" style="width:100%;margin-top:10px">
-                <option value="">Kategória: všetky ponuky</option>
-                <?php foreach (zcn_interests() as $value => $label): ?>
-                <option value="<?php echo esc_attr($value); ?>"><?php echo esc_html($label); ?></option>
-                <?php endforeach; ?>
-            </select>
-            <button type="submit" name="zcn_import" value="1" class="button button-primary" style="margin-top:10px">Importovať</button>
-        </form>
+    <?php // Rovnaké možnosti ako v realitnom paneli – po jednom aj hromadne ?>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;max-width:960px">
+
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:26px">
+            <h3 style="margin:0 0 6px">Pridať jeden kontakt</h3>
+            <p style="color:#666;font-size:13px;margin:0 0 16px">
+                Kontakt sa uloží rovno ako aktívny a <strong>nedostane žiadny e-mail</strong>.
+            </p>
+            <form method="post">
+                <?php wp_nonce_field('zcn_admin') ?>
+                <input type="hidden" name="zcn_add" value="1">
+                <p style="margin:0 0 10px">
+                    <label style="display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px">Meno</label>
+                    <input type="text" name="zcn_add_name" class="regular-text" style="width:100%" placeholder="Jana Nováková">
+                </p>
+                <p style="margin:0 0 10px">
+                    <label style="display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px">E-mail *</label>
+                    <input type="email" name="zcn_add_email" required class="regular-text" style="width:100%" placeholder="jana@example.sk">
+                </p>
+                <p style="margin:0 0 10px">
+                    <label style="display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px">Kategória</label>
+                    <select name="zcn_add_interest" style="width:100%">
+                        <option value="">Všetky ponuky</option>
+                        <?php foreach (zcn_interests() as $value => $label): ?>
+                        <option value="<?php echo esc_attr($value); ?>"><?php echo esc_html($label); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </p>
+                <p style="margin:0 0 14px">
+                    <label style="display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px">Spôsob pridania</label>
+                    <select name="zcn_add_mode" style="width:100%">
+                        <option value="active">Aktívny – pridať priamo, bez e-mailu</option>
+                        <option value="pending">Poslať potvrdzovací e-mail</option>
+                    </select>
+                </p>
+                <button type="submit" class="button button-primary">Pridať kontakt</button>
+            </form>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:26px">
+            <h3 style="margin:0 0 6px">Pridať viac naraz</h3>
+            <p style="color:#666;font-size:13px;margin:0 0 14px">
+                Jeden človek na riadok vo formáte <strong>Meno;Priezvisko;e-mail</strong>
+                (funguje aj CSV s čiarkou alebo tabulátorom, aj samotný e-mail).
+            </p>
+            <form method="post">
+                <?php wp_nonce_field('zcn_admin') ?>
+                <textarea name="zcn_import_emails" rows="9" required spellcheck="false"
+                    style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:ui-monospace,Consolas,monospace;font-size:13px;line-height:1.55"
+                    placeholder="Jana;Nováková;jana@example.sk&#10;Peter;Kováč;peter@example.sk&#10;maria@email.sk"></textarea>
+                <select name="zcn_import_interest" style="width:100%;margin-top:10px">
+                    <option value="">Spoločná kategória: všetky ponuky</option>
+                    <?php foreach (zcn_interests() as $value => $label): ?>
+                    <option value="<?php echo esc_attr($value); ?>"><?php echo esc_html($label); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="submit" name="zcn_import" value="1" class="button button-primary" style="margin-top:12px">Pridať celú dávku</button>
+            </form>
+            <p style="color:#777;font-size:12px;margin:14px 0 0;line-height:1.6">
+                Kontakty sa pridajú priamo ako aktívne, <strong>bez potvrdzovacieho aj bez uvítacieho e-mailu</strong>.
+                Rovnaký e-mail sa nevytvorí druhýkrát – existujúci záznam sa bezpečne aktualizuje.
+                Naraz sa spracuje najviac 500 riadkov.
+            </p>
+        </div>
+
     </div>
-    </div>
+    <p style="color:#999;font-size:12px;max-width:960px;margin-top:16px">
+        Aktívny kontakt pridávaj len vtedy, keď ti preukázateľne udelil súhlas.
+        Zdroj sa uloží ako „Ručne vo wp-admine“, takže je vždy dohľadateľné, odkiaľ prišiel.
+    </p>
     <?php endif; ?>
 
     </div>

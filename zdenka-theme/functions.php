@@ -11,13 +11,13 @@ add_action('wp_enqueue_scripts', function() {
     $use_min = get_option('zc_min_css', '1') === '1'
             && file_exists($dir . '/assets/css/main.min.css');
     $css = $use_min ? '/assets/css/main.min.css' : '/assets/css/main.css';
-    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.36.3');
+    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.36.4');
     // Malé kritické úpravy musia platiť aj pri zapnutej staršej minifikovanej verzii.
     wp_add_inline_style('zdenka-main',
         '.zc-nav a{font-size:11px}.zc-prop-badge.is-sold{background:#DC2626!important;color:#fff!important;box-shadow:0 0 9px rgba(220,38,38,.85),0 0 20px rgba(220,38,38,.5)}'
     );
-    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.36.3', true);
-    wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.png','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0]);
+    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.36.4', true);
+    wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.png','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0,'interests'=>function_exists('zcn_interest_choices')?zcn_interest_choices():[],'nlNonce'=>wp_create_nonce('zcn_nonce')]);
 });
 
 add_action('after_setup_theme', function() {
@@ -94,9 +94,9 @@ function zc_handle_contact() {
     $email = sanitize_email($_POST['email']??'');
     $phone = sanitize_text_field($_POST['phone']??'');
     $msg   = sanitize_textarea_field($_POST['message']??'');
-    $interest = function_exists('zcn_sanitize_interest')
-        ? zcn_sanitize_interest($_POST['newsletter_interest'] ?? '')
-        : sanitize_key($_POST['newsletter_interest'] ?? '');
+    // Na typ nehnuteľnosti sa už vo formulári nepýtame – opýtame sa až
+    // po odoslaní, a len toho, kto si zaškrtol newsletter.
+    $interest = '';
     if (!$name||!$email) { wp_send_json_error(['message'=>'Vyplňte meno a email.']); }
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
     // Adresátov určuje nastavenie notifikácií (roly / používatelia / e-maily)
@@ -134,12 +134,19 @@ function zc_handle_contact() {
     }
 
     $response_message = 'Správa odoslaná! Ozvem sa vám čoskoro.';
+    $interest_token = '';
     if ($newsletter_requested && $newsletter_added) {
         $response_message .= ' E-mail bol pridaný aj do newslettera.';
+        // Token pre okno „O aké ponuky máte záujem?" – platí 30 minút
+        if (function_exists('zcn_interest_token')) $interest_token = zcn_interest_token($email);
     } elseif ($newsletter_requested && !$newsletter_added) {
         $response_message .= ' Prihlásenie do newslettera sa nepodarilo; skúste samostatný formulár Newsletter.';
     }
-    wp_send_json_success(['message'=>$response_message, 'newsletter_added'=>(bool)$newsletter_added]);
+    wp_send_json_success([
+        'message'         => $response_message,
+        'newsletter_added'=> (bool) $newsletter_added,
+        'interest_token'  => $interest_token,
+    ]);
 }
 
 // Customizer – kontaktné údaje

@@ -1754,71 +1754,12 @@ add_action('template_redirect', function() {
 
 // ── Newsletter Panel ───────────────────────────────────────────────────────
 /**
- * Načíta riadky vo formáte Meno;Priezvisko;email.
- * Akceptuje aj čiarku alebo tabulátor, hlavičku CSV a samostatný e-mail.
+ * Načítanie riadkov „Meno;Priezvisko;email" rieši plugin ZC Newsletter,
+ * aby sa panel a wp-admin nesprávali rozdielne. Tu ostáva len obal.
  */
 function pp_parse_subscriber_batch($raw, $limit = 500) {
-    $lines = preg_split('/\R/u', trim((string) $raw)) ?: [];
-    $contacts = [];
-    $invalid_rows = [];
-    $duplicate_rows = 0;
-    $truncated = count($lines) > $limit;
-
-    foreach (array_slice($lines, 0, $limit) as $index => $line) {
-        $line = trim(preg_replace('/^\xEF\xBB\xBF/', '', (string) $line));
-        if ($line === '') continue;
-
-        $delimiter = strpos($line, ';') !== false
-            ? ';'
-            : (strpos($line, "\t") !== false ? "\t" : (strpos($line, ',') !== false ? ',' : ''));
-        $parts = $delimiter ? str_getcsv($line, $delimiter) : [$line];
-        $parts = array_map(static function ($value) {
-            return trim((string) $value);
-        }, $parts);
-
-        if ($index === 0) {
-            $header = strtolower(remove_accents(implode(' ', $parts)));
-            if (strpos($header, 'email') !== false || strpos($header, 'e-mail') !== false) {
-                continue;
-            }
-        }
-
-        if (count($parts) >= 3) {
-            $first_name = $parts[0];
-            $last_name = $parts[1];
-            $email = $parts[2];
-        } elseif (count($parts) === 2) {
-            $first_name = $parts[0];
-            $last_name = '';
-            $email = $parts[1];
-        } else {
-            $first_name = '';
-            $last_name = '';
-            $email = $parts[0];
-        }
-
-        $email = strtolower(sanitize_email($email));
-        if (!is_email($email)) {
-            $invalid_rows[] = $index + 1;
-            continue;
-        }
-        if (isset($contacts[$email])) {
-            $duplicate_rows++;
-            continue;
-        }
-
-        $contacts[$email] = [
-            'email' => $email,
-            'name'  => trim(sanitize_text_field($first_name) . ' ' . sanitize_text_field($last_name)),
-        ];
-    }
-
-    return [
-        'contacts'       => array_values($contacts),
-        'invalid_rows'   => $invalid_rows,
-        'duplicate_rows' => $duplicate_rows,
-        'truncated'      => $truncated,
-    ];
+    if (function_exists('zcn_parse_contacts')) return zcn_parse_contacts($raw, $limit);
+    return ['contacts' => [], 'invalid_rows' => [], 'duplicate_rows' => 0, 'truncated' => false];
 }
 
 function panel_newsletter() {
@@ -1849,23 +1790,10 @@ function panel_newsletter() {
         $add_name = sanitize_text_field($_POST['name'] ?? '');
         $add_interest = pp_nl_interest($_POST['interest'] ?? '');
         $add_mode = sanitize_key($_POST['add_mode'] ?? 'active');
-        if (!is_email($add_email)) {
-            $subscriber_notice = 'Zadajte platnú e-mailovú adresu.';
-        } elseif ($add_mode === 'pending' && function_exists('zcn_subscribe_direct')) {
-            $ok = zcn_subscribe_direct($add_email, $add_name, 'manual_panel', $add_interest);
-            $mail_error = function_exists('zcn_last_mail_error') ? zcn_last_mail_error() : '';
-            $subscriber_notice = $ok
-                ? 'Kontakt bol pridaný a dostal potvrdzovací e-mail.'
-                : ($mail_error
-                    ? 'Kontakt bol uložený, ale e-mail sa nepodarilo odoslať. Dôvod: ' . $mail_error
-                    : 'Kontakt už je aktívny alebo čaká na potvrdenie.');
-            $subscriber_notice_ok = (bool) $ok;
-        } elseif (function_exists('zcn_subscribe_forced')) {
-            $ok = zcn_subscribe_forced($add_email, $add_name, 'manual_panel', $add_interest);
-            $subscriber_notice = $ok ? 'Kontakt bol pridaný medzi aktívnych odberateľov.' : 'Kontakt sa nepodarilo pridať.';
-            $subscriber_notice_ok = (bool) $ok;
+        if (function_exists('zcn_add_contact')) {
+            [$subscriber_notice, $subscriber_notice_ok] =
+                zcn_add_contact($add_email, $add_name, $add_interest, $add_mode, 'manual_panel');
         } else {
-            // Bez tejto vetvy by tlačidlo vyzeralo, že nič neurobilo
             $subscriber_notice = 'Plugin ZC Newsletter neponúka pridanie kontaktu – aktualizuj ho na najnovšiu verziu.';
         }
     }
@@ -2079,7 +2007,8 @@ function panel_newsletter() {
             <div style="margin-bottom:14px">
                 <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Príjemcovia</label>
                 <select id="pnlInterest" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px">
-                    <option value="">Všetci aktívni odberatelia</option>
+                    <option value="">Všetci aktívni odberatelia (aj bez záujmu o ponuky)</option>
+                    <option value="offers">Všetci so záujmom o ponuky</option>
                     <?php foreach (pp_nl_interests() as $value => $label): ?>
                     <option value="<?php echo esc_attr($value) ?>" data-count="<?php echo (int) $interest_counts[$value] ?>"><?php echo esc_html($label) ?> (<?php echo (int) $interest_counts[$value] ?>)</option>
                     <?php endforeach; ?>

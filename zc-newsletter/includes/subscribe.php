@@ -386,3 +386,203 @@ function zcn_subscribe_direct($email, $name = '', $source = 'web', $interest = '
     if ($saved === false) return false;
     return zcn_send_confirmation($email, $name, $token);
 }
+
+/* ── Ručné pridávanie kontaktov (wp-admin aj realitný panel) ──────────────
+ * Jedna logika pre obe miesta, nech sa nesprávajú rozdielne.
+ * Ručné pridanie zámerne NEPOSIELA žiadny e-mail – ani uvítací, ani
+ * potvrdzovací. Kontakt vkladá maklérka, ktorá súhlas už má.
+ */
+
+/**
+ * Načíta riadky vo formáte Meno;Priezvisko;email.
+ * Akceptuje aj čiarku alebo tabulátor, hlavičku CSV a samostatný e-mail.
+ */
+function zcn_parse_contacts($raw, $limit = 500) {
+    $lines = preg_split('/\R/u', trim((string) $raw)) ?: [];
+    $contacts = [];
+    $invalid_rows = [];
+    $duplicate_rows = 0;
+    $truncated = count($lines) > $limit;
+
+    foreach (array_slice($lines, 0, $limit) as $index => $line) {
+        $line = trim(preg_replace('/^\xEF\xBB\xBF/', '', (string) $line));
+        if ($line === '') continue;
+
+        $delimiter = strpos($line, ';') !== false
+            ? ';'
+            : (strpos($line, "\t") !== false ? "\t" : (strpos($line, ',') !== false ? ',' : ''));
+        $parts = $delimiter ? str_getcsv($line, $delimiter) : [$line];
+        $parts = array_map(static function ($value) {
+            return trim((string) $value);
+        }, $parts);
+
+        if ($index === 0) {
+            $header = strtolower(remove_accents(implode(' ', $parts)));
+            if (strpos($header, 'email') !== false || strpos($header, 'e-mail') !== false) {
+                continue;
+            }
+        }
+
+        if (count($parts) >= 3) {
+            $first_name = $parts[0];
+            $last_name = $parts[1];
+            $email = $parts[2];
+        } elseif (count($parts) === 2) {
+            $first_name = $parts[0];
+            $last_name = '';
+            $email = $parts[1];
+        } else {
+            $first_name = '';
+            $last_name = '';
+            $email = $parts[0];
+        }
+
+        $email = strtolower(sanitize_email($email));
+        if (!is_email($email)) {
+            $invalid_rows[] = $index + 1;
+            continue;
+        }
+        if (isset($contacts[$email])) {
+            $duplicate_rows++;
+            continue;
+        }
+
+        $contacts[$email] = [
+            'email' => $email,
+            'name'  => trim(sanitize_text_field($first_name) . ' ' . sanitize_text_field($last_name)),
+        ];
+    }
+
+    return [
+        'contacts'       => array_values($contacts),
+        'invalid_rows'   => $invalid_rows,
+        'duplicate_rows' => $duplicate_rows,
+        'truncated'      => $truncated,
+    ];
+}
+
+/**
+ * Pridá naraz celú dávku kontaktov.
+ * Vracia počty [created, reactivated, updated, failed] + poznámky k vstupu.
+ */
+function zcn_add_contacts_bulk($raw, $interest = '', $source = 'manual_batch') {
+    $batch  = zcn_parse_contacts($raw);
+    $counts = ['created' => 0, 'reactivated' => 0, 'updated' => 0, 'failed' => 0];
+
+    foreach ($batch['contacts'] as $contact) {
+        $result = zcn_upsert_manual_active($contact['email'], $contact['name'], $source, $interest);
+        if (is_wp_error($result))          $counts['failed']++;
+        elseif (isset($counts[$result]))   $counts[$result]++;
+    }
+
+    return $counts + [
+        'total'          => count($batch['contacts']),
+        'invalid_rows'   => $batch['invalid_rows'],
+        'duplicate_rows' => $batch['duplicate_rows'],
+        'truncated'      => $batch['truncated'],
+    ];
+}
+
+/** Zrozumiteľná veta o výsledku dávky – rovnaká vo wp-admine aj v paneli. */
+function zcn_bulk_notice($counts) {
+    if (empty($counts['total'])) {
+        return ['Nenašiel sa žiadny platný kontakt. Použi jeden riadok na osobu: Meno;Priezvisko;email.', false];
+    }
+    $msg = sprintf(
+        'Hotovo: %d nových, %d znovu aktivovaných, %d existujúcich aktualizovaných.',
+        $counts['created'], $counts['reactivated'], $counts['updated']
+    );
+    if (!empty($counts['duplicate_rows'])) $msg .= ' Duplicity v zozname preskočené: ' . (int) $counts['duplicate_rows'] . '.';
+    if (!empty($counts['invalid_rows']))   $msg .= ' Neplatné riadky: ' . implode(', ', array_slice($counts['invalid_rows'], 0, 12)) . '.';
+    if (!empty($counts['failed']))         $msg .= ' Neuložené pre chybu databázy: ' . (int) $counts['failed'] . '.';
+    if (!empty($counts['truncated']))      $msg .= ' Naraz sa spracuje najviac 500 riadkov; zvyšok vlož v ďalšej dávke.';
+    $msg .= ' Žiadne e-maily sa neposielali.';
+
+    $ok = ($counts['created'] + $counts['reactivated'] + $counts['updated']) > 0 && empty($counts['failed']);
+    return [$msg, $ok];
+}
+
+/**
+ * Pridá jeden kontakt. $mode: 'active' = rovno aktívny bez e-mailu,
+ * 'pending' = pošle sa potvrdzovací e-mail (vedomá voľba používateľa).
+ * Vracia [hláška, úspech].
+ */
+function zcn_add_contact($email, $name = '', $interest = '', $mode = 'active', $source = 'manual_panel') {
+    $email = strtolower(sanitize_email($email));
+    if (!is_email($email)) return ['Zadaj platnú e-mailovú adresu.', false];
+
+    if ($mode === 'pending') {
+        $ok = zcn_subscribe_direct($email, $name, $source, $interest);
+        if ($ok) return ['Kontakt bol pridaný a dostal potvrdzovací e-mail.', true];
+        $err = function_exists('zcn_last_mail_error') ? zcn_last_mail_error() : '';
+        return [$err
+            ? 'Kontakt bol uložený, ale e-mail sa nepodarilo odoslať. Dôvod: ' . $err
+            : 'Kontakt už je aktívny alebo čaká na potvrdenie.', false];
+    }
+
+    $result = zcn_upsert_manual_active($email, $name, $source, $interest);
+    if (is_wp_error($result)) return [$result->get_error_message(), false];
+
+    $labels = [
+        'created'     => 'Kontakt bol pridaný medzi aktívnych odberateľov.',
+        'reactivated' => 'Kontakt bol znovu aktivovaný.',
+        'updated'     => 'Kontakt už v databáze bol – údaje sme aktualizovali.',
+    ];
+    return [($labels[$result] ?? 'Kontakt uložený.') . ' Žiadny e-mail sa neposielal.', true];
+}
+
+/* ── Doplnenie kategórie hneď po odoslaní formulára ───────────────────────
+ * Vo formulári sa už na typ nehnuteľnosti nepýtame – nezaťažuje to človeka,
+ * ktorý chce len napísať správu. Keď si zaškrtne newsletter, opýtame sa ho
+ * až potom, v malom okne. Aby nikto nemohol prepísať kategóriu cudziemu
+ * kontaktu, dostane jednorazový token platný 30 minút.
+ */
+
+/** Vytvorí jednorazový token na doplnenie kategórie. */
+function zcn_interest_token($email) {
+    $email = strtolower(sanitize_email($email));
+    if (!is_email($email)) return '';
+    $token = wp_generate_password(24, false);
+    set_transient('zcn_int_' . $token, $email, 30 * MINUTE_IN_SECONDS);
+    return $token;
+}
+
+add_action('wp_ajax_zcn_set_interest',        'zcn_handle_set_interest');
+add_action('wp_ajax_nopriv_zcn_set_interest', 'zcn_handle_set_interest');
+
+function zcn_handle_set_interest() {
+    check_ajax_referer('zcn_nonce', 'nonce');
+
+    $token = sanitize_text_field(wp_unslash($_POST['token'] ?? ''));
+    $email = $token ? get_transient('zcn_int_' . $token) : '';
+    if (!$email || !is_email($email)) {
+        wp_send_json_error(['message' => 'Platnosť voľby vypršala. Kategóriu ti nastavíme na požiadanie.']);
+    }
+
+    $interest = zcn_sanitize_interest($_POST['interest'] ?? '');
+    if (function_exists('zcn_ensure_table_ready')) zcn_ensure_table_ready();
+
+    global $wpdb;
+    $updated = $wpdb->update(zcn_table(), ['interest' => $interest], ['email' => $email]);
+    delete_transient('zcn_int_' . $token);
+
+    if ($updated === false) {
+        wp_send_json_error(['message' => 'Voľbu sa nepodarilo uložiť.']);
+    }
+    wp_send_json_success([
+        'message'  => zcn_wants_offers($interest)
+            ? 'Ďakujeme, nastavené. Nové ponuky vám budú chodiť na e-mail.'
+            : 'Ďakujeme. Budeme vám posielať len novinky a ebook, žiadne ponuky.',
+        'interest' => $interest,
+    ]);
+}
+
+/** Možnosti pre okno s výberom – v tvare pre JavaScript. */
+function zcn_interest_choices() {
+    $out = [['value' => '', 'label' => 'Všetky ponuky']];
+    foreach (zcn_offer_interests() as $value => $label) {
+        $out[] = ['value' => $value, 'label' => $label];
+    }
+    $out[] = ['value' => 'ziadne', 'label' => 'Žiadne – len novinky a ebook'];
+    return $out;
+}

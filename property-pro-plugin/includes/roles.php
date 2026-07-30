@@ -79,6 +79,32 @@ function pp_sitekit_available() {
         || (is_multisite() && isset(get_site_option('active_sitewide_plugins', [])['google-site-kit/google-site-kit.php']));
 }
 
+/**
+ * Oprávnenia, ktoré maklérka potrebuje, aby Site Kit vôbec zobrazil prehľad.
+ * Sú výhradne na čítanie – nastavovanie, pripájanie účtov ani správa modulov
+ * medzi nimi nie sú, tie ostávajú správcovi.
+ */
+function pp_sitekit_view_caps() {
+    return [
+        'googlesitekit_view_dashboard',
+        'googlesitekit_view_shared_dashboard',
+        'googlesitekit_view_module_details',
+        'googlesitekit_read_shared_module_data',
+    ];
+}
+
+/**
+ * Site Kit si oprávnenia nastavuje sám cez user_has_cap (priorita 20),
+ * preto sa musíme pripojiť až za neho – inak by našu voľbu prepísal.
+ */
+add_filter('user_has_cap', function ($allcaps, $caps, $args, $user) {
+    if (!($user instanceof WP_User) || !pp_is_agent($user)) return $allcaps;
+    if (!empty($allcaps['manage_options'])) return $allcaps;
+
+    foreach (pp_sitekit_view_caps() as $cap) $allcaps[$cap] = true;
+    return $allcaps;
+}, 30, 4);
+
 // Skryť hornú WordPress lištu maklérovi
 add_filter('show_admin_bar', function ($show) {
     if (pp_is_agent() && !current_user_can('manage_options')) return false;

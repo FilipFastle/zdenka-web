@@ -289,7 +289,9 @@ function zc_ebook_handle() {
     }
 
     if (function_exists('zcn_subscribe_forced')) {
-        zcn_subscribe_forced($email, $name, 'ebook');
+        // Kto si stiahol ebook, má o nehnuteľnosti záujem – zaradíme ho
+        // do „Všetky ponuky" (prázdna kategória), nech mu chodí všetko.
+        zcn_subscribe_forced($email, $name, 'ebook', '');
     }
 
     $from = function_exists('zc_mail_from') ? zc_mail_from() : get_option('admin_email');
