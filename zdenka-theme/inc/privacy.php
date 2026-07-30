@@ -41,7 +41,7 @@ function zc_privacy_default_content() {
 <ul>
 <li><strong>Identifikačné a kontaktné údaje:</strong> meno a priezvisko, e-mailová adresa, telefónne číslo;</li>
 <li><strong>Údaje z formulárov</strong> (kontaktný formulár, formulár na odhad nehnuteľnosti, dopyt k ponuke, formulár na stiahnutie e-booku): obsah vašej správy, údaje o nehnuteľnosti a odpovede na položené otázky, ktoré nám dobrovoľne poskytnete;</li>
-<li><strong>Údaje pri odbere noviniek (newsletter):</strong> e-mailová adresa, prípadne meno;</li>
+<li><strong>Údaje pri odbere noviniek (newsletter):</strong> e-mailová adresa, prípadne meno a zvolená kategória nehnuteľností;</li>
 <li><strong>Údaje o udelení súhlasu a technické údaje formulára:</strong> IP adresa a dátum a čas odoslania formulára – uchovávame ich ako doklad o udelení súhlasu a na ochranu pred zneužívaním formulárov (spam);</li>
 <li><strong>Ostatné technické údaje:</strong> typ a nastavenia prehliadača a údaje z cookies (pozri bod 7).</li>
 </ul>

@@ -59,6 +59,9 @@
                 <?php if (function_exists('zc_has_referencie') && zc_has_referencie()): ?>
                 <li><a href="<?php echo home_url('/referencie/'); ?>">Referencie</a></li>
                 <?php endif; ?>
+                <?php if (shortcode_exists('zc_newsletter_full')): ?>
+                <li><a href="<?php echo home_url('/newsletter/'); ?>">Newsletter</a></li>
+                <?php endif; ?>
                 <li><a href="<?php echo home_url('/kontakt/'); ?>">Kontakt</a></li>
                 <?php if (function_exists('zc_ebook_enabled') && zc_ebook_enabled()): zc_ebook_flag(true); ?>
                 <li><a href="#" data-zc-ebook-open style="color:var(--accent) !important;font-weight:600">Ebook PDF zdarma</a></li>

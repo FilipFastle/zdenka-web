@@ -14,14 +14,15 @@ add_action('template_redirect', function() {
     $amenities   = get_post_meta($id, '_property_amenities', true) ?: [];
     $agent_id    = get_post_meta($id, '_property_agent_id', true) ?: get_post_field('post_author', $id);
 
-    $agent_name  = get_the_author_meta('display_name', $agent_id) ?: 'Realitná maklérka';
-    $agent_phone = get_user_meta($agent_id, 'property_phone', true) ?: '+421 907 579 742';
+    $agent_data  = function_exists('pp_agent_data') ? pp_agent_data($id) : [];
+    $agent_name  = $agent_data['name'] ?? (get_the_author_meta('display_name', $agent_id) ?: 'Mgr. Zdenka Cibuľová');
+    $agent_phone = $agent_data['phone'] ?? (get_user_meta($agent_id, 'property_phone', true) ?: '+421 907 579 742');
     // PRIVACY: nepoužívať e-mail WP účtu (môže byť privátny/administrátorský).
     // Verejné exposé používa výhradne kontaktný e-mail nastavený pre web.
-    $agent_email = get_user_meta($agent_id, 'property_email', true);
+    $agent_email = $agent_data['email'] ?? get_user_meta($agent_id, 'property_email', true);
     if (!$agent_email && function_exists('zc_agent')) $agent_email = zc_agent('email', '');
     if (!$agent_email) $agent_email = get_theme_mod('zc_email_main', '');
-    $agent_title = get_user_meta($agent_id, 'property_title', true) ?: 'Realitná maklérka';
+    $agent_title = $agent_data['title'] ?? (get_user_meta($agent_id, 'property_title', true) ?: 'Realitná maklérka');
 
     $typ_labels = ['predaj'=>'Na predaj','prenajom'=>'Na prenájom','pozemok'=>'Pozemok'];
     $cover = $cover_id ? wp_get_attachment_image_url($cover_id, 'large') : (has_post_thumbnail($id) ? get_the_post_thumbnail_url($id, 'large') : '');

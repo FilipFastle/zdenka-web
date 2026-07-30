@@ -4,6 +4,7 @@ get_header();
 if (have_posts()) { while (have_posts()) { the_post(); } }
 $name  = zc_agent('name','Mgr. Zdenka Cibuľová');
 $title = zc_agent('title','Realitná maklérka');
+$name_without_title = trim(preg_replace('/^Mgr\.\s*/u', '', $name));
 ?>
 <section style="background:var(--section);padding:80px 0">
 <div class="zc-container zc-omne-hero" style="display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center">
@@ -14,7 +15,7 @@ $title = zc_agent('title','Realitná maklérka');
             $surname = array_pop($name_parts);
             $rest    = trim(implode(' ', $name_parts));
             echo esc_html($rest); echo $rest ? ' ' : ''; ?><em><?php echo esc_html($surname); ?></em></h1>
-        <p style="font-size:16px;color:var(--muted);line-height:1.85;margin-bottom:20px">Som <?php echo esc_html($name); ?>, realitná maklérka pôsobiaca vo Zvolene, Banskej Bystrici a okolí. Práca s ľuďmi ma napĺňa a svet realít mi dáva možnosť pomáhať klientom pri jednom z najdôležitejších rozhodnutí v ich živote.</p>
+        <p style="font-size:16px;color:var(--muted);line-height:1.85;margin-bottom:20px">Som <?php echo esc_html($name_without_title); ?>, realitná maklérka pôsobiaca vo Zvolene, Banskej Bystrici a okolí. Práca s ľuďmi ma napĺňa a svet realít mi dáva možnosť pomáhať klientom pri jednom z najdôležitejších rozhodnutí v ich živote.</p>
         <p style="font-size:16px;color:var(--muted);line-height:1.85;margin-bottom:20px">Ku každému klientovi pristupujem individuálne, s profesionálnym a ľudským prístupom. Pri spolupráci kladiem veľký dôraz na dôveru, úprimnosť, otvorenú komunikáciu a férové jednanie.</p>
         <p style="font-size:16px;color:var(--muted);line-height:1.85;margin-bottom:32px">Svojich klientov sprevádzam celým procesom – od prvého stretnutia až po odovzdanie kľúčov, pričom venujem pozornosť každému detailu. Mojím cieľom je spokojný klient, ktorý vie, že sa na mňa môže s dôverou obrátiť aj v budúcnosti.</p>
         <a href="<?php echo home_url('/kontakt/'); ?>" class="zc-btn zc-btn-primary">Kontaktujte ma</a>

@@ -66,7 +66,7 @@ if (isset($_POST['odhad_send']) && !wp_verify_nonce($_POST['odhad_nonce'] ?? '',
 
     // Newsletter opt-in
     if ($sent && !empty($_POST['newsletter']) && $email_od && function_exists('zcn_subscribe_forced')) {
-        zcn_subscribe_forced($email_od, trim("{$meno} {$priezvisko}"), 'odhad-form');
+        zcn_subscribe_forced($email_od, trim("{$meno} {$priezvisko}"), 'odhad');
     }
 }
 ?>

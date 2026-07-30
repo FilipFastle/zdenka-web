@@ -16,11 +16,20 @@ function zcn_handle_subscribe() {
     }
     set_transient($key, $attempts + 1, 10 * MINUTE_IN_SECONDS);
 
-    $email = sanitize_email($_POST['email'] ?? '');
+    $email = strtolower(sanitize_email($_POST['email'] ?? ''));
     $name  = sanitize_text_field($_POST['name']  ?? '');
+    $interest = function_exists('zcn_sanitize_interest')
+        ? zcn_sanitize_interest($_POST['interest'] ?? '')
+        : '';
+    $source = function_exists('zcn_merge_sources')
+        ? zcn_merge_sources('', $_POST['source'] ?? 'newsletter')
+        : sanitize_key($_POST['source'] ?? 'newsletter');
 
     if (!is_email($email)) {
         wp_send_json_error(['message' => 'Zadajte platnú e-mailovú adresu.']);
+    }
+    if (function_exists('zcn_ensure_table_ready') && !zcn_ensure_table_ready()) {
+        wp_send_json_error(['message' => 'Databáza newslettera momentálne nie je dostupná. Skúste to, prosím, znova.']);
     }
 
     global $wpdb;
@@ -33,43 +42,84 @@ function zcn_handle_subscribe() {
 
     if ($existing) {
         if ($existing->status === 'active') {
+            if ($interest || ($name && !$existing->name) || $source) {
+                $data = ['source' => zcn_merge_sources($existing->source ?? '', $source)];
+                if ($interest) $data['interest'] = $interest;
+                if ($name && !$existing->name) $data['name'] = $name;
+                if ($data) $wpdb->update($table, $data, ['id' => (int) $existing->id]);
+            }
             wp_send_json_error(['message' => 'Táto adresa je už prihlásená na odber.']);
         }
         if ($existing->status === 'pending') {
+            $data = ['source' => zcn_merge_sources($existing->source ?? '', $source)];
+            if ($interest) $data['interest'] = $interest;
+            if ($name && !$existing->name) $data['name'] = $name;
+            $wpdb->update($table, $data, ['id' => (int) $existing->id]);
             // Resend confirmation
-            zcn_send_confirmation($email, $name ?: $existing->name, $existing->token);
+            $resent = zcn_resend_confirmation((int) $existing->id, $source);
+            if (is_wp_error($resent)) {
+                wp_send_json_error(['message' => $resent->get_error_message()]);
+            }
             wp_send_json_success(['message' => 'Potvrdzovací e-mail bol znovu odoslaný. Skontrolujte schránku.']);
         }
         if ($existing->status === 'unsubscribed') {
             // Resubscribe
             $token = zcn_generate_token();
             $wpdb->update($table,
-                ['status' => 'pending', 'token' => $token, 'name' => $name, 'subscribed_at' => current_time('mysql')],
+                ['status' => 'pending', 'token' => $token, 'name' => $name, 'interest' => $interest,
+                 'source' => zcn_merge_sources($existing->source ?? '', $source), 'subscribed_at' => current_time('mysql'),
+                 'confirmed_at' => null],
                 ['email' => $email]
             );
-            zcn_send_confirmation($email, $name, $token);
+            if (!zcn_send_confirmation($email, $name, $token)) {
+                wp_send_json_error(['message' => 'Kontakt bol uložený, ale potvrdzovací e-mail sa nepodarilo odoslať. ' . zcn_last_mail_error()]);
+            }
             wp_send_json_success(['message' => 'Skontrolujte e-mail a potvrďte prihlásenie.']);
         }
     }
 
     // New subscriber
     $token = zcn_generate_token();
-    $wpdb->insert($table, [
+    $saved = $wpdb->insert($table, [
         'email'  => $email,
         'name'   => $name,
+        'interest' => $interest,
         'status' => 'pending',
         'token'  => $token,
-        'source' => sanitize_text_field($_POST['source'] ?? 'web'),
+        'source' => $source,
     ]);
+    if ($saved === false) {
+        wp_send_json_error(['message' => 'Prihlásenie sa nepodarilo uložiť. Skúste to, prosím, znova.']);
+    }
 
-    zcn_send_confirmation($email, $name, $token);
+    if (!zcn_send_confirmation($email, $name, $token)) {
+        wp_send_json_error(['message' => 'Kontakt bol uložený, ale potvrdzovací e-mail sa nepodarilo odoslať. ' . zcn_last_mail_error()]);
+    }
     wp_send_json_success(['message' => 'Skontrolujte e-mail a potvrďte prihlásenie na odber. ']);
 }
 
+/**
+ * Posledná chyba odoslania v rámci aktuálneho requestu.
+ * Hodnota sa používa iba na bezpečnú diagnostiku v realitnom paneli.
+ */
+function zcn_last_mail_error() {
+    return sanitize_text_field((string) ($GLOBALS['zcn_last_mail_error'] ?? ''));
+}
+
 function zcn_send_confirmation($email, $name, $token) {
+    $email = strtolower(sanitize_email($email));
+    $name  = sanitize_text_field($name);
+    $token = sanitize_text_field($token);
+    $GLOBALS['zcn_last_mail_error'] = '';
+
+    if (!is_email($email) || $token === '') {
+        $GLOBALS['zcn_last_mail_error'] = 'Neplatná e-mailová adresa alebo potvrdzovací token.';
+        return false;
+    }
+
     $confirm_url = add_query_arg(['zcn_action' => 'confirm', 'token' => $token], home_url('/'));
     $unsub_url   = add_query_arg(['zcn_action' => 'unsubscribe', 'token' => $token], home_url('/'));
-    $site        = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : get_bloginfo('name');
+    $site        = function_exists('zc_agent') ? zc_agent('name', 'Mgr. Zdenka Cibuľová') : 'Mgr. Zdenka Cibuľová';
     $from_email  = function_exists('zc_mail_from') ? zc_mail_from() : (get_theme_mod('zc_email_from', '') ?: get_option('admin_email'));
     $greeting    = $name ? "Dobrý deň {$name}," : 'Dobrý deň,';
 
@@ -94,17 +144,153 @@ function zcn_send_confirmation($email, $name, $token) {
         </p>
     ");
 
-    wp_mail($email, $subject, $body, [
+    $mail_error = null;
+    $capture_mail_error = static function ($error) use (&$mail_error) {
+        if (is_wp_error($error)) {
+            $mail_error = $error->get_error_message();
+        }
+    };
+    add_action('wp_mail_failed', $capture_mail_error);
+    $sent = wp_mail($email, $subject, $body, [
         'Content-Type: text/html; charset=UTF-8',
         "From: {$site} <{$from_email}>",
     ]);
+    remove_action('wp_mail_failed', $capture_mail_error);
+
+    if (!$sent) {
+        $GLOBALS['zcn_last_mail_error'] = $mail_error
+            ? sanitize_text_field($mail_error)
+            : 'WordPress e-mail odmietol odoslať. Skontrolujte nastavenie WP Mail SMTP.';
+    }
+
+    return (bool) $sent;
+}
+
+/**
+ * Bezpečne odošle nový potvrdzovací e-mail existujúcemu kontaktu.
+ * Pri chybe wp_mail() vráti pôvodný stav, token aj dátumy.
+ *
+ * @return true|WP_Error
+ */
+function zcn_resend_confirmation($subscriber_id, $source = 'manual_panel') {
+    if (function_exists('zcn_ensure_table_ready') && !zcn_ensure_table_ready()) {
+        return new WP_Error('zcn_table_missing', 'Databáza newslettera nie je dostupná.');
+    }
+
+    global $wpdb;
+    $table = zcn_table();
+    $row = $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM {$table} WHERE id=%d",
+        absint($subscriber_id)
+    ));
+
+    if (!$row || !is_email($row->email)) {
+        return new WP_Error('zcn_subscriber_missing', 'Kontakt sa v databáze nenašiel.');
+    }
+    if ($row->status === 'active') {
+        return new WP_Error('zcn_already_active', 'Kontakt je už aktívny.');
+    }
+
+    $original = [
+        'status'        => $row->status,
+        'token'         => $row->token,
+        'subscribed_at' => $row->subscribed_at,
+        'confirmed_at'  => $row->confirmed_at,
+    ];
+    $token = zcn_generate_token();
+    $source = sanitize_key($source) ?: 'manual_panel';
+    $saved = $wpdb->update(
+        $table,
+        [
+            'status'        => 'pending',
+            'token'         => $token,
+            'subscribed_at' => current_time('mysql'),
+            'confirmed_at'  => null,
+            'source'        => zcn_merge_sources($row->source ?? '', $source),
+        ],
+        ['id' => (int) $row->id]
+    );
+    if ($saved === false) {
+        return new WP_Error('zcn_save_failed', 'Nový potvrdzovací token sa nepodarilo uložiť.');
+    }
+
+    if (!zcn_send_confirmation($row->email, $row->name, $token)) {
+        // Odošlanie neprešlo: kontakt nesmie zostať v inom stave než pred kliknutím.
+        $wpdb->update($table, $original, ['id' => (int) $row->id]);
+        $detail = zcn_last_mail_error();
+        return new WP_Error(
+            'zcn_mail_failed',
+            'Potvrdzovací e-mail sa nepodarilo odoslať.'
+            . ($detail ? ' Dôvod: ' . $detail : '')
+        );
+    }
+
+    return true;
+}
+
+/**
+ * Priamy ručný zápis bez potvrdzovacieho ani uvítacieho e-mailu.
+ * confirmed_at zostáva NULL, aby databáza netvrdila, že kontakt klikol na súhlas.
+ *
+ * @return string|WP_Error created|reactivated|updated
+ */
+function zcn_upsert_manual_active($email, $name = '', $source = 'manual_batch', $interest = '') {
+    $email = strtolower(sanitize_email($email));
+    $name = sanitize_text_field($name);
+    $source = sanitize_key($source) ?: 'manual_batch';
+    $interest = function_exists('zcn_sanitize_interest') ? zcn_sanitize_interest($interest) : '';
+
+    if (!is_email($email)) {
+        return new WP_Error('zcn_invalid_email', 'Neplatná e-mailová adresa.');
+    }
+    if (function_exists('zcn_ensure_table_ready') && !zcn_ensure_table_ready()) {
+        return new WP_Error('zcn_table_missing', 'Databáza newslettera nie je dostupná.');
+    }
+
+    global $wpdb;
+    $table = zcn_table();
+    $existing = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE email=%s", $email));
+
+    if ($existing) {
+        $data = [
+            'source' => zcn_merge_sources($existing->source ?? '', $source),
+        ];
+        if ($name !== '') $data['name'] = $name;
+        if ($interest !== '') $data['interest'] = $interest;
+
+        if ($existing->status !== 'active') {
+            $data['status'] = 'active';
+            $data['token'] = zcn_generate_token();
+            $data['subscribed_at'] = current_time('mysql');
+            $data['confirmed_at'] = null;
+        }
+
+        if ($wpdb->update($table, $data, ['id' => (int) $existing->id]) === false) {
+            return new WP_Error('zcn_update_failed', 'Kontakt sa nepodarilo aktualizovať.');
+        }
+        return $existing->status === 'active' ? 'updated' : 'reactivated';
+    }
+
+    $saved = $wpdb->insert($table, [
+        'email'        => $email,
+        'name'         => $name,
+        'status'       => 'active',
+        'token'        => zcn_generate_token(),
+        'source'       => $source,
+        'interest'     => $interest,
+        'confirmed_at' => null,
+    ]);
+
+    return $saved === false
+        ? new WP_Error('zcn_insert_failed', 'Kontakt sa nepodarilo uložiť.')
+        : 'created';
 }
 
 // Uvítací e-mail po potvrdení / priamom prihlásení na odber
 function zcn_send_welcome($email, $name = '') {
     if (!is_email($email)) return;
     global $wpdb;
-    $site       = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : get_bloginfo('name');
+    $site       = function_exists('zc_agent') ? zc_agent('name', 'Mgr. Zdenka Cibuľová') : 'Mgr. Zdenka Cibuľová';
     $from_email = function_exists('zc_mail_from') ? zc_mail_from() : (get_theme_mod('zc_email_from', '') ?: get_option('admin_email'));
     $greeting   = $name ? "Dobrý deň {$name}," : 'Dobrý deň,';
     $subject    = "Vitajte v odbere noviniek — {$site}";
@@ -135,37 +321,53 @@ function zcn_send_welcome($email, $name = '') {
 }
 
 // Forced subscription - direct active (no confirmation email, used from form opt-in)
-function zcn_subscribe_forced($email, $name = '', $source = 'form') {
+function zcn_subscribe_forced($email, $name = '', $source = 'form', $interest = '') {
     if (!is_email($email)) return false;
+    if (function_exists('zcn_ensure_table_ready') && !zcn_ensure_table_ready()) return false;
+    $email = strtolower(sanitize_email($email));
+    $interest = function_exists('zcn_sanitize_interest') ? zcn_sanitize_interest($interest) : '';
     global $wpdb;
     $table = zcn_table();
     $existing = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE email=%s", $email));
     if ($existing) {
-        if ($existing->status === 'active') return true; // already subscribed
+        if ($existing->status === 'active') {
+            $data = ['source' => zcn_merge_sources($existing->source ?? '', $source)];
+            if ($name) $data['name'] = sanitize_text_field($name);
+            if ($interest) $data['interest'] = $interest;
+            return $wpdb->update($table, $data, ['id' => (int) $existing->id]) !== false;
+        }
         $token = zcn_generate_token();
-        $wpdb->update($table,
-            ['status'=>'active','token'=>$token,'name'=>$name,
-             'subscribed_at'=>current_time('mysql'),'confirmed_at'=>current_time('mysql'),'source'=>$source],
-            ['email'=>$email]
-        );
+        // Prázdne meno ani prázdna kategória nesmú prepísať to, čo už máme
+        $data = ['status'=>'active','token'=>$token,
+                 'subscribed_at'=>current_time('mysql'),'confirmed_at'=>current_time('mysql'),
+                 'source'=>zcn_merge_sources($existing->source ?? '', $source)];
+        if ($name !== '')     $data['name']     = sanitize_text_field($name);
+        if ($interest !== '') $data['interest'] = $interest;
+        $saved = $wpdb->update($table, $data, ['email'=>$email]);
+        if ($saved === false) return false;
     } else {
         $token = zcn_generate_token();
-        $wpdb->insert($table, [
+        $saved = $wpdb->insert($table, [
             'email'        => $email,
             'name'         => $name,
             'status'       => 'active',
             'token'        => $token,
             'source'       => $source,
+            'interest'     => $interest,
             'confirmed_at' => current_time('mysql'),
         ]);
+        if ($saved === false) return false;
     }
     zcn_send_welcome($email, $name);
     return true;
 }
 
 // Direct subscription (from other forms) - sends confirmation email
-function zcn_subscribe_direct($email, $name = '', $source = 'web') {
+function zcn_subscribe_direct($email, $name = '', $source = 'web', $interest = '') {
     if (!is_email($email)) return false;
+    if (function_exists('zcn_ensure_table_ready') && !zcn_ensure_table_ready()) return false;
+    $email = strtolower(sanitize_email($email));
+    $interest = function_exists('zcn_sanitize_interest') ? zcn_sanitize_interest($interest) : '';
     global $wpdb;
     $table = zcn_table();
     $existing = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE email=%s", $email));
@@ -173,10 +375,14 @@ function zcn_subscribe_direct($email, $name = '', $source = 'web') {
 
     $token = zcn_generate_token();
     if ($existing) {
-        $wpdb->update($table, ['status'=>'pending','token'=>$token,'name'=>$name,'subscribed_at'=>current_time('mysql'),'source'=>$source], ['email'=>$email]);
+        $data = ['status'=>'pending','token'=>$token,'subscribed_at'=>current_time('mysql'),
+                 'confirmed_at'=>null,'source'=>zcn_merge_sources($existing->source ?? '', $source)];
+        if ($name !== '')     $data['name']     = sanitize_text_field($name);
+        if ($interest !== '') $data['interest'] = $interest;
+        $saved = $wpdb->update($table, $data, ['email'=>$email]);
     } else {
-        $wpdb->insert($table, ['email'=>$email,'name'=>$name,'status'=>'pending','token'=>$token,'source'=>$source]);
+        $saved = $wpdb->insert($table, ['email'=>$email,'name'=>$name,'status'=>'pending','token'=>$token,'source'=>$source,'interest'=>$interest]);
     }
-    zcn_send_confirmation($email, $name, $token);
-    return true;
+    if ($saved === false) return false;
+    return zcn_send_confirmation($email, $name, $token);
 }

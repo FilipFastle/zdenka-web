@@ -41,39 +41,6 @@ function pp_svg($name, $size = 18) {
     return '<svg class="pp-ic" width="'.$size.'" height="'.$size.'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.$body.'</svg>';
 }
 
-// ── Živý kurz mien (EUR → CZK, USD) ─────────────────────────────────────
-// Načíta sa raz za 12 h a uloží do transientu; fallback na rozumné hodnoty.
-function pp_fx_rates() {
-    $cached = get_transient('pp_fx_rates');
-    if (is_array($cached) && !empty($cached['CZK'])) return $cached;
-
-    $fallback = [
-        'CZK'  => (float) (function_exists('get_theme_mod') ? get_theme_mod('zc_czk_rate', 25.2) : 25.2),
-        'USD'  => 1.08,
-        'date' => '',
-        'live' => false,
-    ];
-
-    $resp = wp_remote_get('https://api.frankfurter.app/latest?from=EUR&to=CZK,USD', ['timeout' => 6]);
-    if (is_wp_error($resp) || wp_remote_retrieve_response_code($resp) !== 200) {
-        set_transient('pp_fx_rates', $fallback, 2 * HOUR_IN_SECONDS); // skús znova o 2 h
-        return $fallback;
-    }
-    $data = json_decode(wp_remote_retrieve_body($resp), true);
-    if (empty($data['rates']['CZK'])) {
-        set_transient('pp_fx_rates', $fallback, 2 * HOUR_IN_SECONDS);
-        return $fallback;
-    }
-    $rates = [
-        'CZK'  => (float) $data['rates']['CZK'],
-        'USD'  => (float) ($data['rates']['USD'] ?? $fallback['USD']),
-        'date' => sanitize_text_field($data['date'] ?? ''),
-        'live' => true,
-    ];
-    set_transient('pp_fx_rates', $rates, 12 * HOUR_IN_SECONDS);
-    return $rates;
-}
-
 // ── Zdieľané pomocné funkcie pre ponuky ─────────────────────────────────
 
 // Stav predaja (nad rámec typu predaj/prenájom): aktívne / rezervované / predané
@@ -90,9 +57,51 @@ function pp_sale_state($pid) {
 }
 function pp_sale_badge($state) {
     if ($state === 'rezervovane') return ['label' => 'Rezervované', 'bg' => '#C6902B', 'fg' => '#fff'];
-    if ($state === 'predane')     return ['label' => 'Predané',     'bg' => '#7A7068', 'fg' => '#fff'];
+    if ($state === 'predane')     return ['label' => 'PREDANÉ',     'bg' => '#DC2626', 'fg' => '#fff'];
     return null;
 }
+
+/**
+ * Jednotné ručné poradie ponúk. Menšie číslo sa zobrazí vyššie.
+ */
+function pp_property_order_args($args = []) {
+    $args['meta_key'] = '_property_sort_order';
+    $args['orderby']  = ['meta_value_num' => 'ASC', 'date' => 'DESC'];
+    $args['order']    = 'ASC';
+    return $args;
+}
+
+function pp_next_property_order() {
+    global $wpdb;
+    $max = (int) $wpdb->get_var($wpdb->prepare(
+        "SELECT MAX(CAST(meta_value AS UNSIGNED)) FROM {$wpdb->postmeta} WHERE meta_key=%s",
+        '_property_sort_order'
+    ));
+    return $max + 10;
+}
+
+// Existujúcim ponukám priradí pôvodné poradie podľa dátumu. Beží iba raz.
+add_action('init', function() {
+    if (get_option('pp_property_order_migrated') === '1') return;
+    $ids = get_posts([
+        'post_type' => 'property', 'posts_per_page' => -1, 'post_status' => 'any',
+        'fields' => 'ids', 'orderby' => 'date', 'order' => 'DESC',
+    ]);
+    $order = 10;
+    foreach ($ids as $pid) {
+        if (get_post_meta($pid, '_property_sort_order', true) === '') {
+            update_post_meta($pid, '_property_sort_order', $order);
+        }
+        $order += 10;
+    }
+    update_option('pp_property_order_migrated', '1', false);
+});
+
+// Nové ponuky vytvorené mimo vlastného panela (import alebo wp-admin) pridá na koniec.
+add_action('save_post_property', function($pid) {
+    if (wp_is_post_revision($pid) || get_post_meta($pid, '_property_sort_order', true) !== '') return;
+    update_post_meta($pid, '_property_sort_order', pp_next_property_order());
+}, 20);
 
 // „NOVÉ" — ponuka publikovaná za posledných 7 dní
 function pp_is_new($pid) {
@@ -174,6 +183,25 @@ add_action('wp_ajax_pp_bulk', function() {
     wp_send_json_success(['done' => $done]);
 });
 
+// AJAX: ručné poradie ponúk z riadkového zobrazenia v paneli.
+add_action('wp_ajax_pp_reorder', function() {
+    check_ajax_referer('pp_reorder', 'nonce');
+    if (!current_user_can('edit_posts')) wp_send_json_error(['message' => 'Nedostatočné oprávnenie.']);
+    $ids = array_values(array_unique(array_filter(array_map('intval', (array) ($_POST['ids'] ?? [])))));
+    if (!$ids) wp_send_json_error(['message' => 'Chýba poradie.']);
+    $order = 10;
+    foreach ($ids as $pid) {
+        $post = get_post($pid);
+        if (!$post || $post->post_type !== 'property' || !current_user_can('edit_post', $pid)) {
+            wp_send_json_error(['message' => 'Neplatná ponuka alebo oprávnenie.']);
+        }
+        update_post_meta($pid, '_property_sort_order', $order);
+        $order += 10;
+    }
+    pp_log('Zmenené poradie ponúk (' . count($ids) . ')');
+    wp_send_json_success(['done' => count($ids)]);
+});
+
 // Počítadlo zobrazení — bezpečné zvýšenie (raz za reláciu prehliadača)
 function pp_bump_views($pid) {
     if (is_admin() || !is_singular('property')) return;
@@ -234,6 +262,11 @@ function pp_agent_data($post_id) {
 
     $name = $user ? $user->display_name : '';
     if (!$name) $name = $mod('name', 'Realitná maklérka');
+    if (function_exists('zc_agent_name_with_title')) {
+        $name = zc_agent_name_with_title($name);
+    } else {
+        $name = 'Mgr. ' . trim(preg_replace('/^(?:Mgr\.\s*)+/u', '', $name ?: 'Zdenka Cibuľová'));
+    }
 
     return [
         'id'    => $uid,
@@ -267,7 +300,7 @@ function pp_agent_photo_html($agent, $size = 144) {
 }
 
 /* ── Doplnok pri kontakte na ponuke ──────────────────────────────────────
- * Do poľa sa dá vložiť shortcode (napr. [porovnanie]) alebo vlastný text.
+ * Do poľa sa dá vložiť shortcode (napr. [zc_reviews limit="1"]) alebo vlastný text.
  * Keď je pole prázdne, kontaktný formulár ostáva cez celú šírku.
  */
 
@@ -291,4 +324,38 @@ function pp_cta_extra_html($post_id) {
 function pp_cta_extra_hint() {
     return 'Vlož shortcode (napr. [property_carousel]) alebo vlastný text. '
          . 'Keď je pole prázdne, kontaktný formulár ostane cez celú šírku ako doteraz.';
+}
+
+/* ── Most k pluginu ZC Newsletter ────────────────────────────────────────
+ * Panel používa kategórie odberateľov a popisy zdrojov, ktoré žijú
+ * v plugine ZC Newsletter. Keď je vypnutý alebo v staršej verzii, panel
+ * sa nesmie zosypať – preto ide každé volanie cez tieto obaly.
+ */
+
+/** Je nainštalovaná verzia newslettera, ktorá pozná kategórie? */
+function pp_nl_has_interests() {
+    return function_exists('zcn_interests') && function_exists('zcn_sanitize_interest');
+}
+
+/** Zoznam kategórií; bez novej verzie pluginu prázdne pole. */
+function pp_nl_interests() {
+    return function_exists('zcn_interests') ? (array) zcn_interests() : [];
+}
+
+/** Očistená hodnota kategórie. */
+function pp_nl_interest($value) {
+    return function_exists('zcn_sanitize_interest') ? zcn_sanitize_interest($value) : '';
+}
+
+/** Názov kategórie pre výpis. */
+function pp_nl_interest_label($value, $empty = 'Všetky ponuky') {
+    if (function_exists('zcn_interest_label')) return zcn_interest_label($value, $empty);
+    return $value ? (string) $value : $empty;
+}
+
+/** Názov zdroja kontaktu pre výpis. */
+function pp_nl_source_label($source) {
+    if (function_exists('zcn_source_label')) return zcn_source_label($source);
+    $source = trim((string) $source);
+    return $source !== '' ? ucwords(str_replace('_', ' ', $source)) : 'Neznámy zdroj';
 }

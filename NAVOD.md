@@ -186,6 +186,24 @@ Kde to použiješ:
 > Fotka môže byť vo viacerých priečinkoch naraz a priečinky nič nepresúvajú na disku —
 > ide o označenie, takže sa nemôže stať, že sa niekde stratí odkaz na súbor.
 
+## DÔLEŽITÉ pri inštalácii newslettera
+Balík newslettera musí byť v priečinku **`zc-newsletter`**. Keby ho niekedy dostaneš
+pod iným názvom (napr. `zc-newsletter-plugin`), WordPress ho nainštaluje ako
+**druhý, samostatný plugin** vedľa pôvodného. Potom buď bežia dva naraz (a web
+spadne na dvakrát definovanej funkcii), alebo ostane aktívna stará verzia a
+Newsletter v paneli prestane fungovať.
+
+Ako to skontrolovať: **Pluginy** → v zozname smie byť *ZC Newsletter* len raz.
+Ak sú tam dva, deaktivuj a zmaž ten starý.
+
+Rovnako to platí pre všetky ostatné balíky — priečinky sú `zdenka-theme`,
+`property-pro-plugin`, `zc-newsletter`, `zc-reviews`, `zc-ebook`, `zc-2fa`.
+
+> Pluginy patria k sebe. Keď aktualizuješ jeden, nahraj radšej všetky —
+> panel používa funkcie z newslettera aj z recenzií a naopak.
+> Keby predsa len ostal starý newsletter, panel to už nezhodí:
+> namiesto bielej stránky napíše, že treba plugin aktualizovať.
+
 ## Kontakt na ponuke — Short vedľa formulára
 Keď do ponuky vložíš **YouTube Short** (adresa s `/shorts/`), zobrazí sa **vpravo vedľa
 kontaktného formulára**, nie pod ním. Kontakt je vľavo, Short vpravo, medzi nimi tenká linka.

@@ -12,9 +12,10 @@ function zcr_ajax_save() {
 
     $id   = intval($_POST['id'] ?? 0);
     $data = [
-        'author_name' => sanitize_text_field($_POST['author_name'] ?? ''),
-        'author_role' => sanitize_text_field($_POST['author_role'] ?? ''),
-        'body'        => sanitize_textarea_field($_POST['body'] ?? ''),
+        // wp_unslash() – bez neho by sa do recenzie uložilo \" namiesto "
+        'author_name' => sanitize_text_field(wp_unslash($_POST['author_name'] ?? '')),
+        'author_role' => sanitize_text_field(wp_unslash($_POST['author_role'] ?? '')),
+        'body'        => sanitize_textarea_field(wp_unslash($_POST['body'] ?? '')),
         'rating'      => max(1, min(5, intval($_POST['rating'] ?? 5))),
         'avatar_url'  => esc_url_raw($_POST['avatar_url'] ?? ''),
         'published'   => intval($_POST['published'] ?? 1),

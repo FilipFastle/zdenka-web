@@ -4,12 +4,15 @@ add_action('wp_ajax_zcn_send_newsletter', 'zcn_handle_send');
 
 function zcn_handle_send() {
     check_ajax_referer('zcn_send_nonce', 'nonce');
-    if (!current_user_can('manage_options')) wp_die('Unauthorized');
+    if (!current_user_can('edit_posts')) wp_die('Unauthorized');
 
-    $subject = sanitize_text_field($_POST['subject'] ?? '');
-    $body_md = wp_kses_post($_POST['body'] ?? '');
+    // POST dáta prídu od WordPressu „oslashované". Bez wp_unslash() by sa
+    // z každej úvodzovky v HTML stalo \" a odkazy aj štýly by sa rozpadli.
+    $subject = sanitize_text_field(wp_unslash($_POST['subject'] ?? ''));
+    $body_md = wp_kses_post(wp_unslash($_POST['body'] ?? ''));
     $test    = !empty($_POST['test_email']) ? sanitize_email($_POST['test_email']) : '';
     $preview = !empty($_POST['preview']);
+    $interest = function_exists('zcn_sanitize_interest') ? zcn_sanitize_interest($_POST['interest'] ?? '') : '';
 
     if (!$subject || !$body_md) {
         wp_send_json_error(['message' => 'Predmet a obsah sú povinné.']);
@@ -22,7 +25,7 @@ function zcn_handle_send() {
         wp_send_json_success(['html' => $body_html]);
     }
 
-    $from_name  = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : get_bloginfo('name');
+    $from_name  = function_exists('zc_agent') ? zc_agent('name', 'Mgr. Zdenka Cibuľová') : 'Mgr. Zdenka Cibuľová';
     $from_email = function_exists('zc_mail_from') ? zc_mail_from() : (get_theme_mod('zc_email_from', '') ?: get_option('admin_email'));
     $headers    = [
         'Content-Type: text/html; charset=UTF-8',
@@ -45,16 +48,23 @@ function zcn_handle_send() {
         $ts -= (int) (get_option('gmt_offset') * HOUR_IN_SECONDS); // datetime-local je v lokálnom čase
         $queue = get_option('zcn_scheduled', []);
         $key   = 'sch_' . time() . '_' . wp_rand(100, 999);
-        $queue[$key] = ['subject' => $subject, 'body' => $body_html, 'created' => current_time('mysql'), 'at' => $schedule_at];
+        $queue[$key] = ['subject' => $subject, 'body' => $body_html, 'interest' => $interest, 'created' => current_time('mysql'), 'at' => $schedule_at];
         update_option('zcn_scheduled', $queue);
         wp_schedule_single_event($ts, 'zcn_do_scheduled', [$key]);
         wp_send_json_success(['message' => 'Newsletter naplánovaný na ' . esc_html($schedule_at) . '.']);
     }
 
     global $wpdb;
-    $subscribers = $wpdb->get_results("SELECT * FROM " . zcn_table() . " WHERE status='active'");
+    // Bez stĺpca „interest" by filtrovaná otázka zlyhala a vyzeralo by to,
+    // akoby web nemal žiadnych odberateľov.
+    if (function_exists('zcn_ensure_table_ready')) zcn_ensure_table_ready();
+    $subscribers = $interest
+        ? $wpdb->get_results($wpdb->prepare("SELECT * FROM " . zcn_table() . " WHERE status='active' AND interest=%s", $interest))
+        : $wpdb->get_results("SELECT * FROM " . zcn_table() . " WHERE status='active'");
     if (empty($subscribers)) {
-        wp_send_json_error(['message' => 'Žiadni aktívni odberatelia.']);
+        wp_send_json_error(['message' => $interest
+            ? 'V tejto kategórii zatiaľ nikto nie je. Skús „Všetci aktívni odberatelia".'
+            : 'Žiadni aktívni odberatelia.']);
     }
 
     $cid  = function_exists('zcn_new_campaign') ? zcn_new_campaign($subject, count($subscribers)) : '';
@@ -93,10 +103,13 @@ add_action('zcn_do_scheduled', function($key) {
     update_option('zcn_scheduled', $queue);
 
     global $wpdb;
-    $subscribers = $wpdb->get_results("SELECT * FROM " . zcn_table() . " WHERE status='active'");
+    $interest = function_exists('zcn_sanitize_interest') ? zcn_sanitize_interest($item['interest'] ?? '') : '';
+    $subscribers = $interest
+        ? $wpdb->get_results($wpdb->prepare("SELECT * FROM " . zcn_table() . " WHERE status='active' AND interest=%s", $interest))
+        : $wpdb->get_results("SELECT * FROM " . zcn_table() . " WHERE status='active'");
     if (empty($subscribers)) return;
 
-    $from_name  = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : get_bloginfo('name');
+    $from_name  = function_exists('zc_agent') ? zc_agent('name', 'Mgr. Zdenka Cibuľová') : 'Mgr. Zdenka Cibuľová';
     $from_email = function_exists('zc_mail_from') ? zc_mail_from() : (get_theme_mod('zc_email_from', '') ?: get_option('admin_email'));
     $headers    = ['Content-Type: text/html; charset=UTF-8', "From: {$from_name} <{$from_email}>"];
 

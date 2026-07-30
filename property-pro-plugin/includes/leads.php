@@ -28,7 +28,7 @@ function pp_lead_states() {
 
 /**
  * Zaznamená nový dopyt. Vracia ID leadu alebo 0.
- * @param array $a name,email,phone,message,property_id,source
+ * @param array $a name,email,phone,message,property_id,source,interest
  */
 function pp_capture_lead($a) {
     $name  = sanitize_text_field($a['name'] ?? '');
@@ -53,6 +53,7 @@ function pp_capture_lead($a) {
     update_post_meta($lead_id, '_lead_message', sanitize_textarea_field($a['message'] ?? ''));
     update_post_meta($lead_id, '_lead_property', $pid);
     update_post_meta($lead_id, '_lead_source',  sanitize_text_field($a['source'] ?? 'web'));
+    update_post_meta($lead_id, '_lead_interest', sanitize_key($a['interest'] ?? ''));
     $ip = $a['ip'] ?? ($_SERVER['REMOTE_ADDR'] ?? '');
     update_post_meta($lead_id, '_lead_ip',      sanitize_text_field($ip));
     update_post_meta($lead_id, '_lead_status',  'novy');
@@ -216,19 +217,26 @@ function panel_settings() {
 // ── Panel: zoznam leadov ───────────────────────────────────────────────────
 function panel_leads() {
     $states = pp_lead_states();
-    $filter = sanitize_text_field($_GET['stav'] ?? '');
+    $filter = sanitize_key($_GET['stav'] ?? '');
+    $search = sanitize_text_field(wp_unslash($_GET['hladat'] ?? ''));
+    $page   = max(1, absint($_GET['strana'] ?? 1));
+    $per_page = 12;
 
     $meta = [];
     if ($filter && isset($states[$filter])) {
         $meta[] = ['key' => '_lead_status', 'value' => $filter];
     }
-    $q = new WP_Query([
+    $query_args = [
         'post_type'      => 'pp_lead',
-        'posts_per_page' => 200,
+        'post_status'    => 'publish',
+        'posts_per_page' => $per_page,
+        'paged'          => $page,
+        's'              => $search,
         'orderby'        => 'date',
         'order'          => 'DESC',
         'meta_query'     => $meta,
-    ]);
+    ];
+    $q = new WP_Query($query_args);
 
     // Počty pre filtre
     $counts = ['' => 0];
@@ -240,21 +248,50 @@ function panel_leads() {
         if (isset($counts[$s])) $counts[$s]++;
     }
     wp_reset_postdata();
+    $total_pages = max(1, (int) $q->max_num_pages);
+    if ($page > $total_pages && $q->found_posts > 0) {
+        $page = $total_pages;
+        $query_args['paged'] = $page;
+        $q = new WP_Query($query_args);
+    }
+
+    $page_url = static function ($target) use ($filter, $search) {
+        $args = ['action' => 'leads'];
+        if ($filter !== '') $args['stav'] = $filter;
+        if ($search !== '') $args['hladat'] = $search;
+        if ((int) $target > 1) $args['strana'] = (int) $target;
+        return add_query_arg($args, function_exists('pp_panel_url') ? pp_panel_url() : home_url('/realitny-panel/'));
+    };
 
     ob_start(); ?>
     <div class="pnl-leads">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-            <h2 style="font-family:var(--serif);font-size:22px;color:var(--dark)">Formuláre <span style="color:var(--muted);font-size:15px">(<?php echo intval($counts['']) ?>)</span></h2>
-            <div class="lead-filters" style="display:flex;gap:6px;flex-wrap:wrap">
-                <a href="?action=leads" class="lead-fbtn<?php echo $filter===''?' active':'' ?>">Všetky (<?php echo intval($counts['']) ?>)</a>
+        <div class="lead-titlebar">
+            <div>
+                <h2>Formuláre <span>(<?php echo intval($counts['']) ?>)</span></h2>
+                <p>Dopyty sú rozdelené na stránky po <?php echo $per_page ?> záznamov.</p>
+            </div>
+            <form method="get" action="<?php echo esc_url(function_exists('pp_panel_url') ? pp_panel_url() : home_url('/realitny-panel/')) ?>" class="lead-search">
+                <input type="hidden" name="action" value="leads">
+                <?php if ($filter !== ''): ?><input type="hidden" name="stav" value="<?php echo esc_attr($filter) ?>"><?php endif; ?>
+                <label for="lead-search-input">Hľadať kontakt</label>
+                <div><input id="lead-search-input" type="search" name="hladat" value="<?php echo esc_attr($search) ?>" placeholder="Meno alebo e-mail"><button type="submit" class="btn btn-primary">Hľadať</button></div>
+            </form>
+        </div>
+        <div class="lead-filterbar">
+            <div class="lead-filters">
+                <a href="<?php echo esc_url(add_query_arg(array_filter(['action'=>'leads','hladat'=>$search]), function_exists('pp_panel_url') ? pp_panel_url() : home_url('/realitny-panel/'))) ?>" class="lead-fbtn<?php echo $filter===''?' active':'' ?>">Všetky (<?php echo intval($counts['']) ?>)</a>
                 <?php foreach ($states as $k => $v): ?>
-                <a href="?action=leads&stav=<?php echo $k ?>" class="lead-fbtn<?php echo $filter===$k?' active':'' ?>"><?php echo esc_html($v['label']) ?> (<?php echo intval($counts[$k]) ?>)</a>
+                <a href="<?php echo esc_url(add_query_arg(array_filter(['action'=>'leads','stav'=>$k,'hladat'=>$search]), function_exists('pp_panel_url') ? pp_panel_url() : home_url('/realitny-panel/'))) ?>" class="lead-fbtn<?php echo $filter===$k?' active':'' ?>"><?php echo esc_html($v['label']) ?> (<?php echo intval($counts[$k]) ?>)</a>
                 <?php endforeach; ?>
             </div>
+            <?php if ($search !== ''):
+                $clear_args = ['action' => 'leads'];
+                if ($filter !== '') $clear_args['stav'] = $filter;
+            ?><a class="lead-clear" href="<?php echo esc_url(add_query_arg($clear_args, function_exists('pp_panel_url') ? pp_panel_url() : home_url('/realitny-panel/'))) ?>">Nájdené: <?php echo number_format_i18n($q->found_posts) ?> · zrušiť hľadanie</a><?php endif; ?>
         </div>
 
         <?php if (!$q->have_posts()): ?>
-        <div class="empty"><div class="empty-icon"><?php echo pp_svg('email', 48) ?></div><p>Zatiaľ žiadne formuláre.</p></div>
+        <div class="empty"><div class="empty-icon"><?php echo pp_svg('email', 48) ?></div><p><?php echo $search !== '' ? 'Pre toto hľadanie sa nenašiel žiadny formulár.' : 'Zatiaľ žiadne formuláre.' ?></p></div>
         <?php else: ?>
         <div class="lead-list">
             <?php while ($q->have_posts()): $q->the_post();
@@ -267,6 +304,7 @@ function panel_leads() {
                 $lprop = intval(get_post_meta($lid, '_lead_property', true));
                 $lstat = get_post_meta($lid, '_lead_status', true) ?: 'novy';
                 $lsrc  = get_post_meta($lid, '_lead_source', true);
+                $lint  = get_post_meta($lid, '_lead_interest', true);
                 $lip   = get_post_meta($lid, '_lead_ip', true);
                 $src_labels = ['detail'=>'Detail ponuky','kontakt'=>'Kontaktný formulár','odhad'=>'Odhad nehnuteľnosti','ebook'=>'PDF ebook','ponuka'=>'Ponuka','web'=>'Web'];
             ?>
@@ -275,6 +313,7 @@ function panel_leads() {
                     <div class="lead-head">
                         <strong><?php echo esc_html($lname ?: '—') ?></strong>
                         <?php if ($lsrc): ?><span class="lead-src"><?php echo esc_html($src_labels[$lsrc] ?? $lsrc) ?></span><?php endif; ?>
+                        <?php if ($lint && function_exists('zcn_interest_label')): ?><span class="lead-src"><?php echo esc_html(zcn_interest_label($lint)) ?></span><?php endif; ?>
                         <span class="lead-date"><?php echo esc_html(get_the_date('j.n.Y H:i')) ?></span>
                     </div>
                     <div class="lead-contact">
@@ -297,13 +336,42 @@ function panel_leads() {
             </div>
             <?php endwhile; wp_reset_postdata(); ?>
         </div>
+        <?php if ($total_pages > 1): ?>
+        <nav class="lead-pages" aria-label="Stránkovanie formulárov">
+            <a class="lead-page lead-page-arrow<?php echo $page <= 1 ? ' disabled' : '' ?>" href="<?php echo $page > 1 ? esc_url($page_url($page - 1)) : '#' ?>" aria-label="Predchádzajúca strana">←</a>
+            <?php
+            $visible = array_unique(array_filter([1, $page - 2, $page - 1, $page, $page + 1, $page + 2, $total_pages], function ($n) use ($total_pages) {
+                return $n >= 1 && $n <= $total_pages;
+            }));
+            sort($visible);
+            $last = 0;
+            foreach ($visible as $number):
+                if ($last && $number > $last + 1): ?><span class="lead-page-dots">…</span><?php endif; ?>
+                <a class="lead-page<?php echo $number === $page ? ' active' : '' ?>" href="<?php echo esc_url($page_url($number)) ?>"<?php echo $number === $page ? ' aria-current="page"' : '' ?>><?php echo (int) $number ?></a>
+            <?php $last = $number; endforeach; ?>
+            <a class="lead-page lead-page-arrow<?php echo $page >= $total_pages ? ' disabled' : '' ?>" href="<?php echo $page < $total_pages ? esc_url($page_url($page + 1)) : '#' ?>" aria-label="Nasledujúca strana">→</a>
+            <span class="lead-page-summary">Strana <?php echo (int) $page ?> z <?php echo (int) $total_pages ?></span>
+        </nav>
+        <?php endif; ?>
         <?php endif; ?>
     </div>
 
     <style>
+    .lead-titlebar{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:16px}
+    .lead-titlebar h2{font-family:var(--serif);font-size:22px;color:var(--dark);margin:0}
+    .lead-titlebar h2 span{color:var(--muted);font-size:15px}
+    .lead-titlebar p{margin:3px 0 0;color:var(--muted);font-size:12px}
+    .lead-search{min-width:min(100%,360px)}
+    .lead-search>label{display:block;margin-bottom:5px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.55px;color:var(--muted)}
+    .lead-search>div{display:flex;gap:7px}
+    .lead-search input{width:240px;min-height:40px;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;background:#fff;color:var(--text);font:13px var(--sans)}
+    .lead-search input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(184,164,122,.14)}
+    .lead-filterbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px;padding:11px;background:var(--white);border:1px solid var(--border);border-radius:11px}
+    .lead-filters{display:flex;gap:6px;flex-wrap:wrap}
     .lead-fbtn{padding:7px 13px;border-radius:var(--r-sm);font-size:12px;font-weight:600;text-decoration:none;color:var(--muted);background:var(--section);border:1px solid var(--border);transition:all .2s}
     .lead-fbtn:hover{color:var(--dark)}
     .lead-fbtn.active{background:var(--accent);color:var(--dark);border-color:transparent}
+    .lead-clear{font-size:11.5px;color:var(--accent-txt);font-weight:700;text-decoration:none}
     .lead-list{display:flex;flex-direction:column;gap:12px}
     .lead-card{display:flex;gap:18px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
     .lead-main{flex:1;min-width:0}
@@ -324,7 +392,19 @@ function panel_leads() {
     .lead-status--rokovanie{background:#FEF3C7;color:#92400E}
     .lead-status--uzavrete{background:#DCFCE7;color:#15803D}
     .lead-status--stratene{background:#F3F4F6;color:#6B7280}
-    @media(max-width:640px){.lead-card{flex-direction:column;gap:12px}.lead-side{width:100%;flex-direction:row}.lead-status{flex:1}}
+    .lead-pages{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:22px;padding:14px;background:var(--white);border:1px solid var(--border);border-radius:11px}
+    .lead-page{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 9px;border:1px solid var(--border);border-radius:8px;background:var(--section);color:var(--text);font-size:12px;font-weight:800;text-decoration:none}
+    .lead-page:hover{border-color:var(--accent);color:var(--dark)}
+    .lead-page.active{background:var(--dark);border-color:var(--dark);color:#fff}
+    .lead-page.disabled{pointer-events:none;opacity:.35}
+    .lead-page-dots{padding:0 3px;color:var(--muted)}
+    .lead-page-summary{margin-left:8px;color:var(--muted);font-size:11.5px}
+    @media(max-width:640px){
+        .lead-titlebar{align-items:stretch}.lead-search{width:100%}.lead-search>div{width:100%}.lead-search input{flex:1;min-width:0;font-size:16px}
+        .lead-filterbar{align-items:stretch}.lead-filters{display:grid;grid-template-columns:1fr 1fr;width:100%}.lead-fbtn{text-align:center;min-height:42px;display:flex;align-items:center;justify-content:center}
+        .lead-card{flex-direction:column;gap:12px}.lead-side{width:100%;flex-direction:row}.lead-status{flex:1}.lead-head{align-items:flex-start;flex-wrap:wrap}
+        .lead-page-summary{flex-basis:100%;margin:4px 0 0;text-align:center}
+    }
     </style>
     <script>
     var ppLeadNonce='<?php echo wp_create_nonce('pp_lead') ?>';

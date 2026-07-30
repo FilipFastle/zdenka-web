@@ -141,6 +141,251 @@ add_filter('tiny_mce_before_init', function ($init) {
     return $init;
 });
 
+// Vlastné wp-admin stránky s wp_editor() sa vykresľujú až po admin_head.
+// Editor preto zaradíme vopred, inak môže chýbať jeho vizuálna vrstva.
+add_action('admin_enqueue_scripts', function () {
+    $page = sanitize_key($_GET['page'] ?? '');
+    if (in_array($page, ['zc-newsletter'], true)) wp_enqueue_editor();
+}, 5);
+
+/**
+ * Jednotné nastavenie vizuálnych editorov na webe aj v realitnom paneli.
+ * Zachováva natívny WordPress editor a jeho formát dát, takže sa nestratia
+ * existujúce texty ani kompatibilita s klasickým wp-adminom.
+ */
+function zc_rich_editor_settings($textarea_name, $rows = 10, $args = []) {
+    $args = wp_parse_args($args, [
+        'media_buttons' => false,
+        'compact'       => false,
+    ]);
+
+    $style_formats = [
+        [
+            'title' => 'Riadkovanie',
+            'items' => [
+                ['title' => 'Úzke (1,4)',    'selector' => 'p,li,div', 'styles' => ['line-height' => '1.4']],
+                ['title' => 'Bežné (1,7)',   'selector' => 'p,li,div', 'styles' => ['line-height' => '1.7']],
+                ['title' => 'Vzdušné (2,0)', 'selector' => 'p,li,div', 'styles' => ['line-height' => '2']],
+            ],
+        ],
+        [
+            'title' => 'Užitočné bloky',
+            'items' => [
+                [
+                    'title'  => 'Úvodný zvýraznený text',
+                    'block'  => 'p',
+                    'styles' => ['font-size' => '1.12em', 'line-height' => '1.8', 'color' => '#4f463d'],
+                ],
+                [
+                    'title'   => 'Zvýraznený informačný box',
+                    'block'   => 'div',
+                    'wrapper' => true,
+                    'styles'  => [
+                        'background-color' => '#f5f1ea',
+                        'border-left'      => '4px solid #b8a47a',
+                        'padding'          => '14px 16px',
+                        'margin'           => '16px 0',
+                    ],
+                ],
+                [
+                    'title'  => 'Malý nadpis / štítok',
+                    'inline' => 'span',
+                    'styles' => [
+                        'font-size'      => '0.78em',
+                        'font-weight'    => '700',
+                        'letter-spacing' => '0.08em',
+                        'text-transform' => 'uppercase',
+                        'color'          => '#7c5e33',
+                    ],
+                ],
+            ],
+        ],
+    ];
+
+    $toolbar1 = 'formatselect,styleselect,|,bold,italic,underline,strikethrough,forecolor,|,bullist,numlist,blockquote';
+    $toolbar2 = 'alignleft,aligncenter,alignright,alignjustify,|,outdent,indent,|,link,unlink,hr,charmap,|,removeformat,undo,redo,fullscreen';
+    if (!$args['compact']) {
+        $toolbar2 = 'alignleft,aligncenter,alignright,alignjustify,|,bullist,numlist,outdent,indent,|,link,unlink,hr,charmap,|,removeformat,undo,redo,fullscreen';
+    }
+
+    return [
+        'textarea_name'   => $textarea_name,
+        'textarea_rows'   => max(4, (int) $rows),
+        'media_buttons'   => (bool) $args['media_buttons'],
+        'teeny'           => false,
+        'drag_drop_upload'=> false,
+        'quicktags'       => [
+            'buttons' => 'strong,em,link,block,del,ins,img,ul,ol,li,code,more,close',
+        ],
+        'tinymce'         => [
+            'toolbar1'            => $toolbar1,
+            'toolbar2'            => $toolbar2,
+            'block_formats'       => 'Odsek=p;Nadpis 2=h2;Nadpis 3=h3;Nadpis 4=h4;Citácia=blockquote;Predformátované=pre',
+            'style_formats'       => wp_json_encode($style_formats),
+            'style_formats_merge' => true,
+            'browser_spellcheck'  => true,
+            'paste_as_text'       => false,
+            'resize'              => true,
+            'statusbar'           => true,
+            'menubar'             => false,
+            'content_style'       => 'body{font-family:"DM Sans",system-ui,sans-serif;font-size:16px;line-height:1.75;color:#2C2825;padding:14px;max-width:none}a{color:#7C5E33}blockquote{border-left:4px solid #B8A47A;margin:18px 0;padding:4px 0 4px 16px;color:#6B6560}',
+        ],
+    ];
+}
+
+/**
+ * Ovládanie nad editorom: výška, rýchle vloženie štruktúry, zalomenie,
+ * počítadlo a stručný návod.
+ *
+ * Zámerne sa nemieša do toho, ako WordPress prepína Vizuálny a Textový
+ * režim. Predchádzajúca verzia to robila cez !important a po pár sekundách
+ * editor násilne prepla do HTML – práve preto sa TinyMCE tváril rozbito.
+ */
+function zc_render_editor_tools($editor_id, $args = []) {
+    static $assets_printed = false;
+    $args = wp_parse_args($args, [
+        'template' => '',
+        'label'    => 'Editor textu',
+    ]);
+    $editor_id = preg_replace('/[^A-Za-z0-9_-]/', '', (string) $editor_id);
+    if (!$editor_id) return;
+
+    if (!$assets_printed):
+        $assets_printed = true;
+        ?>
+        <style id="zc-editor-tools-css">
+        .zce-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 8px;padding:9px 10px;background:#f8f6f1;border:1px solid #e2dace;border-radius:9px;font-family:"DM Sans",system-ui,sans-serif}
+        .zce-tools-label{font-size:11px;font-weight:800;letter-spacing:.55px;text-transform:uppercase;color:#6b6560;margin-right:2px}
+        .zce-tools button{min-height:34px;padding:6px 10px;border:1px solid #ddd4c7;border-radius:7px;background:#fff;color:#2c2825;font:700 11px/1.2 "DM Sans",system-ui,sans-serif;cursor:pointer;touch-action:manipulation}
+        .zce-tools button:hover,.zce-tools button:focus-visible,.zce-tools button.is-active{border-color:#b8a47a;background:#f5f1ea;outline:none}
+        .zce-tools-sep{width:1px;height:24px;background:#ddd4c7}
+        .zce-count{margin-left:auto;font-size:11px;color:#6b6560;white-space:nowrap}
+        .zce-help{position:relative}
+        .zce-help summary{cursor:pointer;list-style:none;min-height:34px;display:flex;align-items:center;padding:6px 10px;border:1px solid #ddd4c7;border-radius:7px;background:#fff;font-size:11px;font-weight:700;color:#2c2825}
+        .zce-help summary::-webkit-details-marker{display:none}
+        .zce-help-card{position:absolute;right:0;top:calc(100% + 7px);z-index:120;width:min(330px,calc(100vw - 32px));padding:13px 15px;background:#1c1a18;color:#fff;border-radius:9px;box-shadow:0 12px 32px rgba(0,0,0,.22);font-size:12px;line-height:1.6}
+        .zce-help-card strong{color:#e8dfd0}
+        /* Rám okolo editora. Bez overflow:hidden a bez display – prepínanie
+           Vizuálny/Text si riadi WordPress sám a nesmieme mu do toho hovoriť. */
+        .zce-tools + .wp-editor-wrap{border:1px solid #ddd4c7;border-radius:9px;background:#fff}
+        .zce-tools + .wp-editor-wrap .wp-editor-area{background:#fff;color:#2c2825}
+        @media(max-width:768px){
+            .zce-tools{align-items:stretch;gap:6px;padding:8px}
+            .zce-tools-label{flex:1 0 100%;margin-bottom:1px}
+            .zce-tools button,.zce-help summary{min-height:44px;padding:9px 12px;font-size:12px}
+            .zce-tools-sep{display:none}
+            .zce-count{order:20;flex:1 0 100%;margin:2px 0 0;text-align:right}
+            .zce-help{margin-left:auto}
+            .zce-help-card{position:fixed;left:16px;right:16px;top:auto;bottom:16px;width:auto;z-index:10010}
+            /* Lišta nástrojov TinyMCE sa na úzkom displeji posúva do strán */
+            .wp-editor-wrap .mce-toolbar-grp{overflow-x:auto;-webkit-overflow-scrolling:touch}
+            .wp-editor-wrap .mce-toolbar .mce-container-body{min-width:max-content}
+            .wp-editor-wrap .mce-btn button{min-width:40px;min-height:40px}
+            .wp-editor-wrap .mce-listbox button{min-width:auto}
+        }
+        </style>
+        <script id="zc-editor-tools-js">
+        (function(){
+            var templates={
+                property:'<h2>Lokalita a okolie</h2><p>Opíšte lokalitu, dostupnosť a občiansku vybavenosť.</p><h2>Dispozícia a stav</h2><p>Opíšte rozloženie miestností, rekonštrukciu a technický stav.</p><h2>Hlavné výhody</h2><ul><li>Doplňte prvú výhodu</li><li>Doplňte druhú výhodu</li><li>Doplňte tretiu výhodu</li></ul><h2>Pre koho je ponuka vhodná</h2><p>Doplňte odporúčanie a výzvu na obhliadku.</p>',
+                short:'<p><strong>Hlavná výhoda nehnuteľnosti.</strong> Stručne doplňte lokalitu, dispozíciu a stav.</p><ul><li>Výhoda 1</li><li>Výhoda 2</li></ul>',
+                newsletter:'<h2>Hlavná novinka</h2><p>Doplňte krátky úvod.</p><h3>Čo je dôležité</h3><ul><li>Prvý bod</li><li>Druhý bod</li></ul><p>Na záver pridajte výzvu alebo kontakt.</p>'
+            };
+            // Aktívny TinyMCE pre dané pole; v textovom režime vráti null.
+            function ed(id){return window.tinymce&&tinymce.get(id)&&!tinymce.get(id).isHidden()?tinymce.get(id):null}
+            function ta(id){return document.getElementById(id)}
+            function text(id){
+                var e=ed(id),raw=e?e.getContent({format:'text'}):((ta(id)||{}).value||'');
+                var d=document.createElement('div');d.innerHTML=raw;
+                return (d.textContent||d.innerText||raw).replace(/\s+/g,' ').trim();
+            }
+            function insert(id,html,plain){
+                var e=ed(id);
+                if(e){e.focus();e.execCommand('mceInsertContent',false,html);e.fire('change');return}
+                var t=ta(id);if(!t)return;
+                var start=t.selectionStart||0,end=t.selectionEnd||0,value=t.value;
+                t.value=value.slice(0,start)+(plain||html.replace(/<[^>]+>/g,''))+value.slice(end);
+                t.focus();t.dispatchEvent(new Event('input',{bubbles:true}));
+            }
+            function height(id,px,box){
+                try{localStorage.setItem('zce_height_'+id,String(px))}catch(ignore){}
+                var t=ta(id);if(t)t.style.height=px+'px';
+                var e=window.tinymce&&tinymce.get(id);
+                if(e){
+                    var iframe=e.iframeElement||document.getElementById(id+'_ifr');
+                    if(iframe)iframe.style.height=px+'px';
+                    try{e.theme.resizeTo(null,px)}catch(ignore){}
+                }
+                box.querySelectorAll('[data-zce-height]').forEach(function(b){b.classList.toggle('is-active',Number(b.dataset.zceHeight)===px)});
+            }
+            function update(box){
+                var value=text(box.dataset.editor),words=value?value.split(/\s+/).length:0;
+                var out=box.querySelector('.zce-count');
+                if(out)out.textContent=words+' slov · '+value.length+' znakov';
+            }
+            function bind(box){
+                if(box.dataset.bound)return;box.dataset.bound='1';
+                var id=box.dataset.editor;
+                box.querySelectorAll('[data-zce-height]').forEach(function(b){b.addEventListener('click',function(){height(id,Number(b.dataset.zceHeight),box)})});
+                box.querySelectorAll('[data-zce-action]').forEach(function(b){b.addEventListener('click',function(){
+                    if(b.dataset.zceAction==='break')insert(id,'<br>','\n');
+                    if(b.dataset.zceAction==='template'){
+                        var key=box.dataset.template||'';
+                        if(!templates[key])return;
+                        if(text(id)&&!confirm('Editor už obsahuje text. Vložiť vzor na aktuálnu pozíciu?'))return;
+                        insert(id,templates[key],templates[key].replace(/<\/(p|h2|h3|li)>/g,'\n').replace(/<[^>]+>/g,''));
+                    }
+                    setTimeout(function(){update(box)},30);
+                })});
+                var textarea=ta(id);if(textarea)textarea.addEventListener('input',function(){update(box)});
+
+                // Počkáme na TinyMCE, ale nikdy do neho nezasahujeme.
+                // Keď sa nenačíta, ostáva textový režim – bez strašenia hláškou.
+                if(window.tinymce&&tinymce.get(id)){onReady(tinymce.get(id))}
+                else if(typeof jQuery!=='undefined'){
+                    jQuery(document).on('tinymce-editor-init.zce',function(event,editor){
+                        if(editor&&editor.id===id)onReady(editor);
+                    });
+                }
+                function onReady(editor){
+                    editor.on('keyup change SetContent Undo Redo',function(){update(box)});
+                    var saved=0;try{saved=Number(localStorage.getItem('zce_height_'+id)||0)}catch(ignore){}
+                    if(saved)height(id,saved,box);
+                    update(box);
+                }
+
+                var initial=0;try{initial=Number(localStorage.getItem('zce_height_'+id)||0)}catch(ignore){}
+                if(initial)height(id,initial,box);
+                update(box);
+            }
+            function init(){document.querySelectorAll('[data-zce-tools]').forEach(bind)}
+            if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+        })();
+        </script>
+        <?php
+    endif;
+    ?>
+    <div class="zce-tools" data-zce-tools data-editor="<?php echo esc_attr($editor_id) ?>" data-template="<?php echo esc_attr($args['template']) ?>">
+        <span class="zce-tools-label"><?php echo esc_html($args['label']) ?></span>
+        <button type="button" data-zce-height="180">Malý</button>
+        <button type="button" data-zce-height="300">Bežný</button>
+        <button type="button" data-zce-height="480">Veľký</button>
+        <span class="zce-tools-sep" aria-hidden="true"></span>
+        <button type="button" data-zce-action="break">↵ Zalomenie</button>
+        <?php if ($args['template']): ?><button type="button" data-zce-action="template">＋ Vložiť vzor</button><?php endif; ?>
+        <details class="zce-help">
+            <summary>Pomoc</summary>
+            <div class="zce-help-card">
+                <strong>Enter</strong> vytvorí nový odsek, <strong>Shift + Enter</strong> iba nový riadok.
+                V ponuke <strong>Štýly</strong> nastavíte riadkovanie a zvýraznené bloky.
+                Záložka <strong>Text</strong> slúži na priame HTML; bežný text píšte vo <strong>Vizuálnom</strong> režime.
+            </div>
+        </details>
+        <span class="zce-count" aria-live="polite">0 slov · 0 znakov</span>
+    </div>
+    <?php
+}
+
 /* ───────────────────────── Nastavenie ───────────────────────── */
 
 add_action('customize_register', function ($wpc) {

@@ -74,14 +74,16 @@
             <?php echo $label; ?>
         </a>
         <?php endforeach; ?>
-        <?php if (function_exists('zc_has_referencie') && zc_has_referencie()): ?>
         <a href="<?php echo home_url('/referencie/'); ?>"
            style="<?php echo is_page('referencie') ? 'color:var(--accent-txt);font-weight:700' : ''; ?>">Referencie</a>
+        <?php if (shortcode_exists('zc_newsletter_full')): ?>
+        <a href="<?php echo home_url('/newsletter/'); ?>"
+           style="<?php echo is_page('newsletter') ? 'color:var(--accent-txt);font-weight:700' : ''; ?>">Newsletter</a>
         <?php endif; ?>
         <a href="<?php echo home_url('/kontakt/'); ?>"
            style="<?php echo is_page('kontakt') ? 'color:var(--accent-txt);font-weight:700' : ''; ?>">Kontakt</a>
         <?php if (function_exists('zc_ebook_enabled') && zc_ebook_enabled()): zc_ebook_flag(true); ?>
-        <a href="#" data-zc-ebook-open style="color:var(--accent-txt);font-weight:700">Ebook PDF zdarma</a>
+        <a href="#" data-zc-ebook-open style="color:var(--accent-txt);font-weight:700">EBOOK</a>
         <?php endif; ?>
         <?php $zc_mnav_soc = function_exists('zc_social_icons_html') ? zc_social_icons_html() : ''; ?>
         <?php if ($zc_mnav_soc): ?>

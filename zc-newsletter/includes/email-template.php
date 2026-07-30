@@ -6,7 +6,7 @@ defined('ABSPATH') || exit;
  */
 function zcn_signature_html() {
     $agent = function_exists('zc_agent') ? 'zc_agent' : null;
-    $name  = $agent ? zc_agent('name',  'Zdenka Cibuľová')  : 'Zdenka Cibuľová';
+    $name  = $agent ? zc_agent('name',  'Mgr. Zdenka Cibuľová')  : 'Mgr. Zdenka Cibuľová';
     $role  = $agent ? zc_agent('title', 'Realitná maklérka') : 'Realitná maklérka';
     $phone = $agent ? zc_agent('phone', '') : '';
     $email = $agent ? zc_agent('email', '') : get_option('admin_email');
@@ -50,7 +50,7 @@ function zcn_signature_html() {
 }
 
 function zcn_email_wrap($subject, $content, $footer_extra = '') {
-    $site    = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : (get_bloginfo('name') ?: 'Zdenka Cibuľová');
+    $site    = function_exists('zc_agent') ? zc_agent('name', 'Mgr. Zdenka Cibuľová') : 'Mgr. Zdenka Cibuľová';
     $url     = home_url();
     $year    = date('Y');
 

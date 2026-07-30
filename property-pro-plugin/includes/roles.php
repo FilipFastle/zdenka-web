@@ -1,7 +1,7 @@
 <?php
 /**
- * Vlastná rola „Realitný maklér" — plný prístup do realitného panelu,
- * ale bez prístupu do wp-admin a bez hornej WordPress lišty.
+ * Vlastná rola „Realitný maklér" — plný prístup do realitného panelu
+ * a vo wp-admin iba view-only dashboard Google Site Kit.
  */
 defined('ABSPATH') || exit;
 
@@ -26,11 +26,27 @@ function pp_register_agent_role() {
     } else {
         foreach ($caps as $c => $g) $role->add_cap($c, $g);
     }
+
+    // Samoliečenie po starších verziách: ak rola niekedy omylom získala
+    // správcovské oprávnenie, pri aktualizácii ho výslovne odoberieme.
+    $role = get_role(PP_AGENT_ROLE);
+    if ($role) {
+        foreach ([
+            'manage_options', 'edit_theme_options', 'switch_themes',
+            'activate_plugins', 'install_plugins', 'update_plugins', 'delete_plugins',
+            'install_themes', 'update_themes', 'delete_themes',
+            'edit_users', 'create_users', 'delete_users', 'promote_users', 'list_users',
+            'manage_categories', 'manage_links', 'import', 'export',
+            'edit_pages', 'edit_others_pages', 'publish_pages', 'delete_pages', 'delete_others_pages',
+        ] as $cap) {
+            $role->remove_cap($cap);
+        }
+    }
 }
 add_action('init', function () {
-    if (get_option('pp_agent_role_v') !== '2') {
+    if (get_option('pp_agent_role_v') !== '3') {
         pp_register_agent_role();
-        update_option('pp_agent_role_v', '2');
+        update_option('pp_agent_role_v', '3');
     }
 });
 register_activation_hook(PROPERTY_PRO_PATH . 'property-manager-pro.php', 'pp_register_agent_role');
@@ -40,13 +56,37 @@ function pp_is_agent($user = null) {
     return $user && in_array(PP_AGENT_ROLE, (array) $user->roles, true);
 }
 
+/**
+ * Je požiadavka určená iba na čítanie zdieľaného prehľadu Site Kit?
+ *
+ * Site Kit si oprávnenie na dáta kontroluje sám. Tu iba dovolíme maklérke
+ * načítať jeho jedinú obrazovku vo vloženom okne panela; ostatný wp-admin
+ * zostáva naďalej neprístupný.
+ */
+function pp_is_sitekit_dashboard_request() {
+    $script = basename($_SERVER['PHP_SELF'] ?? '');
+    $page   = sanitize_key($_GET['page'] ?? '');
+    return $script === 'admin.php' && $page === 'googlesitekit-dashboard';
+}
+
+function pp_sitekit_dashboard_url() {
+    return add_query_arg('zc_panel', '1', admin_url('admin.php?page=googlesitekit-dashboard'));
+}
+
+function pp_sitekit_available() {
+    if (defined('GOOGLESITEKIT_VERSION')) return true;
+    return in_array('google-site-kit/google-site-kit.php', (array) get_option('active_plugins', []), true)
+        || (is_multisite() && isset(get_site_option('active_sitewide_plugins', [])['google-site-kit/google-site-kit.php']));
+}
+
 // Skryť hornú WordPress lištu maklérovi
 add_filter('show_admin_bar', function ($show) {
     if (pp_is_agent() && !current_user_can('manage_options')) return false;
     return $show;
 });
 
-// Zablokovať vstup do wp-admin (okrem AJAX a uploadu médií) — presmerovať do panelu
+// Vo wp-admin povoliť maklérke iba Site Kit. Všetky ostatné obrazovky
+// presmerujeme na Site Kit; technické endpointy panela a médií ostávajú funkčné.
 add_action('admin_init', function () {
     if (!pp_is_agent() || current_user_can('manage_options')) return;
     if (wp_doing_ajax()) return;
@@ -54,15 +94,90 @@ add_action('admin_init', function () {
     // z panela a nahráva fotky. Bez admin-post.php by sa nič neuložilo.
     $script = basename($_SERVER['PHP_SELF'] ?? '');
     if (in_array($script, ['admin-ajax.php', 'admin-post.php', 'async-upload.php', 'media-upload.php'], true)) return;
+    if (pp_is_sitekit_dashboard_request()) return;
 
-    wp_safe_redirect(function_exists('pp_panel_url') ? pp_panel_url() : home_url('/'));
+    $target = pp_sitekit_available()
+        ? pp_sitekit_dashboard_url()
+        : (function_exists('pp_panel_url') ? pp_panel_url('action=sitekit') : home_url('/'));
+    wp_safe_redirect($target);
     exit;
 });
 
-// Po prihlásení makléra ho pošli rovno do panelu
+// V ľavom menu wp-adminu zostane maklérke iba položka Site Kit.
+// Technické endpointy pre ukladanie panela nie sú položky menu a fungujú ďalej.
+add_action('admin_menu', function () {
+    if (!pp_is_agent() || current_user_can('manage_options')) return;
+
+    global $menu, $submenu;
+    foreach ((array) $menu as $item) {
+        $slug = (string) ($item[2] ?? '');
+        if ($slug === 'googlesitekit-dashboard') continue;
+        remove_menu_page($slug);
+    }
+    foreach (array_keys((array) $submenu) as $parent) {
+        if ($parent !== 'googlesitekit-dashboard') unset($submenu[$parent]);
+    }
+    if (!empty($submenu['googlesitekit-dashboard'])) {
+        $submenu['googlesitekit-dashboard'] = array_values(array_filter(
+            $submenu['googlesitekit-dashboard'],
+            static function ($item) {
+                return (string) ($item[2] ?? '') === 'googlesitekit-dashboard';
+            }
+        ));
+    }
+}, 999);
+
+// Site Kit sa v paneli načíta v iframe. Maklérke preto schováme celé rozhranie
+// wp-adminu a necháme iba samotný prehľad, ktorý jej správca zdieľal.
+add_action('admin_head', function () {
+    if (!pp_is_agent() || current_user_can('manage_options') || !pp_is_sitekit_dashboard_request()) return;
+    ?>
+    <style>
+    html.wp-toolbar{padding-top:0!important}
+    #wpadminbar,#adminmenumain,#wpfooter,.update-nag,.notice:not(.googlesitekit-notice){display:none!important}
+    #wpcontent,#wpfooter{margin-left:0!important}
+    #wpbody-content{padding-bottom:0!important}
+    #wpbody{padding-top:0!important}
+    body{background:#fff!important}
+    .pp-sitekit-back{position:fixed;right:16px;bottom:16px;z-index:100000;background:#1C1A18;color:#fff!important;
+        text-decoration:none;padding:10px 15px;border-radius:9px;font:600 13px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+        box-shadow:0 6px 18px rgba(0,0,0,.2)}
+    @media(max-width:782px){
+        html.wp-toolbar{padding-top:0!important}
+        #wpcontent{padding-left:0!important}
+    }
+    </style>
+    <?php
+}, 100);
+
+add_action('admin_footer', function () {
+    if (!pp_is_agent() || current_user_can('manage_options') || !pp_is_sitekit_dashboard_request()) return;
+    ?>
+    <script>
+    if (window.top === window.self) {
+        var back = document.createElement('a');
+        back.className = 'pp-sitekit-back';
+        back.href = <?php echo wp_json_encode(function_exists('pp_panel_url') ? pp_panel_url('action=sitekit') : home_url('/')); ?>;
+        back.textContent = '← Späť do realitného panela';
+        document.body.appendChild(back);
+    }
+    </script>
+    <?php
+}, 100);
+
+// Po prihlásení cez wp-admin otvor maklérke jedinú povolenú obrazovku – Site Kit.
+// Z nej má stále viditeľné tlačidlo späť do samostatného realitného panela.
 add_filter('login_redirect', function ($redirect_to, $requested, $user) {
     if ($user instanceof WP_User && pp_is_agent($user) && !user_can($user, 'manage_options')) {
-        return function_exists('pp_panel_url') ? pp_panel_url() : home_url('/');
+        $panel_url = function_exists('pp_panel_url') ? pp_panel_url() : '';
+        $panel_path = $panel_url ? wp_parse_url($panel_url, PHP_URL_PATH) : '';
+        $requested_path = $requested ? wp_parse_url($requested, PHP_URL_PATH) : '';
+        // Prihlásenie otvorené priamo z realitného panela sa musí vrátiť doň.
+        if ($panel_path && $requested_path === $panel_path) return $panel_url;
+
+        return pp_sitekit_available()
+            ? pp_sitekit_dashboard_url()
+            : (function_exists('pp_panel_url') ? pp_panel_url('action=sitekit') : home_url('/'));
     }
     return $redirect_to;
 }, 10, 3);

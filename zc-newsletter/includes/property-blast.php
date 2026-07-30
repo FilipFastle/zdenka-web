@@ -16,7 +16,7 @@ function zcn_blast_settings() {
 
 // Kontaktný blok makléra (z Customizeru / profilu)
 function zcn_blast_contact_html() {
-    $name  = function_exists('zc_agent') ? zc_agent('name', get_bloginfo('name')) : get_bloginfo('name');
+    $name  = function_exists('zc_agent') ? zc_agent('name', 'Mgr. Zdenka Cibuľová') : 'Mgr. Zdenka Cibuľová';
     $title = function_exists('zc_agent') ? zc_agent('title', 'Realitná maklérka') : '';
     $phone = function_exists('zc_agent') ? zc_agent('phone', '') : '';
     $email = function_exists('zc_agent') ? zc_agent('email', '') : '';
@@ -78,7 +78,11 @@ function zcn_property_email_parts($pid) {
     $body .= '<h2 style="font-family:Georgia,serif;font-size:22px;color:#1C1A18;margin:0 0 8px">' . esc_html($title) . '</h2>';
     if ($meta)  $body .= '<p style="color:#7A7068;font-size:14px;margin:0 0 14px">' . implode(' &nbsp;·&nbsp; ', $meta) . '</p>';
     if ($cena)  $body .= '<p style="font-family:Georgia,serif;font-size:24px;font-weight:700;color:#7C5E33;margin:0 0 16px">' . esc_html($cena) . '</p>';
-    if ($popis) $body .= '<p style="color:#555;line-height:1.75;margin:0 0 24px">' . esc_html($popis) . '</p>';
+    if ($popis) {
+        $body .= '<div style="color:#555;line-height:1.75;margin:0 0 24px">'
+              . wp_kses_post(wpautop($popis))
+              . '</div>';
+    }
     $body .= '<div style="text-align:center;margin:28px 0 8px"><a href="' . esc_url($url) . '" style="display:inline-block;padding:14px 32px;background:#B8A47A;color:#1C1A18;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;font-family:\'DM Sans\',Arial,sans-serif">Pozrieť ponuku →</a></div>';
     // 3) Záverečný text (editovateľný)
     $outro = zcn_text_to_html($cfg['outro']);
@@ -102,7 +106,7 @@ function zcn_handle_property_blast() {
     }
 
     $parts      = zcn_property_email_parts($pid);
-    $from_name  = function_exists('zc_agent') ? zc_agent('name', 'Zdenka Cibuľová') : get_bloginfo('name');
+    $from_name  = function_exists('zc_agent') ? zc_agent('name', 'Mgr. Zdenka Cibuľová') : 'Mgr. Zdenka Cibuľová';
     $from_email = function_exists('zc_mail_from') ? zc_mail_from() : (get_theme_mod('zc_email_from', '') ?: get_option('admin_email'));
     $headers    = ['Content-Type: text/html; charset=UTF-8', "From: {$from_name} <{$from_email}>"];
 

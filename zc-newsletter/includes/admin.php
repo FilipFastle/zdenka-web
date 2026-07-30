@@ -50,13 +50,28 @@ function zcn_admin_page() {
         $wpdb->update($table, ['status' => 'unsubscribed'], ['id' => intval($_POST['zcn_unsub'])]);
         echo '<div class="notice notice-success is-dismissible"><p>Odberateľ odhlásený.</p></div>';
     }
+    if (isset($_POST['zcn_interest_save']) && check_admin_referer('zcn_admin')) {
+        $wpdb->update(
+            $table,
+            ['interest' => zcn_sanitize_interest($_POST['interest'] ?? '')],
+            ['id' => intval($_POST['zcn_interest_save'])]
+        );
+        echo '<div class="notice notice-success is-dismissible"><p>Kategória kontaktu uložená.</p></div>';
+    }
     if (isset($_POST['zcn_import']) && check_admin_referer('zcn_admin')) {
         $emails = array_filter(array_map('trim', explode("\n", $_POST['zcn_import_emails'] ?? '')));
         $imported = 0;
         foreach ($emails as $email) {
             if (!is_email($email)) continue;
             $token = zcn_generate_token();
-            $ins = $wpdb->insert($table, ['email'=>$email,'status'=>'active','token'=>$token,'confirmed_at'=>current_time('mysql'),'source'=>'import']);
+            $ins = $wpdb->insert($table, [
+                'email'=>strtolower(sanitize_email($email)),
+                'status'=>'active',
+                'token'=>$token,
+                'confirmed_at'=>current_time('mysql'),
+                'source'=>'import',
+                'interest'=>zcn_sanitize_interest($_POST['zcn_import_interest'] ?? ''),
+            ]);
             if ($ins) $imported++;
         }
         echo '<div class="notice notice-success is-dismissible"><p>Importovaných: <strong>' . $imported . '</strong> e-mailov.</p></div>';
@@ -67,11 +82,11 @@ function zcn_admin_page() {
         header('Content-Disposition: attachment; filename="newsletter-' . date('Y-m-d') . '.csv"');
         echo "\xEF\xBB\xBF";
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['ID','Meno','Email','Status','Dátum prihlásenia','Dátum potvrdenia','Zdroj']);
+        fputcsv($out, ['ID','Meno','Email','Kategória','Status','Dátum prihlásenia','Dátum potvrdenia','Zdroj']);
         foreach ($rows as $r) {
             // Prefix riskantných znakov – ochrana pred CSV/formula injection v Exceli
             $name = preg_match('/^[=+\-@]/', (string)$r->name) ? "'" . $r->name : $r->name;
-            fputcsv($out, [$r->id, $name, $r->email, $r->status,
+            fputcsv($out, [$r->id, $name, $r->email, zcn_interest_label($r->interest ?? ''), $r->status,
                 $r->subscribed_at, $r->confirmed_at ?? '', $r->source]);
         }
         fclose($out);
@@ -84,6 +99,13 @@ function zcn_admin_page() {
         'unsubscribed' => $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status='unsubscribed'"),
         'this_month'   => $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status='active' AND subscribed_at >= DATE_FORMAT(NOW(),'%Y-%m-01')"),
     ];
+    $interest_counts = [];
+    foreach (zcn_interests() as $value => $label) {
+        $interest_counts[$value] = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$table} WHERE status='active' AND interest=%s",
+            $value
+        ));
+    }
     ?>
     <div class="wrap">
     <h1 style="display:flex;align-items:center;gap:10px;font-size:22px">ZC Newsletter
@@ -121,20 +143,23 @@ function zcn_admin_page() {
 
     <?php if ($tab === 'subscribers'):
         // SECURITY: whitelist status (enum), prepared statement for search
-        $status_filter = in_array($_GET['status'] ?? 'active', ['active','pending','unsubscribed'], true)
-            ? $_GET['status'] : 'active';
+        $requested_status = sanitize_key($_GET['status'] ?? 'active');
+        $status_filter = in_array($requested_status, ['active','pending','unsubscribed'], true)
+            ? $requested_status : 'active';
         $search = sanitize_text_field($_GET['s'] ?? '');
+        $interest_filter = zcn_sanitize_interest($_GET['interest'] ?? '');
+        $where_interest = $interest_filter ? ' AND interest=%s' : '';
         if ($search) {
             $like = '%' . $wpdb->esc_like($search) . '%';
-            $rows = $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM {$table} WHERE status=%s AND (email LIKE %s OR name LIKE %s) ORDER BY subscribed_at DESC LIMIT 500",
-                $status_filter, $like, $like
-            ));
+            $sql = "SELECT * FROM {$table} WHERE status=%s{$where_interest} AND (email LIKE %s OR name LIKE %s) ORDER BY subscribed_at DESC LIMIT 500";
+            $args = $interest_filter
+                ? [$status_filter, $interest_filter, $like, $like]
+                : [$status_filter, $like, $like];
+            $rows = $wpdb->get_results($wpdb->prepare($sql, $args));
         } else {
-            $rows = $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM {$table} WHERE status=%s ORDER BY subscribed_at DESC LIMIT 500",
-                $status_filter
-            ));
+            $sql = "SELECT * FROM {$table} WHERE status=%s{$where_interest} ORDER BY subscribed_at DESC LIMIT 500";
+            $args = $interest_filter ? [$status_filter, $interest_filter] : [$status_filter];
+            $rows = $wpdb->get_results($wpdb->prepare($sql, $args));
         }
     ?>
     <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
@@ -152,21 +177,39 @@ function zcn_admin_page() {
             <input type="hidden" name="page" value="zc-newsletter">
             <input type="hidden" name="tab" value="subscribers">
             <input type="hidden" name="status" value="<?php echo $status_filter ?>">
+            <select name="interest" style="padding:6px 10px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px">
+                <option value="">Všetky kategórie</option>
+                <?php foreach (zcn_interests() as $value => $label): ?>
+                <option value="<?php echo esc_attr($value); ?>" <?php selected($interest_filter, $value); ?>><?php echo esc_html($label); ?></option>
+                <?php endforeach; ?>
+            </select>
             <input type="text" name="s" value="<?php echo esc_attr($search) ?>" placeholder="Hľadať..."
                 style="padding:6px 12px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px">
             <button type="submit" class="button"></button>
         </form>
     </div>
     <table class="wp-list-table widefat fixed striped" style="border-radius:10px;overflow:hidden">
-        <thead><tr><th style="width:180px">E-mail</th><th>Meno</th><th style="width:100px">Zdroj</th><th style="width:130px">Prihlásený</th><th style="width:110px">Potvrdený</th><th style="width:160px">Akcie</th></tr></thead>
+        <thead><tr><th style="width:180px">E-mail</th><th>Meno</th><th style="width:170px">Kategória</th><th style="width:100px">Zdroj</th><th style="width:110px">Prihlásený</th><th style="width:220px">Akcie</th></tr></thead>
         <tbody>
         <?php if ($rows): foreach ($rows as $r): ?>
         <tr>
             <td><a href="mailto:<?php echo esc_attr($r->email) ?>"><?php echo esc_html($r->email) ?></a></td>
             <td><?php echo esc_html($r->name ?: '–') ?></td>
+            <td>
+                <form method="post" style="display:flex;gap:4px">
+                    <?php wp_nonce_field('zcn_admin') ?>
+                    <input type="hidden" name="zcn_interest_save" value="<?php echo (int) $r->id ?>">
+                    <select name="interest" style="max-width:125px;font-size:11px">
+                        <option value="">Všetky</option>
+                        <?php foreach (zcn_interests() as $value => $label): ?>
+                        <option value="<?php echo esc_attr($value); ?>" <?php selected($r->interest ?? '', $value); ?>><?php echo esc_html($label); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button class="button button-small" title="Uložiť kategóriu">✓</button>
+                </form>
+            </td>
             <td><span style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-size:11px"><?php echo esc_html($r->source) ?></span></td>
             <td style="font-size:12px"><?php echo date('d.m.Y', strtotime($r->subscribed_at)) ?></td>
-            <td style="font-size:12px"><?php echo $r->confirmed_at ? date('d.m.Y', strtotime($r->confirmed_at)) : '<span style="color:#aaa">–</span>' ?></td>
             <td>
                 <?php if ($r->status === 'active'): ?>
                 <form method="post" style="display:inline" onsubmit="return confirm('Odhlásiť?')">
@@ -191,24 +234,42 @@ function zcn_admin_page() {
     <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:28px">
         <h3 style="margin:0 0 20px">Odoslať newsletter</h3>
         <div style="margin-bottom:16px">
+            <label style="display:block;font-size:11px;font-weight:700;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Príjemcovia</label>
+            <select id="zcnInterest" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px">
+                <option value="">Všetci aktívni odberatelia</option>
+                <?php foreach (zcn_interests() as $value => $label): ?>
+                <option value="<?php echo esc_attr($value); ?>" data-count="<?php echo (int) $interest_counts[$value]; ?>"><?php echo esc_html($label); ?> (<?php echo (int) $interest_counts[$value]; ?>)</option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div style="margin-bottom:16px">
             <label style="display:block;font-size:11px;font-weight:700;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Predmet *</label>
             <input type="text" id="zcnSubject" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px" placeholder="Nová ponuka – 3-izbový byt Banská Bystrica">
         </div>
         <?php zcn_render_tpl_toolbar('zcnBody', 'zcnSubject'); ?>
         <div style="margin-bottom:16px">
             <label style="display:block;font-size:11px;font-weight:700;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Obsah *</label>
-            <?php wp_editor('', 'zcnBody', [
+            <?php
+            if (function_exists('zc_render_editor_tools')) {
+                zc_render_editor_tools('zcnBody', ['template'=>'newsletter','label'=>'Obsah newslettera']);
+            }
+            $editor_settings = [
                 'textarea_name' => 'zcn_body',
                 'textarea_rows' => 14,
                 'media_buttons' => true,
+                'teeny'         => false,
                 'quicktags'     => true,
                 'tinymce'       => [
-                    'toolbar1' => 'undo,redo,formatselect,|,bold,italic,underline,strikethrough,forecolor,|,alignleft,aligncenter,alignright,|,bullist,numlist,|,outdent,indent,|,link,unlink,image,table,|,removeformat',
+                    'toolbar1' => 'undo,redo,formatselect,|,bold,italic,underline,strikethrough,forecolor,|,alignleft,aligncenter,alignright,|,bullist,numlist,|,outdent,indent,|,link,unlink,|,removeformat',
                     'toolbar2' => '',
                     'block_formats' => 'Odsek=p;Nadpis 1=h1;Nadpis 2=h2;Nadpis 3=h3;Nadpis 4=h4;Nadpis 5=h5;Nadpis 6=h6;Predformátované=pre',
-                    'content_style' => 'body{font-family:DM Sans,sans-serif;font-size:15px;line-height:1.8;color:#2C2825;padding:12px}',
+                    'content_style' => 'body{font-family:DM Sans,sans-serif;font-size:16px;line-height:1.8;color:#2C2825;padding:12px}',
+                    'browser_spellcheck' => true,
+                    'resize' => true,
                 ],
-            ]); ?>
+            ];
+            wp_editor('', 'zcnBody', $editor_settings);
+            ?>
         </div>
         <div style="background:#f8fafc;border-radius:8px;padding:14px;margin-bottom:16px;border:1px solid #e5e7eb;display:flex;gap:8px;align-items:flex-end">
             <div style="flex:1">
@@ -225,7 +286,7 @@ function zcn_admin_page() {
             <button onclick="zcnSend(false,true)" class="button">Naplánovať</button>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-            <span style="font-size:13px;color:#666">Odošle sa <strong><?php echo $stats['active'] ?></strong> aktívnym odberateľom</span>
+            <span style="font-size:13px;color:#666">Odošle sa <strong id="zcnRecipientCount"><?php echo $stats['active'] ?></strong> aktívnym odberateľom</span>
             <div style="display:flex;gap:8px">
                 <button onclick="zcnPreview()" class="button">Náhľad e-mailu</button>
                 <button onclick="zcnSend(false)" class="button button-primary">Odoslať všetkým →</button>
@@ -253,6 +314,10 @@ function zcn_admin_page() {
         el.style.border = '1px solid ' + (ok ? '#bbf7d0' : '#fecaca');
         el.textContent = msg;
     }
+    document.getElementById('zcnInterest').addEventListener('change',function(){
+        var option=this.options[this.selectedIndex];
+        document.getElementById('zcnRecipientCount').textContent=this.value?(option.dataset.count||'0'):'<?php echo (int) $stats['active'] ?>';
+    });
     function zcnGetBody() {
         if (window.tinymce && tinymce.get('zcnBody') && !tinymce.get('zcnBody').isHidden()) {
             return tinymce.get('zcnBody').getContent();
@@ -265,14 +330,17 @@ function zcn_admin_page() {
         var b = zcnGetBody().trim();
         var t = document.getElementById('zcnTestEmail').value.trim();
         var sch = document.getElementById('zcnScheduleAt') ? document.getElementById('zcnScheduleAt').value : '';
+        var interest = document.getElementById('zcnInterest') ? document.getElementById('zcnInterest').value : '';
         if (!s||!b) { alert('Vyplňte predmet aj obsah.'); return; }
         if (isSchedule && !sch) { alert('Zvoľte dátum a čas odoslania.'); return; }
         if (isSchedule && !confirm('Naplánovať newsletter na ' + sch + '?')) return;
-        if (!isTest && !isSchedule && !confirm('Odoslať newsletter <?php echo $stats['active'] ?> odberateľom?')) return;
+        var recipientCount=document.getElementById('zcnRecipientCount').textContent;
+        if (!isTest && !isSchedule && !confirm('Odoslať newsletter ' + recipientCount + ' odberateľom?')) return;
         var data = new FormData();
         data.append('action','zcn_send_newsletter');
         data.append('nonce','<?php echo wp_create_nonce("zcn_send_nonce") ?>');
         data.append('subject',s); data.append('body',b); data.append('is_html','1');
+        data.append('interest',interest);
         if (isTest && t) data.append('test_email',t);
         if (isSchedule && sch) data.append('schedule_at',sch);
         fetch(ajaxurl,{method:'POST',body:data})
@@ -323,6 +391,12 @@ function zcn_admin_page() {
         <form method="post">
             <?php wp_nonce_field('zcn_admin') ?>
             <textarea name="zcn_import_emails" rows="10" style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:monospace;font-size:13px" placeholder="jan@email.sk&#10;maria@email.sk&#10;peter@email.sk"></textarea>
+            <select name="zcn_import_interest" style="width:100%;margin-top:10px">
+                <option value="">Kategória: všetky ponuky</option>
+                <?php foreach (zcn_interests() as $value => $label): ?>
+                <option value="<?php echo esc_attr($value); ?>"><?php echo esc_html($label); ?></option>
+                <?php endforeach; ?>
+            </select>
             <button type="submit" name="zcn_import" value="1" class="button button-primary" style="margin-top:10px">Importovať</button>
         </form>
     </div>

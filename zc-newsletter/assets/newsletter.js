@@ -11,7 +11,8 @@ document.querySelectorAll('.zcn-form').forEach(function(form) {
         data.append('nonce',   zcnData.nonce);
         data.append('email',   form.querySelector('[name=zcn_email]').value);
         data.append('name',    form.querySelector('[name=zcn_name]')?.value || '');
-        data.append('source',  form.dataset.source || 'web');
+        data.append('interest',form.querySelector('[name=zcn_interest]')?.value || '');
+        data.append('source',  form.dataset.source || 'newsletter');
 
         fetch(zcnData.ajaxurl, {method:'POST', body:data})
         .then(function(r){ return r.json(); })

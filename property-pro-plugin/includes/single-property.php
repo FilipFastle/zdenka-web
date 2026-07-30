@@ -77,6 +77,9 @@ foreach ($raw_ids as $img_id) {
 $all_images  = array_values($all_images);
 $images_json = array_values($images_json);
 $total_images = count($all_images);
+$hero_image_id = $cover_id && in_array((int) $cover_id, $all_images, true)
+    ? (int) $cover_id
+    : ($all_images[0] ?? 0);
 $all_amenities = get_property_amenities();
 ?>
 <style>
@@ -109,10 +112,25 @@ $all_amenities = get_property_amenities();
 .pp-hero-badge {
     display:inline-flex; align-items:center;
     background:<?php echo $typ_color ?>; color:<?php echo $typ_text_color ?>;
-    padding:6px 16px; border-radius:50px;
-    font-size:11px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase;
+    min-height:32px; padding:7px 15px; border-radius:50px;
+    border:1px solid rgba(255,255,255,.42);
+    box-shadow:0 7px 20px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.28);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    font-size:10px; font-weight:900; letter-spacing:1.35px; text-transform:uppercase;
+    text-shadow:0 1px 3px rgba(0,0,0,.24);
     margin-bottom:14px; font-family:var(--sans,'DM Sans',sans-serif);
 }
+.pp-hero-badge.type-predaj{background:linear-gradient(135deg,#E8D39F,#B89450)!important;color:#2A2114!important;text-shadow:none}
+.pp-hero-badge.type-prenajom{background:linear-gradient(135deg,#246C8F,#153F69)!important;color:#fff!important}
+.pp-hero-badge.type-pozemok{background:linear-gradient(135deg,#5A9B71,#2E684A)!important;color:#fff!important}
+.pp-hero-badge.is-new{background:linear-gradient(135deg,#43DFA2,#0F7956)!important;color:#fff!important;border-color:rgba(190,255,229,.78)!important;animation:pp-new-badge-pulse 1.8s ease-in-out infinite}
+@keyframes pp-new-badge-pulse{
+    0%,100%{box-shadow:0 7px 20px rgba(15,121,86,.42),0 0 8px rgba(67,223,162,.28)!important;filter:brightness(1)}
+    50%{box-shadow:0 8px 24px rgba(15,121,86,.56),0 0 25px rgba(67,223,162,.84)!important;filter:brightness(1.12)}
+}
+@media(prefers-reduced-motion:reduce){.pp-hero-badge.is-new{animation:none;box-shadow:0 7px 20px rgba(15,121,86,.48),0 0 16px rgba(67,223,162,.58)!important}}
+.pp-hero-badge.is-reduced{background:linear-gradient(135deg,#EF6B5A,#B62E28)!important;color:#fff!important}
+.pp-hero-badge.is-reserved{background:linear-gradient(135deg,#F6B944,#C77912)!important;color:#3D2705!important;text-shadow:none;box-shadow:0 7px 20px rgba(199,121,18,.42),0 0 18px rgba(246,185,68,.34)!important}
 .pp-hero-title {
     font-size:clamp(22px,4vw,40px); font-weight:800; line-height:1.2;
     font-family:var(--serif,'Playfair Display',serif);
@@ -399,18 +417,16 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
 </script>
 
 <!-- ═══ HERO ═══ -->
-<div class="pp-hero<?php echo $all_images ? '' : ' pp-hero--nophoto' ?>" id="ppHero">
-    <?php if ($all_images): ?>
-    <div class="pp-hero-track" id="ppTrack">
-        <?php foreach ($all_images as $pp_slide_i => $img_id): ?>
+<div class="pp-hero<?php echo $hero_image_id ? '' : ' pp-hero--nophoto' ?>" id="ppHero">
+    <?php if ($hero_image_id): ?>
+    <div class="pp-hero-track">
         <div class="pp-hero-slide">
             <?php
-            /* Slajd je cez celú šírku okna. Pri veľkosti „large" (max 1024 px)
+            /* Cover je cez celú šírku okna. Pri veľkosti „large" (max 1024 px)
                povie WordPress prehliadaču sizes="…1024px" a ten stiahne malú
                fotku, ktorú potom roztiahne na 1900 px – odtiaľ tá rozmazanosť.
                Preto plná veľkosť a sizes=100vw, nech si prehliadač vyberie sám. */
-            $pp_first = ($pp_slide_i === 0);
-            echo wp_get_attachment_image($img_id, 'full', false, [
+            echo wp_get_attachment_image($hero_image_id, 'full', false, [
                 /* Hero je vysoký na celú obrazovku a fotka sa oreže cez
                    object-fit:cover, takže z nej treba viac, než je šírka okna.
                    Na telefóne preto pýtame ~1100 px – dosť na ostrý obraz, ale
@@ -418,13 +434,12 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
                    Veľký monitor si vypýta fotku podľa svojej skutočnej šírky. */
                 'sizes'         => '(max-width: 768px) 1100px, '
                                  . '(max-width: 1200px) 1500px, 100vw',
-                'loading'       => $pp_first ? 'eager' : 'lazy',
+                'loading'       => 'eager',
                 'decoding'      => 'async',
-                'fetchpriority' => $pp_first ? 'high' : 'auto',
+                'fetchpriority' => 'high',
             ]);
             ?>
         </div>
-        <?php endforeach; ?>
     </div>
     <?php else: ?>
     <!-- Bez fotky: nižší zlatý hero namiesto tmavej 100vh plochy -->
@@ -436,10 +451,10 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
     </button>
     <div class="pp-hero-info">
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-            <?php if ($typ): ?><span class="pp-hero-badge" style="margin:0"><?php echo $typ_label ?></span><?php endif; ?>
-            <?php if (pp_is_new($id) && !$sale): ?><span class="pp-hero-badge" style="margin:0;background:#5A8F6A;color:#fff">Nové</span><?php endif; ?>
-            <?php if ($znizena && !$sale): ?><span class="pp-hero-badge" style="margin:0;background:#C0392B;color:#fff">Znížená cena</span><?php endif; ?>
-            <?php if ($sale_badge): ?><span class="pp-hero-badge" style="margin:0;background:<?php echo $sale_badge['bg'] ?>;color:<?php echo $sale_badge['fg'] ?>"><?php echo $sale_badge['label'] ?></span><?php endif; ?>
+            <?php if ($typ): ?><span class="pp-hero-badge type-<?php echo esc_attr($typ) ?>" style="margin:0"><?php echo $typ_label ?></span><?php endif; ?>
+            <?php if (pp_is_new($id) && !$sale): ?><span class="pp-hero-badge is-new" style="margin:0">Nové</span><?php endif; ?>
+            <?php if ($znizena && !$sale): ?><span class="pp-hero-badge is-reduced" style="margin:0">Znížená cena</span><?php endif; ?>
+            <?php if ($sale_badge): ?><span class="pp-hero-badge <?php echo $sale === 'predane' ? 'is-sold' : 'is-reserved' ?>" style="margin:0"><?php echo $sale_badge['label'] ?></span><?php endif; ?>
         </div>
         <h1 class="pp-hero-title"><?php the_title() ?></h1>
         <?php if ($lokalita || $plocha || $spalne): ?>
@@ -450,18 +465,6 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
         </div>
         <?php endif; ?>
     </div>
-    <?php if ($total_images > 1): ?>
-    <button class="pp-hero-btn pp-hero-prev" onclick="ppPrev()" aria-label="Predošlá">&#8249;</button>
-    <button class="pp-hero-btn pp-hero-next" onclick="ppNext()" aria-label="Ďalšia">&#8250;</button>
-    <div class="pp-hero-counter"><span id="ppCur">1</span> / <?php echo $total_images ?></div>
-    <?php $show_dots = ($total_images <= 5); ?>
-    <div class="pp-hero-dots" id="ppDots"<?php echo $show_dots ? '' : ' style="display:none"'; ?>>
-        <?php for ($i = 0; $i < $total_images; $i++): ?>
-        <button class="pp-hero-dot<?php echo $i === 0 ? ' active' : '' ?>" onclick="ppGo(<?php echo $i ?>)" aria-label="Fotka <?php echo $i+1 ?>"></button>
-        <?php endfor; ?>
-    </div>
-    <?php endif; ?>
-
 </div>
 
 <!-- ═══ BODY ═══ -->
@@ -526,6 +529,23 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
             </div>
         </div>
         <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+
+    <?php /* Galéria patrí pred kontakt; kontakt a prípadný Short tvoria spodný spoločný blok. */ ?>
+    <?php if (count($all_images) > 1): ?>
+    <div class="pp-card">
+        <div class="pp-sec-title">Galéria</div>
+        <div class="pp-gallery">
+            <?php foreach ($all_images as $i => $img_id): ?>
+            <div class="pp-gal-item" data-i="<?php echo $i ?>" onclick="ppLbOpen(<?php echo $i ?>)">
+                <?php echo wp_get_attachment_image($img_id, 'large', false, [
+                    'loading' => 'lazy',
+                    'sizes'   => '(max-width:600px) 46vw, (max-width:900px) 31vw, 300px',
+                ]) ?>
+            </div>
+            <?php endforeach; ?>
+        </div>
     </div>
     <?php endif; ?>
 
@@ -611,24 +631,6 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
     </div>
     <?php endif; ?>
 
-    <?php if (count($all_images) > 1): ?>
-    <div class="pp-card">
-        <div class="pp-sec-title">Galéria</div>
-        <div class="pp-gallery">
-            <?php foreach ($all_images as $i => $img_id): ?>
-            <div class="pp-gal-item" data-i="<?php echo $i ?>" onclick="ppLbOpen(<?php echo $i ?>)">
-                <?php /* Stĺpce v galérii sú široké ~300 px, na retine 600 px – „medium"
-                         (300 px) by bola mäkká, preto necháme prehliadač vybrať z väčších. */ ?>
-                <?php echo wp_get_attachment_image($img_id, 'large', false, [
-                    'loading' => 'lazy',
-                    'sizes'   => '(max-width:600px) 46vw, (max-width:900px) 31vw, 300px',
-                ]) ?>
-            </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
-    <?php endif; ?>
-
 </main>
 
 <!-- aside sa musí natiahnuť na výšku riadku gridu, inak sticky sidebar nemá kade cestovať -->
@@ -641,25 +643,8 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
             <?php if ($znizena): ?>
             <div style="font-size:15px;color:#9A8660;text-decoration:line-through;margin-bottom:2px"><?php echo esc_html(pp_price_fmt($cena_pov)) ?></div>
             <?php endif; ?>
-            <?php
-            $cena_num_val = pp_price_num($cena_raw);
-            $fx = function_exists('pp_fx_rates') ? pp_fx_rates() : ['CZK'=>25.2,'USD'=>1.08,'date'=>'','live'=>false];
-            ?>
-            <div class="pp-price-val" id="ppPriceVal" data-eur="<?php echo esc_attr($cena_num_val) ?>" data-czk="<?php echo esc_attr($fx['CZK']) ?>" data-usd="<?php echo esc_attr($fx['USD']) ?>"<?php if ($cena_num_val === 0) echo ' style="font-size:20px;letter-spacing:0"'; ?>><?php echo esc_html($cena_fmt); ?></div>
-            <?php if ($cena_num_val > 0): ?>
-            <div class="pp-cur" role="group" aria-label="Mena">
-                <button type="button" class="pp-cur-btn active" data-cur="EUR" onclick="ppSetCur(this,'EUR')">€ EUR</button>
-                <button type="button" class="pp-cur-btn" data-cur="CZK" onclick="ppSetCur(this,'CZK')">Kč CZK</button>
-                <button type="button" class="pp-cur-btn" data-cur="USD" onclick="ppSetCur(this,'USD')">$ USD</button>
-            </div>
-            <div class="pp-fx-note">
-                <?php if (!empty($fx['live'])): ?>
-                    Prepočet podľa aktuálneho kurzu ECB<?php if(!empty($fx['date'])):?> (<?php echo esc_html($fx['date']) ?>)<?php endif; ?>: 1&nbsp;€ = <?php echo esc_html(number_format($fx['CZK'],2,',',' ')) ?>&nbsp;Kč · <?php echo esc_html(number_format($fx['USD'],3,',',' ')) ?>&nbsp;$
-                <?php else: ?>
-                    Orientačný prepočet: 1&nbsp;€ ≈ <?php echo esc_html(number_format($fx['CZK'],2,',',' ')) ?>&nbsp;Kč
-                <?php endif; ?>
-            </div>
-            <?php endif; ?>
+            <?php $cena_num_val = pp_price_num($cena_raw); ?>
+            <div class="pp-price-val"<?php if ($cena_num_val === 0) echo ' style="font-size:20px;letter-spacing:0"'; ?>><?php echo esc_html($cena_fmt); ?></div>
             <?php if ($per_m2): ?><div style="font-size:12px;color:#6B6560;margin-top:4px"><?php echo esc_html($per_m2) ?></div><?php endif; ?>
         </div>
         <div class="pp-price-body">
@@ -733,25 +718,9 @@ textarea.pp-cta-input { resize:vertical; min-height:84px; max-height:280px; }
 .pp-share-btn.copied,.pp-share-btn.copied:hover{background:#16a34a !important;color:#fff}
 .pp-pdf-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;padding:11px;border-radius:9px;border:1.5px solid #E2DACE;background:#F5F1EA;color:#2C2C2C;font-size:13px;font-weight:700;text-decoration:none;transition:all .2s}
 .pp-pdf-btn:hover{border-color:#B8A47A;background:#fff;color:#7C5E33}
-.pp-cur{display:inline-flex;gap:0;margin-top:8px;border:1.5px solid #E2DACE;border-radius:8px;overflow:hidden}
-.pp-cur-btn{background:transparent;color:#6B6560;border:none;padding:6px 13px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans,sans-serif);transition:all .2s}
-.pp-cur-btn+.pp-cur-btn{border-left:1px solid #E2DACE}
-.pp-cur-btn:hover{background:#F5F1EA;color:#1C1A18}
-.pp-cur-btn.active{background:#B8A47A;color:#1C1A18}
-.pp-fx-note{font-size:11px;color:#8A8072;margin-top:7px;line-height:1.5;max-width:280px}
+.pp-hero-badge.is-sold{background:linear-gradient(135deg,#F04444,#A90F1B)!important;color:#fff!important;border-color:rgba(255,220,220,.75)!important;box-shadow:0 0 11px rgba(220,38,38,.92),0 0 28px rgba(220,38,38,.6),0 8px 22px rgba(91,8,15,.45)!important}
 </style>
 <script>
-function ppSetCur(btn,cur){
-    var el=document.getElementById('ppPriceVal'); if(!el)return;
-    document.querySelectorAll('.pp-cur-btn').forEach(function(b){b.classList.toggle('active',b===btn)});
-    var eur=parseFloat(el.getAttribute('data-eur'))||0;
-    var czk=parseFloat(el.getAttribute('data-czk'))||25.2;
-    var usd=parseFloat(el.getAttribute('data-usd'))||1.08;
-    function fmt(n){return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ')}
-    if(cur==='CZK')      el.textContent = fmt(eur*czk)+' Kč';
-    else if(cur==='USD') el.textContent = '$ '+fmt(eur*usd);
-    else                 el.textContent = fmt(eur)+' €';
-}
 function ppCopyLink(btn){
     var url=<?php echo wp_json_encode(get_permalink()) ?>;
     var done=function(){btn.classList.add('copied');btn.title='Skopírované!';setTimeout(function(){btn.classList.remove('copied');btn.title='Kopírovať odkaz'},1400)};
@@ -771,38 +740,8 @@ function ppCopyLink(btn){
 
 <script>
 (function(){
-/* CAROUSEL */
-var cur=0,total=<?php echo $total_images ?>;
-var track=document.getElementById('ppTrack');
-var dots=document.querySelectorAll('.pp-hero-dot');
-var counter=document.getElementById('ppCur');
-function ppUpd(){
-    if(track)track.style.transform='translateX(-'+(cur*100)+'%)';
-    dots.forEach(function(d,i){d.classList.toggle('active',i===cur)});
-    if(counter)counter.textContent=cur+1;
-}
-window.ppNext=function(){cur=(cur+1)%total;ppUpd()};
-window.ppPrev=function(){cur=(cur-1+total)%total;ppUpd()};
-window.ppGo=function(i){cur=i;ppUpd()};
-
-// Touch/drag
-var hero=document.getElementById('ppHero'),sx=0,sy=0,dragging=false;
-if(hero&&total>1){
-    hero.addEventListener('mousedown',function(e){sx=e.clientX;sy=e.clientY;dragging=true});
-    document.addEventListener('mouseup',function(e){
-        if(!dragging)return;dragging=false;
-        var dx=sx-e.clientX;
-        if(Math.abs(dx)>60&&Math.abs(sy-e.clientY)<60){dx>0?ppNext():ppPrev()}
-    });
-    hero.addEventListener('touchstart',function(e){sx=e.touches[0].clientX},{passive:true});
-    hero.addEventListener('touchend',function(e){
-        var dx=sx-e.changedTouches[0].clientX;
-        if(Math.abs(dx)>50){dx>0?ppNext():ppPrev()}
-    });
-    setInterval(function(){ppNext()},7000);
-}
-
 /* Zoom hero fotky pri scrolle (beží vždy – aj na PC, nezávisle od OS nastavenia) */
+var hero=document.getElementById('ppHero');
 if(hero){
     var zoomImgs=hero.querySelectorAll('.pp-hero-slide img');
     var zTick=false;
@@ -869,14 +808,14 @@ document.addEventListener('keydown',function(e){
 <?php
 // ── Podobné ponuky ("Mohlo by vás zaujať") ──
 $mesto = get_post_meta($id, '_property_mesto', true);
-$sim_args = [
+$sim_args = pp_property_order_args([
     'post_type' => 'property', 'posts_per_page' => 3, 'post__not_in' => [$id],
-    'post_status' => 'publish', 'orderby' => 'rand',
+    'post_status' => 'publish',
     'meta_query' => [['key' => '_property_typ', 'value' => $typ, 'compare' => '=']],
-];
-$sim = $typ ? new WP_Query($sim_args) : new WP_Query(['post_type'=>'property','posts_per_page'=>3,'post__not_in'=>[$id],'post_status'=>'publish','orderby'=>'rand']);
+]);
+$sim = $typ ? new WP_Query($sim_args) : new WP_Query(pp_property_order_args(['post_type'=>'property','posts_per_page'=>3,'post__not_in'=>[$id],'post_status'=>'publish']));
 if (!$sim->have_posts() && $typ) {
-    $sim = new WP_Query(['post_type'=>'property','posts_per_page'=>3,'post__not_in'=>[$id],'post_status'=>'publish','orderby'=>'rand']);
+    $sim = new WP_Query(pp_property_order_args(['post_type'=>'property','posts_per_page'=>3,'post__not_in'=>[$id],'post_status'=>'publish']));
 }
 if ($sim->have_posts()): ?>
 <section style="background:var(--section,#F5EEDF);padding:64px 0;margin-top:20px">

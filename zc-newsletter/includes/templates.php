@@ -20,9 +20,10 @@ function zcn_apply_vars($text, $vars) {
 add_action('wp_ajax_zcn_tpl_save', function() {
     check_ajax_referer('zcn_tpl', 'nonce');
     if (!current_user_can('edit_posts')) wp_send_json_error(['message' => 'Nedostatočné oprávnenie.']);
-    $name    = trim(sanitize_text_field($_POST['name'] ?? ''));
-    $subject = sanitize_text_field($_POST['subject'] ?? '');
-    $body    = wp_kses_post($_POST['body'] ?? '');
+    // wp_unslash() musí ísť prvé – inak sa do šablóny uloží \" namiesto "
+    $name    = trim(sanitize_text_field(wp_unslash($_POST['name'] ?? '')));
+    $subject = sanitize_text_field(wp_unslash($_POST['subject'] ?? ''));
+    $body    = wp_kses_post(wp_unslash($_POST['body'] ?? ''));
     if (!$name || mb_strlen($name) > 60) wp_send_json_error(['message' => 'Zadajte názov šablóny (max. 60 znakov).']);
     if (!$subject && !$body) wp_send_json_error(['message' => 'Šablóna je prázdna.']);
     $id = sanitize_title($name);
@@ -49,9 +50,18 @@ add_action('wp_ajax_zcn_tpl_delete', function() {
 function zcn_render_tpl_toolbar($editor_id, $subject_id) {
     $tpls = zcn_get_templates();
     $uid  = preg_replace('/[^a-zA-Z0-9]/', '', $editor_id);
-    $btn  = 'padding:7px 12px;border:1.5px solid #E0D8CE;background:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit';
+    $btn  = 'min-height:40px;padding:7px 12px;border:1.5px solid #E0D8CE;background:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit';
     ?>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding:12px 14px;background:#F5F1EA;border:1px solid #E0D8CE;border-radius:8px">
+    <style>
+    @media(max-width:600px){
+        .zcn-tpl-toolbar{align-items:stretch!important}
+        .zcn-tpl-toolbar select{flex:1 0 100%;max-width:none!important;min-height:44px;font-size:16px!important}
+        .zcn-tpl-toolbar button{flex:1 1 calc(50% - 8px);min-height:44px!important}
+        .zcn-tpl-vars{line-height:1.8!important}
+        .zcn-tpl-vars code{display:inline-block;margin-top:5px;padding:5px 9px!important}
+    }
+    </style>
+    <div class="zcn-tpl-toolbar" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding:12px 14px;background:#F5F1EA;border:1px solid #E0D8CE;border-radius:8px">
         <select id="zcnTplSel_<?php echo $uid ?>" style="padding:7px 10px;border:1.5px solid #E0D8CE;border-radius:7px;font-size:13px;max-width:220px;background:#fff">
             <option value="">– Šablóna –</option>
             <?php foreach ($tpls as $id => $t): ?>
@@ -60,8 +70,8 @@ function zcn_render_tpl_toolbar($editor_id, $subject_id) {
         </select>
         <button type="button" style="<?php echo $btn ?>" onclick="zcnTplLoad_<?php echo $uid ?>()">Načítať</button>
         <button type="button" style="<?php echo $btn ?>" onclick="zcnTplSave_<?php echo $uid ?>()">Uložiť ako šablónu</button>
-        <button type="button" style="<?php echo $btn ?>;color:#dc2626" onclick="zcnTplDel_<?php echo $uid ?>()" title="Zmazať vybranú šablónu"></button>
-        <span style="flex-basis:100%;font-size:11px;color:#7A7068;line-height:2">Premenné (kliknutím vložíš, doplnia sa pri odoslaní pre každého odberateľa zvlášť):
+        <button type="button" style="<?php echo $btn ?>;color:#dc2626" onclick="zcnTplDel_<?php echo $uid ?>()" title="Zmazať vybranú šablónu">Zmazať</button>
+        <span class="zcn-tpl-vars" style="flex-basis:100%;font-size:11px;color:#7A7068;line-height:2">Premenné (kliknutím vložíš, doplnia sa pri odoslaní pre každého odberateľa zvlášť):
             <?php foreach (['meno' => 'Meno odberateľa', 'email' => 'E-mail odberateľa'] as $v => $tip): ?>
             <code style="cursor:pointer;background:#fff;border:1px solid #E0D8CE;border-radius:4px;padding:1px 7px;margin-right:4px" title="<?php echo esc_attr($tip) ?>"
                 onclick="zcnTplIns_<?php echo $uid ?>('{<?php echo $v ?>}')">{<?php echo $v ?>}</code>

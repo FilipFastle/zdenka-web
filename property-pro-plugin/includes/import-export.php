@@ -126,7 +126,9 @@ function pp_import_properties_csv($file) {
 
         foreach ($cols as $key) {
             if ($key === 'title' || $key === 'content') continue;
-            $val = sanitize_text_field($vals[$key]);
+            $val = $key === 'popis_kratky'
+                ? wp_kses_post($vals[$key])
+                : sanitize_text_field($vals[$key]);
             if (($key === 'cena' || $key === 'cena_povodna') && $val && strpos($val, '€') === false) $val .= ' €';
             update_post_meta($pid, '_property_' . $key, $val);
         }

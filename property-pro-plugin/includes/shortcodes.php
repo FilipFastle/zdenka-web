@@ -19,7 +19,7 @@ add_action('wp_ajax_nopriv_zc_property_grid', 'zc_ajax_property_grid');
 
 function zc_ajax_property_grid() {
     $typ      = sanitize_text_field($_POST['typ']      ?? '');
-    $sort     = sanitize_text_field($_POST['sort']     ?? 'date_desc');
+    $sort     = sanitize_text_field($_POST['sort']     ?? 'manual');
     $city     = sanitize_text_field($_POST['city']     ?? '');
     $per_page = intval($_POST['per_page']              ?? 24);
 
@@ -46,7 +46,8 @@ function zc_ajax_property_grid() {
         case 'area_desc':  $args['meta_key']='_property_plocha';$args['orderby']='meta_value_num'; $args['order']='DESC'; break;
         case 'area_asc':   $args['meta_key']='_property_plocha';$args['orderby']='meta_value_num'; $args['order']='ASC';  break;
         case 'city_az':    $args['meta_key']='_property_mesto'; $args['orderby']='meta_value';     $args['order']='ASC';  break;
-        default:           $args['orderby']='date'; $args['order']='DESC';
+        case 'date_desc':  $args['orderby']='date'; $args['order']='DESC'; break;
+        default:           $args = pp_property_order_args($args);
     }
 
     $query = new WP_Query($args);
@@ -83,13 +84,11 @@ add_shortcode('property_grid', function($atts) {
     wp_reset_postdata();
 
     // Initial query
-    $init_query = new WP_Query([
+    $init_query = new WP_Query(pp_property_order_args([
         'post_type'      => 'property',
         'posts_per_page' => intval($atts['per_page']),
         'post_status'    => 'publish',
-        'orderby'        => 'date',
-        'order'          => 'DESC',
-    ]);
+    ]));
 
     $uid = 'pgrid_' . wp_rand(100,999);
 
@@ -133,6 +132,7 @@ add_shortcode('property_grid', function($atts) {
             <div class="zc-filter-group">
                 <span class="zc-filter-label">Zoradiť</span>
                 <select class="zc-filter-select" id="<?php echo $uid ?>_sort">
+                    <option value="manual">Odporúčané poradie</option>
                     <option value="date_desc">Najnovšie</option>
                     <option value="price_asc">Cena vzostupne</option>
                     <option value="price_desc">Cena zostupne</option>
@@ -223,7 +223,7 @@ add_shortcode('property_grid', function($atts) {
         window[uid + '_reset'] = function() {
             ['typ','sort','city'].forEach(function(id){
                 var el = document.getElementById(uid + '_' + id);
-                if (el) el.value = id === 'sort' ? 'date_desc' : '';
+                if (el) el.value = id === 'sort' ? 'manual' : '';
             });
             window[uid + '_filter']();
         };
@@ -282,13 +282,10 @@ function render_property_card() {
                 <?php if ($typ_label): ?><span class="zc-prop-badge <?php echo esc_attr($typ) ?>"><?php echo $typ_label ?></span><?php endif; ?>
                 <?php if (pp_is_new($id) && !$sale): ?><span class="zc-prop-badge is-new">Nové</span><?php endif; ?>
                 <?php if ($znizena && !$sale): ?><span class="zc-prop-badge is-reduced">Znížená cena</span><?php endif; ?>
-                <?php if ($sale_badge): ?><span class="zc-prop-badge" style="background:<?php echo $sale_badge['bg'] ?>;color:<?php echo $sale_badge['fg'] ?>"><?php echo $sale_badge['label'] ?></span><?php endif; ?>
+                <?php if ($sale_badge): ?><span class="zc-prop-badge <?php echo $sale === 'predane' ? 'is-sold' : 'is-reserved' ?>"><?php echo $sale_badge['label'] ?></span><?php endif; ?>
             </div>
             <button class="zc-fav-btn" data-id="<?php echo $id ?>" title="Pridať do obľúbených" onclick="zcToggleFav(this,<?php echo $id ?>)">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-            </button>
-            <button class="zc-cmp-btn" data-id="<?php echo $id ?>" title="Porovnať" onclick="zcToggleCompare(this,<?php echo $id ?>)" aria-label="Pridať do porovnania">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="21"/><line x1="18" y1="3" x2="18" y2="21"/><rect x="3" y="8" width="6" height="8" rx="1"/><rect x="15" y="6" width="6" height="12" rx="1"/></svg>
             </button>
         </div>
         <div class="zc-prop-body">
@@ -321,13 +318,12 @@ add_shortcode('property_filter', '__return_empty_string');
 // ── PREDANÉ NEHNUTEĽNOSTI ─────────────────────────────────────────────────
 add_shortcode('predane_nehnutelnosti', function($atts) {
     $atts = shortcode_atts(['per_page' => '6'], $atts);
-    $q = new WP_Query([
+    $q = new WP_Query(pp_property_order_args([
         'post_type'      => 'property',
         'posts_per_page' => intval($atts['per_page']),
         'post_status'    => 'publish',
         'meta_query'     => [['key' => '_property_stav_predaja', 'value' => 'predane', 'compare' => '=']],
-        'orderby'        => 'modified', 'order' => 'DESC',
-    ]);
+    ]));
     if (!$q->have_posts()) return '';
     ob_start(); ?>
     <div class="property-grid">
@@ -339,7 +335,7 @@ add_shortcode('predane_nehnutelnosti', function($atts) {
 // ── CAROUSEL ─────────────────────────────────────────────────────────────
 add_shortcode('property_carousel', function($atts) {
     $atts  = shortcode_atts(['per_page'=>'6'], $atts);
-    $query = new WP_Query(['post_type'=>'property','posts_per_page'=>intval($atts['per_page']),'post_status'=>'publish','orderby'=>'date','order'=>'DESC']);
+    $query = new WP_Query(pp_property_order_args(['post_type'=>'property','posts_per_page'=>intval($atts['per_page']),'post_status'=>'publish']));
     if (!$query->have_posts()) return '';
 
     $uid    = 'pcar_' . wp_rand(100,999);
@@ -354,7 +350,6 @@ add_shortcode('property_carousel', function($atts) {
         $lokalita = get_post_meta($id,'_property_lokalita',true);
         $typ      = get_post_meta($id,'_property_typ',true);
         $typ_labels = ['predaj'=>'Na predaj','prenajom'=>'Na prenájom','pozemok'=>'Pozemok'];
-        $typ_colors = ['predaj'=>'#B8A47A','prenajom'=>'#FFFFFF','pozemok'=>'#6a9e77'];
         $slide_attr = [
             'style' => 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover',
             'sizes' => '100vw',
@@ -362,7 +357,7 @@ add_shortcode('property_carousel', function($atts) {
         $img = $cover_id
             ? wp_get_attachment_image($cover_id, 'full', false, $slide_attr)
             : (has_post_thumbnail() ? get_the_post_thumbnail(null, 'full', $slide_attr) : '');
-        $slides[] = ['img'=>$img,'title'=>get_the_title(),'cena'=>$cena,'lokalita'=>$lokalita,'typ'=>$typ_labels[$typ]??'','typ_color'=>$typ_colors[$typ]??'#B8A47A','typ_text'=>$typ==='pozemok'?'#fff':'#1C1A18','url'=>get_permalink()];
+        $slides[] = ['img'=>$img,'title'=>get_the_title(),'cena'=>$cena,'lokalita'=>$lokalita,'typ'=>$typ_labels[$typ]??'','typ_key'=>$typ,'url'=>get_permalink()];
     }
     wp_reset_postdata();
     $total = count($slides);
@@ -376,7 +371,10 @@ add_shortcode('property_carousel', function($atts) {
     /* prekrytie len farbí, klik prejde na fotku pod ním */
     .prop-sc-overlay{position:absolute;inset:0;background:linear-gradient(transparent 35%,rgba(0,0,0,.78));z-index:1;pointer-events:none}
     .prop-sc-info{position:absolute;bottom:0;left:0;right:0;padding:clamp(18px,4vw,48px);color:#fff;z-index:2}
-    .prop-sc-badge{display:inline-block;padding:5px 13px;border-radius:50px;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+    .prop-sc-badge{display:inline-flex;align-items:center;min-height:31px;padding:6px 13px;border-radius:50px;border:1px solid rgba(255,255,255,.55);font-size:9px;font-weight:900;letter-spacing:1.15px;text-transform:uppercase;margin-bottom:10px;box-shadow:0 6px 18px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+    .prop-sc-badge.predaj{background:linear-gradient(135deg,#E8D39F,#B89450)!important;color:#2A2114!important}
+    .prop-sc-badge.prenajom{background:linear-gradient(135deg,#2A7EA4,#174B78)!important;color:#fff!important}
+    .prop-sc-badge.pozemok{background:linear-gradient(135deg,#5A9B71,#2E684A)!important;color:#fff!important}
     .prop-sc-title{font-size:clamp(16px,3vw,26px);font-weight:700;margin-bottom:7px;font-family:var(--serif,'Playfair Display',serif);text-shadow:0 2px 10px rgba(0,0,0,.5)}
     .prop-sc-title a{color:#fff;text-decoration:none}
     .prop-sc-meta{display:flex;gap:16px;font-size:13px;opacity:.85}
@@ -396,7 +394,7 @@ add_shortcode('property_carousel', function($atts) {
             </a>
             <div class="prop-sc-overlay"></div>
             <div class="prop-sc-info">
-                <?php if ($s['typ']): ?><span class="prop-sc-badge" style="background:<?php echo $s['typ_color'] ?>;color:<?php echo $s['typ_text'] ?>"><?php echo $s['typ'] ?></span><?php endif; ?>
+                <?php if ($s['typ']): ?><span class="prop-sc-badge <?php echo esc_attr($s['typ_key']) ?>"><?php echo $s['typ'] ?></span><?php endif; ?>
                 <div class="prop-sc-title"><a href="<?php echo $s['url'] ?>"><?php echo esc_html($s['title']) ?></a></div>
                 <div class="prop-sc-meta">
                     <?php if ($s['lokalita']): ?><span><?php echo zc_icon('pin') ?> <?php echo esc_html($s['lokalita']) ?></span><?php endif; ?>
@@ -431,7 +429,7 @@ add_shortcode('property_carousel', function($atts) {
 
 // ── POROVNÁVAČ NEHNUTEĽNOSTÍ ──────────────────────────────────────────────
 // Plávajúca lišta (max 3 ponuky) + stránka [porovnanie]
-add_action('wp_footer', function () {
+if (false) add_action('wp_footer', function () {
     if (is_admin()) return;
     $cmp_url = home_url('/porovnanie/');
     ?>
@@ -506,18 +504,16 @@ add_shortcode('reality_mesto', function ($atts) {
     if ($mesto === '') return '';
 
     // Nájsť ponuky v meste – podľa _property_mesto alebo lokality
-    $q = new WP_Query([
+    $q = new WP_Query(pp_property_order_args([
         'post_type'      => 'property',
         'posts_per_page' => intval($atts['count']),
         'post_status'    => 'publish',
-        'orderby'        => 'date',
-        'order'          => 'DESC',
         'meta_query'     => [
             'relation' => 'OR',
             ['key' => '_property_mesto',    'value' => $mesto, 'compare' => 'LIKE'],
             ['key' => '_property_lokalita', 'value' => $mesto, 'compare' => 'LIKE'],
         ],
-    ]);
+    ]));
 
     $nadpis = $atts['nadpis'] ?: ('Reality ' . $mesto);
     $text   = $atts['text'] ?: ('Aktuálne ponuky nehnuteľností v lokalite ' . $mesto . ' a okolí. Byty, domy aj pozemky na predaj a prenájom so serióznym prístupom a osobnou obhliadkou.');
@@ -544,8 +540,7 @@ add_shortcode('reality_mesto', function ($atts) {
 });
 
 // AJAX: dáta na porovnanie
-add_action('wp_ajax_pp_compare',        'pp_ajax_compare');
-add_action('wp_ajax_nopriv_pp_compare', 'pp_ajax_compare');
+// Starý porovnávač zostáva iba ako migračný kód a nie je verejne registrovaný.
 function pp_ajax_compare() {
     $ids = json_decode(sanitize_text_field($_POST['ids'] ?? '[]'), true);
     $ids = array_slice(array_map('intval', (array)$ids), 0, 3);
@@ -626,7 +621,7 @@ function pp_ajax_compare() {
 }
 
 // Stránka porovnania
-add_shortcode('porovnanie', function () {
+if (false) add_shortcode('porovnanie', function () {
     ob_start(); ?>
     <div id="zcCmpPage">
         <div id="zcCmpEmpty" style="text-align:center;padding:70px 20px;display:none">

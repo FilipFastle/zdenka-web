@@ -37,7 +37,7 @@ add_action('wp_head', function() {
         $cena_raw = get_post_meta($pid, '_property_cena', true);
         $cena_num = preg_replace('/[^0-9]/', '', (string)$cena_raw);
         $lok      = get_post_meta($pid, '_property_lokalita', true);
-        $popis    = get_post_meta($pid, '_property_popis_kratky', true);
+        $popis    = wp_strip_all_tags((string) get_post_meta($pid, '_property_popis_kratky', true), true);
         $bits = array_filter([
             $lok ? $lok : '',
             $cena_num ? number_format((int)$cena_num, 0, ',', ' ') . ' €' : '',

@@ -1,6 +1,4 @@
 <?php /* Template Name: Homepage */
 defined('ABSPATH') || exit;
-get_header();
-if (have_posts()) { while (have_posts()) { the_post(); } }
-// Redirect to front-page.php logic
+// Jediný zdroj domovskej stránky. front-page.php si načíta hlavičku aj pätičku sám.
 require get_stylesheet_directory() . '/front-page.php';

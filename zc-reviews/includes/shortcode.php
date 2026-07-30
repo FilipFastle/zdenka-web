@@ -46,8 +46,10 @@ add_shortcode('zc_reviews', function($atts) {
     $atts = shortcode_atts([
         'limit'    => '500',
         'cols'     => '3',
+        'per_page' => '10',
         'carousel' => 'auto',
-        'layout'   => '',      // '' | grid | mosaic | carousel
+        'layout'   => '',      // '' | grid | mosaic | carousel | carousel-grid | paged
+        'rows'     => '2',
         'clamp'    => '',      // '0' = zobraziť celý text
         'google'   => '1',     // '0' = skryť tlačidlo na Google
     ], $atts);
@@ -70,8 +72,10 @@ add_shortcode('zc_reviews', function($atts) {
         $layout   = $carousel ? 'carousel' : 'grid';
     }
 
-    if ($layout === 'carousel') return zcr_carousel($rows) . $gbtn;
-    if ($layout === 'mosaic')   return zcr_mosaic($rows, $cols, $clamp) . $gbtn;
+    if ($layout === 'paged')         return zcr_paged_grid($rows, $cols, intval($atts['per_page']), $clamp) . $gbtn;
+    if ($layout === 'carousel')      return zcr_carousel($rows) . $gbtn;
+    if ($layout === 'carousel-grid') return zcr_grid_carousel($rows, $cols, intval($atts['rows']), $clamp) . $gbtn;
+    if ($layout === 'mosaic')        return zcr_mosaic($rows, $cols, $clamp) . $gbtn;
 
     ob_start(); ?>
     <style>
@@ -207,6 +211,283 @@ function zcr_card($r, $clamp = true) {
     <?php return ob_get_clean();
 }
 
+/**
+ * SEO-friendly stránkovaný zoznam recenzií bez JavaScriptového carouselu.
+ * Používa samostatný query parameter, takže nekoliduje s WordPress pagináciou.
+ */
+function zcr_paged_grid($rows, $cols = 2, $per_page = 10, $clamp = true) {
+    $cols       = max(1, min(3, intval($cols)));
+    $per_page   = max(1, min(50, intval($per_page)));
+    $param      = 'referencie_strana';
+    $total      = count($rows);
+    $page_count = max(1, (int) ceil($total / $per_page));
+    $current    = isset($_GET[$param]) ? absint(wp_unslash($_GET[$param])) : 1;
+    $current    = max(1, min($current, $page_count));
+    $page_rows  = array_slice($rows, ($current - 1) * $per_page, $per_page);
+    $base_url   = remove_query_arg($param);
+
+    $page_url = function ($page) use ($base_url, $param) {
+        return $page <= 1 ? $base_url : add_query_arg($param, $page, $base_url);
+    };
+
+    // Prvá, posledná a okolie aktuálnej strany. Pri veľkom počte strán
+    // zostane navigácia krátka a medzi vzdialenými stranami sa ukáže elipsa.
+    $visible = [1, $page_count];
+    for ($i = $current - 2; $i <= $current + 2; $i++) {
+        if ($i >= 1 && $i <= $page_count) $visible[] = $i;
+    }
+    $visible = array_values(array_unique($visible));
+    sort($visible);
+
+    ob_start();
+    echo zcr_card_styles(); ?>
+    <style>
+    .zcr-paged-grid{display:grid;
+        grid-template-columns:repeat(<?php echo $cols ?>,minmax(0,1fr));
+        gap:24px;align-items:stretch}
+    .zcr-paged-item{display:flex;min-width:0}
+    .zcr-paged-item>.zc-testimonial{width:100%}
+    .zcr-pagination{display:flex;align-items:center;justify-content:center;
+        flex-wrap:wrap;gap:8px;margin-top:36px}
+    .zcr-page-link,.zcr-page-current{min-width:42px;height:42px;padding:0 13px;
+        display:inline-flex;align-items:center;justify-content:center;
+        border:1.5px solid var(--border,#E0D8CE);border-radius:10px;
+        background:var(--white,#fff);color:var(--dark,#1C1A18);
+        font:700 13px/1 var(--sans,'DM Sans',sans-serif);
+        text-decoration:none;transition:all .2s}
+    .zcr-page-link:hover,.zcr-page-link:focus-visible{background:var(--section,#F5EEDF);
+        border-color:var(--accent,#B8A47A);color:var(--dark,#1C1A18);
+        transform:translateY(-2px);outline:none}
+    .zcr-page-current{background:var(--accent,#B8A47A);
+        border-color:var(--accent,#B8A47A);box-shadow:0 4px 13px rgba(184,164,122,.28)}
+    .zcr-page-nav{padding:0 16px;white-space:nowrap}
+    .zcr-page-gap{display:inline-flex;align-items:center;justify-content:center;
+        width:24px;height:42px;color:var(--muted,#7A7068)}
+    @media(max-width:760px){
+        .zcr-paged-grid{grid-template-columns:1fr;gap:16px}
+        .zcr-pagination{gap:6px;margin-top:28px}
+        .zcr-page-link,.zcr-page-current{min-width:40px;height:40px;padding:0 11px}
+        .zcr-page-nav{font-size:0;min-width:40px;padding:0}
+        .zcr-page-nav.zcr-prev::after{content:'‹';font-size:20px}
+        .zcr-page-nav.zcr-next::after{content:'›';font-size:20px}
+    }
+    </style>
+    <div class="zcr-paged-grid">
+        <?php foreach ($page_rows as $r): ?>
+        <div class="zcr-paged-item"><?php echo zcr_card($r, $clamp); ?></div>
+        <?php endforeach; ?>
+    </div>
+    <?php if ($page_count > 1): ?>
+    <nav class="zcr-pagination" aria-label="Stránkovanie referencií">
+        <?php if ($current > 1): ?>
+        <a class="zcr-page-link zcr-page-nav zcr-prev"
+           href="<?php echo esc_url($page_url($current - 1)); ?>"
+           rel="prev">Predchádzajúca</a>
+        <?php endif; ?>
+
+        <?php $previous = 0; foreach ($visible as $page): ?>
+            <?php if ($previous && $page > $previous + 1): ?>
+            <span class="zcr-page-gap" aria-hidden="true">…</span>
+            <?php endif; ?>
+
+            <?php if ($page === $current): ?>
+            <span class="zcr-page-current" aria-current="page"><?php echo $page; ?></span>
+            <?php else: ?>
+            <a class="zcr-page-link" href="<?php echo esc_url($page_url($page)); ?>"
+               aria-label="Referencie – strana <?php echo $page; ?>"><?php echo $page; ?></a>
+            <?php endif; ?>
+        <?php $previous = $page; endforeach; ?>
+
+        <?php if ($current < $page_count): ?>
+        <a class="zcr-page-link zcr-page-nav zcr-next"
+           href="<?php echo esc_url($page_url($current + 1)); ?>"
+           rel="next">Ďalšia</a>
+        <?php endif; ?>
+    </nav>
+    <?php endif; ?>
+    <?php
+    return ob_get_clean();
+}
+
+/**
+ * Stránkovaný carousel recenzií. Na desktope zobrazuje 3 stĺpce × 2 riadky,
+ * na tablete 2 × 2 a na mobile 1 × 2. Počet strán nie je obmedzený.
+ */
+function zcr_grid_carousel($rows, $cols = 3, $row_count = 2, $clamp = true) {
+    $uid       = 'zcrgc_' . wp_rand(1000, 9999);
+    $cols      = max(1, min(3, intval($cols)));
+    $row_count = max(1, min(3, intval($row_count)));
+    $per_page  = $cols * $row_count;
+    $pages     = array_chunk($rows, $per_page);
+
+    ob_start();
+    echo zcr_card_styles(); ?>
+    <style>
+    #<?php echo $uid ?>{position:relative}
+    #<?php echo $uid ?> .zcrgc-viewport{overflow:hidden;padding:3px}
+    #<?php echo $uid ?> .zcrgc-track{display:flex;align-items:flex-start;
+        transition:transform .55s cubic-bezier(.4,0,.2,1);will-change:transform}
+    #<?php echo $uid ?> .zcrgc-page{flex:0 0 100%;min-width:0;display:grid;
+        grid-template-columns:repeat(<?php echo $cols ?>,minmax(0,1fr));
+        grid-template-rows:repeat(<?php echo $row_count ?>,minmax(0,1fr));
+        gap:22px;padding:0 1px}
+    #<?php echo $uid ?> .zcrgc-item{display:flex;min-width:0}
+    #<?php echo $uid ?> .zcrgc-item>.zc-testimonial{width:100%}
+    #<?php echo $uid ?> .zcrgc-nav{display:flex;align-items:center;justify-content:center;
+        gap:18px;margin-top:28px}
+    #<?php echo $uid ?> .zcrgc-btn{width:44px;height:44px;border-radius:50%;
+        background:var(--white,#fff);border:1.5px solid var(--border,#E0D8CE);
+        color:var(--dark,#1C1A18);font-size:21px;line-height:1;cursor:pointer;
+        display:flex;align-items:center;justify-content:center;
+        box-shadow:0 3px 14px rgba(40,32,20,.09);transition:all .22s}
+    #<?php echo $uid ?> .zcrgc-btn:hover,
+    #<?php echo $uid ?> .zcrgc-btn:focus-visible{background:var(--accent,#B8A47A);
+        border-color:var(--accent,#B8A47A);transform:translateY(-2px);outline:none}
+    #<?php echo $uid ?> .zcrgc-dots{display:flex;align-items:center;justify-content:center;
+        flex-wrap:wrap;gap:7px;max-width:min(560px,65vw)}
+    #<?php echo $uid ?> .zcrgc-dot{width:8px;height:8px;border:0;border-radius:50%;
+        padding:0;background:var(--border,#E0D8CE);cursor:pointer;transition:all .25s}
+    #<?php echo $uid ?> .zcrgc-dot.is-active{width:25px;border-radius:5px;
+        background:var(--accent,#B8A47A)}
+    #<?php echo $uid ?> .zcrgc-status{position:absolute;width:1px;height:1px;
+        padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    @media(max-width:900px){
+        #<?php echo $uid ?> .zcrgc-page{grid-template-columns:repeat(2,minmax(0,1fr));
+            grid-template-rows:repeat(2,minmax(0,1fr));gap:18px}
+    }
+    @media(max-width:620px){
+        #<?php echo $uid ?> .zcrgc-page{grid-template-columns:1fr;
+            grid-template-rows:repeat(2,minmax(0,1fr));gap:14px}
+        #<?php echo $uid ?> .zcrgc-nav{gap:12px;margin-top:22px}
+        #<?php echo $uid ?> .zcrgc-btn{width:42px;height:42px}
+        #<?php echo $uid ?> .zcrgc-dots{max-width:calc(100vw - 150px)}
+    }
+    @media(prefers-reduced-motion:reduce){
+        #<?php echo $uid ?> .zcrgc-track{transition:none}
+    }
+    </style>
+    <div class="zcrgc-shell" id="<?php echo $uid ?>" tabindex="0"
+         aria-roledescription="carousel" aria-label="Referencie klientov">
+        <div class="zcrgc-viewport">
+            <div class="zcrgc-track">
+            <?php foreach ($pages as $page_index => $page): ?>
+                <div class="zcrgc-page" data-page="<?php echo $page_index ?>">
+                <?php foreach ($page as $r): ?>
+                    <div class="zcrgc-item"><?php echo zcr_card($r, $clamp); ?></div>
+                <?php endforeach; ?>
+                </div>
+            <?php endforeach; ?>
+            </div>
+        </div>
+        <div class="zcrgc-nav">
+            <button type="button" class="zcrgc-btn zcrgc-prev" aria-label="Predchádzajúce referencie">&#8249;</button>
+            <div class="zcrgc-dots" aria-label="Stránky referencií"></div>
+            <button type="button" class="zcrgc-btn zcrgc-next" aria-label="Ďalšie referencie">&#8250;</button>
+        </div>
+        <div class="zcrgc-status" aria-live="polite"></div>
+    </div>
+    <script>
+    (function(){
+        var shell=document.getElementById('<?php echo $uid ?>');
+        if(!shell)return;
+        var track=shell.querySelector('.zcrgc-track');
+        var dots=shell.querySelector('.zcrgc-dots');
+        var status=shell.querySelector('.zcrgc-status');
+        var prev=shell.querySelector('.zcrgc-prev');
+        var next=shell.querySelector('.zcrgc-next');
+        var items=Array.prototype.slice.call(shell.querySelectorAll('.zcrgc-item'));
+        var index=0,pages=[],timer=null,resizeTimer=null;
+
+        function perPage(){
+            if(window.innerWidth<=620)return 2;
+            if(window.innerWidth<=900)return 4;
+            return <?php echo $per_page ?>;
+        }
+        function stop(){
+            if(timer){window.clearInterval(timer);timer=null}
+        }
+        function start(){
+            stop();
+            if(pages.length>1&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+                timer=window.setInterval(function(){go(index+1,false)},7000);
+            }
+        }
+        function build(){
+            var size=perPage();
+            var fragment=document.createDocumentFragment();
+            track.innerHTML='';
+            for(var i=0;i<items.length;i+=size){
+                var page=document.createElement('div');
+                page.className='zcrgc-page';
+                page.setAttribute('data-page',String(i/size));
+                items.slice(i,i+size).forEach(function(item){page.appendChild(item)});
+                fragment.appendChild(page);
+            }
+            track.appendChild(fragment);
+            pages=Array.prototype.slice.call(track.querySelectorAll('.zcrgc-page'));
+            index=Math.min(index,Math.max(0,pages.length-1));
+            buildDots();
+            go(index,false);
+            start();
+        }
+        function buildDots(){
+            dots.innerHTML='';
+            pages.forEach(function(page,i){
+                var dot=document.createElement('button');
+                dot.type='button';
+                dot.className='zcrgc-dot';
+                dot.setAttribute('aria-label','Zobraziť referencie – strana '+(i+1));
+                dot.addEventListener('click',function(){go(i,true)});
+                dots.appendChild(dot);
+            });
+            var multiple=pages.length>1;
+            shell.querySelector('.zcrgc-nav').style.display=multiple?'flex':'none';
+        }
+        function go(target,restart){
+            if(!pages.length)return;
+            index=(target%pages.length+pages.length)%pages.length;
+            track.style.transform='translateX(-'+(index*100)+'%)';
+            pages.forEach(function(page,i){
+                page.setAttribute('aria-hidden',i===index?'false':'true');
+                page.toggleAttribute('inert',i!==index);
+            });
+            dots.querySelectorAll('.zcrgc-dot').forEach(function(dot,i){
+                dot.classList.toggle('is-active',i===index);
+                dot.setAttribute('aria-current',i===index?'true':'false');
+            });
+            status.textContent='Strana '+(index+1)+' z '+pages.length;
+            if(restart)start();
+        }
+
+        prev.addEventListener('click',function(){go(index-1,true)});
+        next.addEventListener('click',function(){go(index+1,true)});
+        shell.addEventListener('keydown',function(e){
+            if(e.key==='ArrowLeft'){e.preventDefault();go(index-1,true)}
+            if(e.key==='ArrowRight'){e.preventDefault();go(index+1,true)}
+        });
+        shell.addEventListener('mouseenter',stop);
+        shell.addEventListener('mouseleave',start);
+        shell.addEventListener('focusin',stop);
+        shell.addEventListener('focusout',start);
+
+        var touchX=0;
+        track.addEventListener('touchstart',function(e){touchX=e.touches[0].clientX},{passive:true});
+        track.addEventListener('touchend',function(e){
+            var distance=touchX-e.changedTouches[0].clientX;
+            if(Math.abs(distance)>45)go(index+(distance>0?1:-1),true);
+        },{passive:true});
+
+        window.addEventListener('resize',function(){
+            window.clearTimeout(resizeTimer);
+            resizeTimer=window.setTimeout(build,140);
+        });
+        build();
+    })();
+    </script>
+    <?php
+    return ob_get_clean();
+}
+
 function zcr_carousel($rows) {
     $uid   = 'zcrc_' . wp_rand(100,999);
     $total = count($rows);
@@ -228,9 +509,13 @@ function zcr_carousel($rows) {
         border:none;cursor:pointer;transition:all .3s;padding:0}
     .zcrc-dot.on{background:var(--accent,#B8A47A);width:22px;border-radius:4px}
     @media(max-width:900px){.zcrc-slide{flex:0 0 50%}}
-    @media(max-width:560px){.zcrc-slide{flex:0 0 100%}.zcrc-btn{display:none}}
+    @media(max-width:768px){
+        .zcrc-shell{padding:0!important}
+        .zcrc-slide{flex:0 0 100%;padding:0}
+        .zcrc-btn{display:none}
+    }
     </style>
-    <div style="position:relative;padding:0 20px">
+    <div class="zcrc-shell" style="position:relative;padding:0 20px">
     <div class="zcrc-wrap" id="<?php echo $uid ?>w">
         <div class="zcrc-track" id="<?php echo $uid ?>t">
         <?php foreach ($rows as $r): ?>
@@ -238,32 +523,43 @@ function zcr_carousel($rows) {
         <?php endforeach; ?>
         </div>
     </div>
-    <?php if ($total > 3): ?>
+    <?php if ($total > 1): ?>
     <button class="zcrc-btn zcrc-prev" onclick="<?php echo $uid ?>P()">&#8249;</button>
     <button class="zcrc-btn zcrc-next" onclick="<?php echo $uid ?>N()">&#8250;</button>
     <?php endif; ?>
     </div>
-    <div class="zcrc-dots" id="<?php echo $uid ?>d">
-    <?php
-    $per = 3;
-    $pages = ceil($total / $per);
-    for ($i = 0; $i < $pages; $i++):
-    ?>
-    <button class="zcrc-dot <?php echo $i===0?'on':'' ?>" onclick="<?php echo $uid ?>G(<?php echo $i ?>)"></button>
-    <?php endfor; ?>
-    </div>
+    <div class="zcrc-dots" id="<?php echo $uid ?>d"></div>
     <script>
     (function(){
-        var per=3,idx=0,total=<?php echo $total ?>,pages=Math.ceil(total/per);
+        var idx=0,total=<?php echo $total ?>;
         var tr=document.getElementById('<?php echo $uid ?>t');
-        var ds=document.querySelectorAll('#<?php echo $uid ?>d .zcrc-dot');
+        var dots=document.getElementById('<?php echo $uid ?>d');
+        var shell=tr.closest('.zcrc-shell');
+        var ds=[];
         // Responsive per-page
-        function getPer(){return window.innerWidth<=560?1:window.innerWidth<=900?2:3}
+        function getPer(){return window.innerWidth<=768?1:window.innerWidth<=900?2:3}
+        function rebuildDots(){
+            var pages=Math.ceil(total/getPer());
+            dots.innerHTML='';
+            for(var i=0;i<pages;i++){
+                var b=document.createElement('button');
+                b.type='button';
+                b.className='zcrc-dot'+(i===idx?' on':'');
+                b.setAttribute('aria-label','Zobraziť skupinu recenzií '+(i+1));
+                (function(page){b.addEventListener('click',function(){go(page)})})(i);
+                dots.appendChild(b);
+            }
+            ds=dots.querySelectorAll('.zcrc-dot');
+            dots.style.display=pages>1?'flex':'none';
+            if(shell){
+                shell.querySelectorAll('.zcrc-btn').forEach(function(btn){
+                    btn.style.display=(pages>1&&window.innerWidth>768)?'flex':'none';
+                });
+            }
+        }
         function go(i){
             var p=getPer(),max=Math.ceil(total/p)-1;
             idx=Math.max(0,Math.min(i,max));
-            tr.style.transform='translateX(-'+(idx*100/p*p)+'%)';
-            // Simpler: move by card width
             var w=tr.parentElement.offsetWidth;
             tr.style.transform='translateX(-'+(idx*w)+'px)';
             ds.forEach(function(d,j){d.classList.toggle('on',j===idx)});
@@ -284,7 +580,13 @@ function zcr_carousel($rows) {
         tr.parentElement.addEventListener('mouseleave',function(){
             timer=setInterval(function(){window['<?php echo $uid ?>N']()},6000)
         });
-        window.addEventListener('resize',function(){go(idx)});
+        var resizeTimer;
+        window.addEventListener('resize',function(){
+            clearTimeout(resizeTimer);
+            resizeTimer=setTimeout(function(){rebuildDots();go(idx)},120);
+        });
+        rebuildDots();
+        go(0);
     })();
     </script>
     <?php return ob_get_clean();

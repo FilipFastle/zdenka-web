@@ -11,8 +11,12 @@ add_action('wp_enqueue_scripts', function() {
     $use_min = get_option('zc_min_css', '1') === '1'
             && file_exists($dir . '/assets/css/main.min.css');
     $css = $use_min ? '/assets/css/main.min.css' : '/assets/css/main.css';
-    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.26.0');
-    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.26.0', true);
+    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.36.2');
+    // Malé kritické úpravy musia platiť aj pri zapnutej staršej minifikovanej verzii.
+    wp_add_inline_style('zdenka-main',
+        '.zc-nav a{font-size:11px}.zc-prop-badge.is-sold{background:#DC2626!important;color:#fff!important;box-shadow:0 0 9px rgba(220,38,38,.85),0 0 20px rgba(220,38,38,.5)}'
+    );
+    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.36.2', true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.png','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0]);
 });
 
@@ -73,6 +77,7 @@ add_filter('theme_page_templates', function($t) {
     $t['templates/page-kontakt.php']      = 'Kontakt';
     $t['templates/page-odhad.php']         = 'Odhad nehnuteľnosti';
     $t['templates/page-referencie.php']    = 'Referencie';
+    $t['templates/page-breakdance.php']    = 'Breakdance – editovateľná stránka';
     return $t;
 });
 
@@ -89,6 +94,9 @@ function zc_handle_contact() {
     $email = sanitize_email($_POST['email']??'');
     $phone = sanitize_text_field($_POST['phone']??'');
     $msg   = sanitize_textarea_field($_POST['message']??'');
+    $interest = function_exists('zcn_sanitize_interest')
+        ? zcn_sanitize_interest($_POST['newsletter_interest'] ?? '')
+        : sanitize_key($_POST['newsletter_interest'] ?? '');
     if (!$name||!$email) { wp_send_json_error(['message'=>'Vyplňte meno a email.']); }
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
     // Adresátov určuje nastavenie notifikácií (roly / používatelia / e-maily)
@@ -107,20 +115,31 @@ function zc_handle_contact() {
         'name'=>$name,'email'=>$email,'phone'=>$phone,
         'message'=>$msg,'subject'=>"Správa z webu: $name",
         'ip'=>$ip,'type'=>'contact',
+        'extra'=>$interest ? ['Záujem o ponuky' => function_exists('zcn_interest_label') ? zcn_interest_label($interest) : $interest] : [],
     ]);
     wp_mail($to, "Správa z webu: $name", $html, $headers);
 
     // Zapísať do databázy klientov (CRM), ak je plugin aktívny
     if (function_exists('pp_capture_lead')) {
-        pp_capture_lead(['name'=>$name,'email'=>$email,'phone'=>$phone,'message'=>$msg,'source'=>'kontakt']);
+        pp_capture_lead(['name'=>$name,'email'=>$email,'phone'=>$phone,'message'=>$msg,'source'=>'kontakt','interest'=>$interest]);
     }
 
     // Newsletter opt-in
-    if (!empty($_POST['newsletter']) && $email && function_exists('zcn_subscribe_forced')) {
-        zcn_subscribe_forced($email, $name, 'contact-form');
+    $newsletter_requested = !empty($_POST['newsletter']);
+    $newsletter_added = null;
+    if ($newsletter_requested && $email) {
+        $newsletter_added = function_exists('zcn_subscribe_forced')
+            ? zcn_subscribe_forced($email, $name, 'kontakt', $interest)
+            : false;
     }
 
-    wp_send_json_success(['message'=>'Správa odoslaná! Ozvem sa vám čoskoro.']);
+    $response_message = 'Správa odoslaná! Ozvem sa vám čoskoro.';
+    if ($newsletter_requested && $newsletter_added) {
+        $response_message .= ' E-mail bol pridaný aj do newslettera.';
+    } elseif ($newsletter_requested && !$newsletter_added) {
+        $response_message .= ' Prihlásenie do newslettera sa nepodarilo; skúste samostatný formulár Newsletter.';
+    }
+    wp_send_json_success(['message'=>$response_message, 'newsletter_added'=>(bool)$newsletter_added]);
 }
 
 // Customizer – kontaktné údaje
@@ -196,11 +215,6 @@ add_action('customize_register',function($wpc) {
         $wpc->add_setting($id,['default'=>'','sanitize_callback'=>'esc_url_raw']);
         $wpc->add_control($id,['label'=>$lbl,'section'=>'zc_social','type'=>'url']);
     }
-
-    // Kurz EUR→CZK pre prepínač meny na ponukách
-    $wpc->add_section('zc_misc',['title'=>'Ostatné nastavenia','priority'=>34]);
-    $wpc->add_setting('zc_czk_rate',['default'=>25.2,'sanitize_callback'=>function($v){return (float)str_replace(',','.',$v);}]);
-    $wpc->add_control('zc_czk_rate',['label'=>'Kurz EUR → CZK (prepínač meny na ponukách)','section'=>'zc_misc','type'=>'text']);
 
     // ── Miestne SEO (Google) ────────────────────────────────────────────
     // Tieto údaje idú do štruktúrovaných dát pre Google. Musia sa presne
@@ -306,7 +320,16 @@ function zc_photo($which, $fallback = '') {
     return $fallback;
 }
 
-function zc_agent($k,$f='') { return get_theme_mod('zc_agent_'.$k,$f)?:$f; }
+function zc_agent_name_with_title($name = '') {
+    $name = trim((string) $name);
+    $name = trim(preg_replace('/^(?:Mgr\.\s*)+/u', '', $name));
+    return 'Mgr. ' . ($name ?: 'Zdenka Cibuľová');
+}
+
+function zc_agent($k,$f='') {
+    $value = get_theme_mod('zc_agent_'.$k,$f) ?: $f;
+    return $k === 'name' ? zc_agent_name_with_title($value) : $value;
+}
 
 /**
  * ID fotky z Prispôsobiť (aby sa dali použiť zmenšeniny).
@@ -441,10 +464,30 @@ function zc_video_volume() {
 // One-time self-healing migration: ensure the saved agent name always
 // includes the "Mgr." title, even if it was previously saved without it.
 add_action('after_setup_theme', function() {
-    $current = get_theme_mod('zc_agent_name', '');
-    if ($current && strpos($current, 'Mgr.') === false) {
-        set_theme_mod('zc_agent_name', 'Mgr. Zdenka Cibuľová');
+    $current = get_theme_mod('zc_agent_name', 'Zdenka Cibuľová');
+    $fixed   = zc_agent_name_with_title($current);
+    if ($current !== $fixed) set_theme_mod('zc_agent_name', $fixed);
+});
+
+// Aj WordPress profil maklérky používa rovnaký titul. Beží iba raz po aktualizácii.
+add_action('admin_init', function() {
+    if (get_option('zc_mgr_profile_migrated') === '1') return;
+    $ids = [];
+    $default_id = (int) get_theme_mod('zc_agent_user', 0);
+    if ($default_id) $ids[] = $default_id;
+    $agents = get_users(['role' => 'realitny_makler']);
+    foreach ($agents as $user) {
+        if (count($agents) === 1
+            || stripos($user->display_name, 'Zdenka') !== false
+            || stripos($user->display_name, 'Cibu') !== false) {
+            $ids[] = (int) $user->ID;
+        }
     }
+    foreach (array_unique(array_filter($ids)) as $uid) {
+        $user = get_userdata($uid);
+        if ($user) wp_update_user(['ID' => $uid, 'display_name' => zc_agent_name_with_title($user->display_name)]);
+    }
+    update_option('zc_mgr_profile_migrated', '1', false);
 });
 
 // Auto-create pages – runs on admin_init if not done yet
@@ -491,6 +534,12 @@ add_action('after_switch_theme', function() {
 // ── Slug-based template routing (reliable, no meta needed) ──
 add_filter('template_include', function($template) {
     $dir = get_stylesheet_directory();
+    // Ak Breakdance už vybral vlastný renderer alebo je stránka vedome prepnutá
+    // na Breakdance template, slugové routovanie nesmie jeho výstup prepísať.
+    if (function_exists('zc_should_respect_breakdance_template')
+        && zc_should_respect_breakdance_template($template)) {
+        return $template;
+    }
     // Match by slug OR page ID
     if (is_page('o-mne'))        return $dir . '/templates/page-o-mne.php';
     if (is_page('ako-pracujem')) return $dir . '/templates/page-ako-pracujem.php';
@@ -746,6 +795,7 @@ require_once get_stylesheet_directory() . '/inc/seo.php';
 require_once get_stylesheet_directory() . '/inc/analytics.php';
 require_once get_stylesheet_directory() . '/inc/typography.php';
 require_once get_stylesheet_directory() . '/inc/indexing.php';
+require_once get_stylesheet_directory() . '/inc/breakdance.php';
 // Ebook je teraz samostatný plugin (zc-ebook). Ak je aktívny, poskytuje
 // zc_ebook_* funkcie aj shortcode [zc_ebook]; téma ich používa cez function_exists.
 

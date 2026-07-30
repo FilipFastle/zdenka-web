@@ -30,6 +30,9 @@ add_action('init', function () {
         'show_in_menu'      => true,
         'show_in_rest'      => true,
         'rewrite'           => false,
+        // Pri prílohách je spoľahlivejší všeobecný počet vzťahov. Predvolený
+        // WordPress callback vie pri médiách ponechať zastaraný počet.
+        'update_count_callback' => '_update_generic_term_count',
         'capabilities'      => [
             'manage_terms' => 'upload_files',
             'edit_terms'   => 'upload_files',
@@ -47,15 +50,25 @@ function zc_folders_flat() {
     $by_parent = [];
     foreach ($terms as $t) $by_parent[$t->parent][] = $t;
 
+    $branch_count = function ($term_id) use (&$branch_count, $by_parent) {
+        $sum = 0;
+        if (!empty($by_parent[$term_id])) {
+            foreach ($by_parent[$term_id] as $child) {
+                $sum += (int) $child->count + $branch_count((int) $child->term_id);
+            }
+        }
+        return $sum;
+    };
+
     $out = [];
-    $walk = function ($parent, $depth) use (&$walk, &$out, $by_parent) {
+    $walk = function ($parent, $depth) use (&$walk, &$out, $by_parent, $branch_count) {
         if (empty($by_parent[$parent])) return;
         foreach ($by_parent[$parent] as $t) {
             $out[] = [
                 'id'    => (int) $t->term_id,
                 'name'  => $t->name,
                 'pad'   => str_repeat('— ', $depth),
-                'count' => (int) $t->count,
+                'count' => (int) $t->count + $branch_count((int) $t->term_id),
             ];
             $walk($t->term_id, $depth + 1);
         }
@@ -95,6 +108,45 @@ function zc_folder_root_ponuky() {
     return $id;
 }
 
+/** Počet médií, ktoré ešte nie sú zaradené do žiadneho priečinka. */
+function zc_folders_unassigned_count() {
+    $query = new WP_Query([
+        'post_type'              => 'attachment',
+        'post_status'            => 'inherit',
+        'post_mime_type'         => 'image',
+        'posts_per_page'         => 1,
+        'fields'                 => 'ids',
+        'no_found_rows'          => false,
+        'update_post_meta_cache' => false,
+        'update_post_term_cache' => false,
+        'tax_query'              => [[
+            'taxonomy' => ZC_FOLDER_TAX,
+            'operator' => 'NOT EXISTS',
+        ]],
+    ]);
+    return (int) $query->found_posts;
+}
+
+/**
+ * Vráti priečinok konkrétnej ponuky. Voliteľne ho bezpečne vytvorí.
+ *
+ * Priečinok je iba taxonomické označenie prílohy. Fyzická cesta súboru,
+ * URL ani väzby na iné priečinky sa nemenia.
+ */
+function zc_folder_for_property($post_id, $create = false) {
+    $post_id = (int) $post_id;
+    $post    = $post_id ? get_post($post_id) : null;
+    if (!$post || $post->post_type !== 'property') return 0;
+
+    $folder = (int) get_post_meta($post_id, '_property_folder_id', true);
+    if ($folder && term_exists($folder, ZC_FOLDER_TAX)) return $folder;
+    if (!$create) return 0;
+
+    $folder = zc_folder_get_or_create(zc_folder_name_for_property($post), zc_folder_root_ponuky());
+    if ($folder) update_post_meta($post_id, '_property_folder_id', $folder);
+    return $folder;
+}
+
 /**
  * Zaradí titulnú fotku aj celú galériu ponuky do priečinka s jej názvom.
  * Volá sa pri každom uložení ponuky – z panela aj z wp-adminu.
@@ -106,11 +158,22 @@ function zc_folder_sync_property($post_id) {
 
     // Ak už priečinok pre túto ponuku poznáme, držíme sa ho – aj keď sa
     // ponuka medzitým premenovala. Inak by pribúdali priečinky navyše.
-    $folder = (int) get_post_meta($post_id, '_property_folder_id', true);
-    if (!$folder || !term_exists($folder, ZC_FOLDER_TAX)) {
-        $folder = zc_folder_get_or_create(zc_folder_name_for_property($post), zc_folder_root_ponuky());
-    }
+    $folder = zc_folder_for_property($post_id, true);
     if (!$folder) return;
+
+    // Staršie priečinky mohli mať iba názov ponuky. Doplníme ID a správneho
+    // rodiča, aby sa dve rovnako pomenované ponuky nikdy nezlúčili.
+    $term = get_term($folder, ZC_FOLDER_TAX);
+    $target_name   = zc_folder_name_for_property($post);
+    $target_parent = zc_folder_root_ponuky();
+    if ($term && !is_wp_error($term) &&
+        ($term->name !== $target_name || (int) $term->parent !== $target_parent)) {
+        wp_update_term($folder, ZC_FOLDER_TAX, [
+            'name'   => $target_name,
+            'slug'   => '',
+            'parent' => $target_parent,
+        ]);
+    }
 
     $ids = [];
     $cover = (int) get_post_meta($post_id, '_property_cover_id', true);
@@ -135,7 +198,9 @@ add_action('save_post_property', 'zc_folder_sync_property', 20);
 /** Názov priečinka pre ponuku. */
 function zc_folder_name_for_property($post) {
     $title = is_object($post) ? trim((string) $post->post_title) : '';
-    return $title !== '' ? $title : ('Ponuka #' . (is_object($post) ? $post->ID : 0));
+    $id    = is_object($post) ? (int) $post->ID : 0;
+    // ID zaručí samostatný priečinok aj pri dvoch ponukách s rovnakým názvom.
+    return ($title !== '' ? $title : 'Ponuka') . ' — #' . $id;
 }
 
 /**
@@ -174,6 +239,49 @@ add_action('post_updated', function ($post_id, $after, $before) {
     wp_update_term($folder, ZC_FOLDER_TAX, ['name' => $new_name, 'slug' => '']);
 }, 10, 3);
 
+/* ─────────────── Bezpečné spätné zaradenie starších ponúk ─────────────── */
+
+/**
+ * Staršie ponuky vznikli skôr než priečinky. Po aktualizácii ich spracujeme
+ * po dávkach, aby sa pri väčšom webe nepreťažil server. Menia sa iba termíny
+ * taxonómie; fyzické súbory, URL a galérie zostávajú bez zmeny.
+ */
+function zc_folders_backfill_existing_properties() {
+    if (!is_admin() || !current_user_can('upload_files')) return;
+    if (get_option('zc_media_folders_backfill_version') === '5') return;
+
+    $offset = max(0, (int) get_option('zc_media_folders_backfill_offset', 0));
+    $ids = get_posts([
+        'post_type'      => 'property',
+        'post_status'    => ['publish', 'draft', 'pending', 'private', 'future'],
+        'posts_per_page' => 50,
+        'offset'         => $offset,
+        'orderby'        => 'ID',
+        'order'          => 'ASC',
+        'fields'         => 'ids',
+    ]);
+
+    foreach ($ids as $property_id) {
+        zc_folder_sync_property((int) $property_id);
+    }
+
+    if (count($ids) < 50) {
+        $term_ids = get_terms([
+            'taxonomy'   => ZC_FOLDER_TAX,
+            'hide_empty' => false,
+            'fields'     => 'ids',
+        ]);
+        if (!is_wp_error($term_ids) && $term_ids) {
+            wp_update_term_count_now(array_map('intval', $term_ids), ZC_FOLDER_TAX);
+        }
+        update_option('zc_media_folders_backfill_version', '5', false);
+        delete_option('zc_media_folders_backfill_offset');
+    } else {
+        update_option('zc_media_folders_backfill_offset', $offset + count($ids), false);
+    }
+}
+add_action('admin_init', 'zc_folders_backfill_existing_properties', 30);
+
 /* ─────────────── Filtrovanie v zozname médií ─────────────── */
 
 add_action('restrict_manage_posts', function ($post_type) {
@@ -181,7 +289,10 @@ add_action('restrict_manage_posts', function ($post_type) {
     $folders = zc_folders_flat();
     if (!$folders) return;
     $sel = isset($_GET['zc_folder']) ? (int) $_GET['zc_folder'] : 0;
+    $unassigned = zc_folders_unassigned_count();
     echo '<select name="zc_folder"><option value="0">Všetky priečinky</option>';
+    printf('<option value="-1"%s>Nezaradené (%d)</option>',
+        selected($sel, -1, false), $unassigned);
     foreach ($folders as $f) {
         printf('<option value="%d"%s>%s%s (%d)</option>',
             $f['id'], selected($sel, $f['id'], false),
@@ -194,7 +305,12 @@ add_action('pre_get_posts', function ($q) {
     if (!is_admin() || !$q->is_main_query()) return;
     if ($q->get('post_type') !== 'attachment') return;
     $f = isset($_GET['zc_folder']) ? (int) $_GET['zc_folder'] : 0;
-    if ($f > 0) {
+    if ($f === -1) {
+        $q->set('tax_query', [[
+            'taxonomy' => ZC_FOLDER_TAX,
+            'operator' => 'NOT EXISTS',
+        ]]);
+    } elseif ($f > 0) {
         $q->set('tax_query', [[
             'taxonomy' => ZC_FOLDER_TAX,
             'field'    => 'term_id',
@@ -245,8 +361,26 @@ function zc_folders_media_script() {
     $folders = zc_folders_flat();
     if (!$folders) return;
 
+    $property_id = 0;
+    if (function_exists('pp_is_panel_page') && pp_is_panel_page() && (($_GET['action'] ?? '') === 'edit')) {
+        $candidate = intval($_GET['id'] ?? 0);
+        if ($candidate && get_post_type($candidate) === 'property' && current_user_can('edit_post', $candidate)) {
+            $property_id = $candidate;
+        }
+    } elseif (is_admin()) {
+        $candidate = intval($_GET['post'] ?? $_POST['post_ID'] ?? 0);
+        if ($candidate && get_post_type($candidate) === 'property' && current_user_can('edit_post', $candidate)) {
+            $property_id = $candidate;
+        }
+    }
+    $property_folder = $property_id ? zc_folder_for_property($property_id, true) : 0;
+    $unassigned_count = zc_folders_unassigned_count();
+
     wp_add_inline_script('media-views',
-        'var zcMediaFolders = ' . wp_json_encode($folders) . ';', 'before');
+        'var zcMediaFolders = ' . wp_json_encode($folders) . ';'
+        . 'var zcCurrentPropertyFolder = ' . (int) $property_folder . ';'
+        . 'var zcCurrentPropertyId = ' . (int) $property_id . ';'
+        . 'var zcUnassignedMediaCount = ' . (int) $unassigned_count . ';', 'before');
 
     $js = <<<'JS'
 (function(){
@@ -259,11 +393,16 @@ function zc_folders_media_script() {
         createFilters: function () {
             All.prototype.createFilters.apply(this, arguments);
             var filters = this.filters;
+            filters['zcfolder-unassigned'] = {
+                text: '\u{1F5C2} Nezaradené (' + Number(window.zcUnassignedMediaCount || 0) + ')',
+                props: { zc_folder: -1, uploadedTo: null, orderby: 'date', order: 'DESC' },
+                priority: 55
+            };
             zcMediaFolders.forEach(function (f) {
                 filters['zcfolder-' + f.id] = {
-                    text: '\u{1F4C1} ' + f.pad + f.name + ' (' + f.count + ')',
+                    text: (Number(f.id)===Number(window.zcCurrentPropertyFolder)?'\u2605 ':'\u{1F4C1} ') + f.pad + f.name + ' (' + f.count + ')',
                     props: { zc_folder: f.id, uploadedTo: null, orderby: 'date', order: 'DESC' },
-                    priority: 60
+                    priority: Number(f.id)===Number(window.zcCurrentPropertyFolder)?5:60
                 };
             });
             this.filters = filters;
@@ -283,7 +422,12 @@ add_filter('ajax_query_attachments_args', function ($args) {
     $f = 0;
     if (isset($_REQUEST['query']['zc_folder']))  $f = (int) $_REQUEST['query']['zc_folder'];
     elseif (isset($_REQUEST['zc_folder']))       $f = (int) $_REQUEST['zc_folder'];
-    if ($f > 0) {
+    if ($f === -1) {
+        $args['tax_query'] = [[
+            'taxonomy' => ZC_FOLDER_TAX,
+            'operator' => 'NOT EXISTS',
+        ]];
+    } elseif ($f > 0) {
         $args['tax_query'] = [[
             'taxonomy' => ZC_FOLDER_TAX,
             'field'    => 'term_id',

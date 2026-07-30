@@ -108,8 +108,8 @@ function render_prop_main_meta($post) {
     
     <div class="pm-title">Popis</div>
     <div class="pm-field">
-        <label>Krátky popis (na kartu)</label>
-        <textarea name="prop_popis_kratky" rows="2" placeholder="Krátky popis..."><?php echo esc_textarea($f('popis_kratky')) ?></textarea>
+        <label>Krátky popis (SEO a newsletter)</label>
+        <textarea name="prop_popis_kratky" rows="4" placeholder="Krátky popis…"><?php echo esc_textarea($f('popis_kratky')) ?></textarea>
     </div>
     <?php
 }
@@ -250,8 +250,11 @@ add_action('save_post_property', function($post_id) {
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (!current_user_can('edit_post', $post_id)) return;
     
-    foreach (['typ','cena','lokalita','mesto','okres','popis_kratky','plocha','pozemok','spalne','kupelne','wc','poschodie','rocnik','stav','vlastnictvo','agent_id'] as $f) {
+    foreach (['typ','cena','lokalita','mesto','okres','plocha','pozemok','spalne','kupelne','wc','poschodie','rocnik','stav','vlastnictvo','agent_id'] as $f) {
         if (isset($_POST['prop_'.$f])) update_post_meta($post_id, '_property_'.$f, sanitize_text_field($_POST['prop_'.$f]));
+    }
+    if (isset($_POST['prop_popis_kratky'])) {
+        update_post_meta($post_id, '_property_popis_kratky', wp_kses_post(wp_unslash($_POST['prop_popis_kratky'])));
     }
     
     if (isset($_POST['gallery_nonce_field']) && wp_verify_nonce($_POST['gallery_nonce_field'], 'gallery_nonce')) {

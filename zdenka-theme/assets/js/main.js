@@ -65,6 +65,8 @@ if (!document.getElementById('zcOvCSS')) {
         '#zcOv.open .zco-nav a:nth-child(4){opacity:1;transform:none;transition-delay:.57s;}',
         '#zcOv.open .zco-nav a:nth-child(5){opacity:1;transform:none;transition-delay:.64s;}',
         '#zcOv.open .zco-nav a:nth-child(6){opacity:1;transform:none;transition-delay:.71s;}',
+        '#zcOv.open .zco-nav a:nth-child(7){opacity:1;transform:none;transition-delay:.78s;}',
+        '#zcOv.open .zco-nav a:nth-child(8){opacity:1;transform:none;transition-delay:.85s;}',
         /* Closing: links snap out quickly */
         '#zcOv.closing .zco-nav a{opacity:0;transform:translateY(-8px);transition:opacity .15s,transform .15s;}',
 
@@ -107,20 +109,22 @@ if (!document.getElementById('zcOv')) {
 
     var nav = document.getElementById('zcOvNav');
     [['/', 'Domov'], ['/o-mne/', 'O mne'], ['/ako-pracujem/', 'Ako pracujem'],
-     ['/ponuky/', 'Ponuky'], ['/odhad/', 'Odhad ZDARMA'], ['/kontakt/', 'Kontakt']
+     ['/ponuky/', 'Ponuky'], ['/referencie/', 'Referencie'],
+     ['/odhad/', 'Odhad ZDARMA'], ['/kontakt/', 'Kontakt']
     ].forEach(function (item) {
         var a = document.createElement('a');
         a.href = location.origin + item[0];
         a.textContent = item[1];
         nav.appendChild(a);
     });
-    // Ebook položka (ak je zverejnený) – otvorí modal namiesto navigácie.
-    // Detekcia je odolná: buď príznak zo servera, alebo prítomnosť položky v desktop menu.
-    var ebookOn = (window.zcData && zcData.ebookOn) || document.querySelector('.zc-nav-ebook') || document.querySelector('[data-zc-ebook-open]');
+    // Ebook položka sa na mobile smie zobraziť iba pri výslovnom serverovom
+    // stave „aktívny“. DOM fallback vedel po vypnutí zachytiť starý/cachovaný
+    // odkaz a EBOOK potom zostal v mobilnom menu.
+    var ebookOn = Boolean(window.zcData && Number(zcData.ebookOn) === 1);
     if (ebookOn) {
         var eb = document.createElement('a');
         eb.href = '#';
-        eb.textContent = 'Ebook PDF zdarma';
+        eb.textContent = 'EBOOK';
         eb.setAttribute('data-zc-ebook-open', '');
         eb.style.color = '#B8A47A';
         eb.addEventListener('click', function (e) {
@@ -211,13 +215,10 @@ if (hero && hdr) {
 }
 
 /* ══ CONTACT FORM ════════════════════════════════════════════ */
-var form = document.getElementById('zcContactForm');
-var fmsg = document.getElementById('zcFormMsg');
-if (form) {
-    var f2 = form.cloneNode(true);
-    form.parentNode.replaceChild(f2, form);
-    form = f2;
-    fmsg = document.getElementById('zcFormMsg');
+document.querySelectorAll('#zcContactForm,.zc-contact-form').forEach(function (originalForm) {
+    var form = originalForm.cloneNode(true);
+    originalForm.parentNode.replaceChild(form, originalForm);
+    var fmsg = form.querySelector('.zc-form-msg,#zcFormMsg');
     form.addEventListener('submit', function (e) {
         e.preventDefault();
         var btn = form.querySelector('[type=submit]'), orig = btn.textContent;
@@ -255,7 +256,7 @@ if (form) {
             btn.textContent = orig; btn.disabled = false;
         });
     });
-}
+});
 
 /* ══ SCROLL TO TOP ═══════════════════════════════════════════ */
 var stb = document.getElementById('zcScrollTop');
@@ -443,3 +444,68 @@ if ('IntersectionObserver' in window) {
 
 
 });
+
+/*
+ * Playfair Display aj Georgia používajú v niektorých prehliadačoch nízke
+ * textové číslice. V serifových textoch preto číslice vykreslíme cez DM Sans,
+ * ktorý má spoľahlivé vysoké (lining) číslice. Text a prístupnosť sa nemenia.
+ */
+(function () {
+    function initLiningNumerals() {
+    function fixSerifNumerals(root) {
+        var nodes = [];
+        var walker;
+
+        if (!root || root.nodeType !== 1) return;
+
+        walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+            acceptNode: function (node) {
+                var parent = node.parentElement;
+                var family;
+
+                if (!parent || !/[0-9]/.test(node.nodeValue || '')) {
+                    return NodeFilter.FILTER_REJECT;
+                }
+                if (parent.closest('script,style,textarea,input,option,[contenteditable="true"],.zc-lining-number')) {
+                    return NodeFilter.FILTER_REJECT;
+                }
+
+                family = window.getComputedStyle(parent).fontFamily.toLowerCase();
+                return family.indexOf('playfair') !== -1 || family.indexOf('georgia') !== -1
+                    ? NodeFilter.FILTER_ACCEPT
+                    : NodeFilter.FILTER_REJECT;
+            }
+        });
+
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+
+        nodes.forEach(function (node) {
+            var parts = node.nodeValue.split(/([0-9]+)/);
+            var fragment = document.createDocumentFragment();
+
+            parts.forEach(function (part) {
+                var number;
+                if (!part) return;
+                if (/^[0-9]+$/.test(part)) {
+                    number = document.createElement('span');
+                    number.className = 'zc-lining-number';
+                    number.textContent = part;
+                    fragment.appendChild(number);
+                } else {
+                    fragment.appendChild(document.createTextNode(part));
+                }
+            });
+
+            node.parentNode.replaceChild(fragment, node);
+        });
+    }
+
+        fixSerifNumerals(document.body);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initLiningNumerals);
+    } else {
+        initLiningNumerals();
+    }
+})();

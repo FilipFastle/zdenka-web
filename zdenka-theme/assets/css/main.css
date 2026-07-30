@@ -34,7 +34,18 @@
 /* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; scroll-padding-top: var(--hh); }
-body { font-family: var(--sans); color: var(--text); background: var(--bg); line-height: 1.75; -webkit-font-smoothing: antialiased; font-size: 16px; overflow-x: hidden; }
+body { font-family: var(--sans); color: var(--text); background: var(--bg); line-height: 1.75; -webkit-font-smoothing: antialiased; font-size: 16px; overflow-x: hidden; font-variant-numeric: lining-nums proportional-nums; }
+.zc-lining-number {
+    display: inline-block;
+    font-family: var(--sans) !important;
+    font-size: 1em;
+    font-weight: inherit;
+    font-style: inherit;
+    font-variant-numeric: lining-nums proportional-nums;
+    font-feature-settings: "lnum" 1, "pnum" 1;
+    line-height: 1;
+    letter-spacing: -.015em;
+}
 img { max-width: 100%; height: auto; display: block; }
 a { color: var(--accent-txt); text-decoration: none; transition: color .22s; }
 a:hover { color: var(--accent); }
@@ -162,7 +173,7 @@ ul { list-style: none; }
 .zc-header-wrap:not(.transparent) .zc-logo small { color: var(--accent-txt); }
 .zc-nav { display: flex; align-items: center; gap: 20px; }
 .zc-nav a {
-    font-size: 10px; font-weight: 700; letter-spacing: .6px;
+    font-size: 11px; font-weight: 700; letter-spacing: .6px;
     text-transform: uppercase; color: var(--text);
     position: relative; padding-bottom: 3px; transition: color .22s;
     white-space: nowrap;
@@ -357,14 +368,25 @@ ul { list-style: none; }
 .zc-prop-card:hover .zc-prop-img img { transform: scale(1.06); }
 .zc-prop-badge {
     position: absolute; bottom: 12px; left: 12px;
-    background: var(--accent); color: var(--dark);
-    font-size: 10px; font-weight: 800; letter-spacing: 1.2px;
-    text-transform: uppercase; padding: 5px 12px; border-radius: 50px;
-    font-family: var(--sans);
+    display:inline-flex;align-items:center;min-height:29px;
+    background: linear-gradient(135deg,#E8D39F,#B89450); color:#2A2114;
+    font-size: 9px; font-weight: 900; letter-spacing: 1.15px;
+    text-transform: uppercase; padding: 6px 11px; border-radius: 50px;
+    border:1px solid rgba(255,255,255,.58);
+    box-shadow:0 5px 14px rgba(31,25,18,.28),inset 0 1px 0 rgba(255,255,255,.32);
+    backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+    font-family: var(--sans); line-height:1; text-shadow:none;
 }
-.zc-prop-badge.prenajom  { background: var(--white); color: var(--dark); border: 1px solid var(--border); }
-.zc-prop-badge.pozemok   { background: #5A8F6A; color: #fff; }
-.zc-prop-badge.rezervovane { background: var(--muted); color: #fff; }
+.zc-prop-badge.predaj    { background:linear-gradient(135deg,#E8D39F,#B89450);color:#2A2114; }
+.zc-prop-badge.prenajom  { background:linear-gradient(135deg,#2A7EA4,#174B78);color:#fff; }
+.zc-prop-badge.pozemok   { background:linear-gradient(135deg,#5A9B71,#2E684A);color:#fff; }
+.zc-prop-badge.is-reserved { background:linear-gradient(135deg,#F6B944,#C77912);color:#3D2705;box-shadow:0 5px 16px rgba(199,121,18,.42),0 0 16px rgba(246,185,68,.28); }
+.zc-prop-badge.is-sold {
+    background: linear-gradient(135deg,#F04444,#A90F1B) !important;
+    color: #fff !important;
+    border-color:rgba(255,220,220,.72);
+    box-shadow: 0 0 9px rgba(220,38,38,.9), 0 0 24px rgba(220,38,38,.58),0 7px 18px rgba(91,8,15,.4);
+}
 .zc-fav-btn {
     position: absolute; top: 12px; right: 12px; z-index: 3;
     width: 38px; height: 38px; border: none; border-radius: 50%;
@@ -846,8 +868,20 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 /* ── Ponuky: štítky NOVÉ / ZNÍŽENÉ / stav + cena za m² ── */
 .zc-prop-badges { position:absolute; top:12px; left:12px; display:flex; flex-direction:column; gap:6px; align-items:flex-start; z-index:3; }
 .zc-prop-badges .zc-prop-badge { position:static; }
-.zc-prop-badge.is-new { background:#5A8F6A; color:#fff; }
-.zc-prop-badge.is-reduced { background:#C0392B; color:#fff; }
+.zc-prop-badge.is-new {
+    background:linear-gradient(135deg,#43DFA2,#0F7956);
+    color:#fff;
+    border-color:rgba(190,255,229,.78);
+    animation:zc-new-badge-pulse 1.8s ease-in-out infinite;
+}
+@keyframes zc-new-badge-pulse {
+    0%,100% { box-shadow:0 5px 16px rgba(15,121,86,.42),0 0 8px rgba(67,223,162,.28); filter:brightness(1); }
+    50% { box-shadow:0 6px 19px rgba(15,121,86,.56),0 0 22px rgba(67,223,162,.82); filter:brightness(1.12); }
+}
+@media (prefers-reduced-motion:reduce) {
+    .zc-prop-badge.is-new { animation:none; box-shadow:0 5px 16px rgba(15,121,86,.48),0 0 15px rgba(67,223,162,.55); }
+}
+.zc-prop-badge.is-reduced { background:linear-gradient(135deg,#EF6B5A,#B62E28);color:#fff; }
 .zc-prop-card.is-sold .zc-prop-img::after {
     content:''; position:absolute; inset:0; background:rgba(28,26,24,.32);
 }
@@ -940,7 +974,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 
 /* ── Fotka na karte ponuky je odkaz ────────────────────────────────────
    Ľudia klikajú najprv na fotku, až potom na tlačidlo. Odkaz leží pod
-   štítkami aj pod srdiečkom a porovnaním, takže tie fungujú ďalej. */
+   štítkami aj pod srdiečkom, takže tie fungujú ďalej. */
 .zc-prop-imglink { display: block; width: 100%; height: 100%; position: relative; z-index: 1; }
 .zc-prop-imglink:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
 .zc-prop-card:hover .zc-prop-imglink { cursor: pointer; }
@@ -960,3 +994,23 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
     padding: 4px 0 4px 16px; border-left: 3px solid var(--accent); color: var(--muted);
 }
 .pp-desc a, .zc-richtext a { color: var(--accent-txt); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ── Mobile hardening: formuláre, dotykové ciele a dlhý obsah ────────── */
+@media (max-width: 768px) {
+    html, body { max-width: 100%; overflow-x: clip; }
+    .zc-page-content, .entry-content, .pp-desc, .zc-richtext { min-width: 0; overflow-wrap: anywhere; }
+    .zc-page-content img, .zc-page-content iframe,
+    .entry-content img, .entry-content iframe { max-width: 100%; height: auto; }
+    input, select, textarea { font-size: 16px; max-width: 100%; }
+    .zc-btn, .zc-prop-btn, button, input[type="submit"] {
+        min-height: 44px;
+        touch-action: manipulation;
+    }
+    .zc-mobile-nav a { min-height: 44px; display: flex; align-items: center; }
+    .zc-prop-actions, .zc-hero-btns { flex-wrap: wrap; }
+    .zc-prop-actions > *, .zc-hero-btns > * { max-width: 100%; }
+}
+@media (max-width: 420px) {
+    .zc-container { padding-left: 15px; padding-right: 15px; }
+    .zc-header { padding-left: 15px; padding-right: 15px; }
+}

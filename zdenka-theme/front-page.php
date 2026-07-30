@@ -19,15 +19,12 @@ $zc_hero_portrait    = $zc_sized('portrait', 'large');      // ~1024 px, mobil
 $zc_hero_portrait_2x = $zc_sized('portrait', 'zc-1440');    // mobil s retinou
 ?>
 <style>
-/* Sticky hero – zvyšok stránky sa naň pri scrolle nasunie ako opona */
+/* Hero je bežná súčasť stránky – po ňom nasleduje normálny scroll bez prekrývania. */
 /* Hero vždy vyplní celé okno – aj keď si používateľ stránku oddiali.
    dvh berie do úvahy lištu prehliadača na mobile, vh je záloha pre staršie. */
-.zc-home-hero{height:100vh;min-height:560px;margin-top:calc(-1 * var(--hh,72px));position:sticky;top:0;z-index:0;overflow:hidden;display:flex;align-items:center}
+.zc-home-hero{height:100vh;min-height:560px;margin-top:calc(-1 * var(--hh,72px));position:relative;overflow:hidden;display:flex;align-items:center}
 @supports(height:100dvh){.zc-home-hero{height:100dvh}}
-.zc-home-hero ~ section{position:relative;z-index:2}
-.zc-home-hero ~ footer.zc-footer{position:relative;z-index:2}
-.zc-hero-bg{position:absolute;inset:0;background-size:cover;background-position:67% center;background-repeat:no-repeat;will-change:transform;transform-origin:67% 35%}
-.zc-hero-text{will-change:transform,opacity}
+.zc-hero-bg{position:absolute;inset:0;background-size:cover;background-position:67% center;background-repeat:no-repeat}
 /* Postupné nabehnutie hero obsahu pri načítaní (beží vždy, aj na PC) */
 @keyframes zcRise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
 .zc-hero-text>*{animation:zcRise .7s cubic-bezier(.22,.9,.36,1) both}
@@ -77,7 +74,6 @@ $zc_hero_portrait_2x = $zc_sized('portrait', 'zc-1440');    // mobil s retinou
     var hdr=document.getElementById('zcHeader');
     if(!hdr)return;
     hdr.classList.add('transparent');
-    // Sticky hero má rect.bottom vždy = výška viewportu – meriame preto scrollY
     function u(){if(!document.getElementById('zcHomeHero'))return;hdr.classList.toggle('transparent',window.scrollY < 24);}
     window.addEventListener('scroll',u,{passive:true});
 })();
@@ -119,33 +115,6 @@ $zc_hero_portrait_2x = $zc_sized('portrait', 'zc-1440');    // mobil s retinou
         <svg width="16" height="20" viewBox="0 0 16 20" fill="none"><rect x="1" y="1" width="14" height="18" rx="7" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="6" r="2" fill="currentColor"/></svg>
     </div>
 </div>
-
-<script>
-/* Hero zoom pri scrolle: obsah stránky sa nasúva na prilepený hero
-   a fotka sa plynulo približuje; text jemne mizne. Beží vždy (PC aj mobil). */
-(function(){
-    var hero = document.getElementById('zcHomeHero');
-    var bg   = document.getElementById('zcHeroBg');
-    var txt  = document.querySelector('.zc-hero-text');
-    var hint = document.querySelector('.zc-hero-scroll');
-    if (!hero || !bg) return;
-    // Zoom aj pohyb textu bežia vždy – nezávisle od systémového „obmedziť pohyb"
-    var ticking = false;
-    function update(){
-        var h = hero.offsetHeight || 1;
-        var p = Math.min(Math.max(window.scrollY / h, 0), 1); // 0 → 1 kým hero zmizne
-        bg.style.transform = 'scale(' + (1 + p * 0.15).toFixed(4) + ')';
-        if (txt)  { txt.style.opacity = Math.max(1 - p * 1.15, 0).toFixed(3); txt.style.transform = 'translateY(' + (-p * 40).toFixed(1) + 'px)'; }
-        if (hint) { hint.style.opacity = Math.max(1 - p * 3, 0).toFixed(3); }
-        ticking = false;
-    }
-    window.addEventListener('scroll', function(){
-        if (!ticking) { requestAnimationFrame(update); ticking = true; }
-    }, {passive:true});
-    window.addEventListener('resize', update, {passive:true});
-    update();
-})();
-</script>
 
 <!-- MOJE HODNOTY -->
 <section class="zc-section bg-section">
@@ -237,11 +206,20 @@ $zc_hero_portrait_2x = $zc_sized('portrait', 'zc-1440');    // mobil s retinou
     </div>
     <div class="zc-cta-card" style="background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:40px;box-shadow:var(--sh)">
         <h3 style="font-family:var(--serif);font-size:22px;margin-bottom:24px">Napíšte mi správu</h3>
-        <form id="zcContactForm">
+        <form id="zcContactForm" style="position:relative">
+            <?php echo function_exists('zc_honeypot_fields') ? zc_honeypot_fields() : ''; ?>
             <?php foreach([['name','text','Vaše meno *'],['email','email','E-mail *'],['phone','tel','Telefón']] as [$n,$t,$p]): ?>
             <div style="margin-bottom:12px"><input type="<?php echo $t; ?>" name="<?php echo $n; ?>" placeholder="<?php echo $p; ?>" class="zc-cta-input" style="background:var(--bg);border:1.5px solid var(--border);color:var(--text);padding:13px 16px;border-radius:var(--r-sm);width:100%;font-family:var(--sans);font-size:16px" <?php if(substr($p, -strlen('*')) === '*') echo 'required'; ?>></div>
             <?php endforeach; ?>
             <div style="margin-bottom:16px"><textarea name="message" placeholder="Správa" rows="4" class="zc-cta-input" style="background:var(--bg);border:1.5px solid var(--border);color:var(--text);padding:13px 16px;border-radius:var(--r-sm);width:100%;font-family:var(--sans);font-size:16px;resize:vertical"></textarea></div>
+            <label style="display:flex;align-items:flex-start;gap:9px;font-size:12px;color:var(--muted);cursor:pointer;line-height:1.55;margin-bottom:10px">
+                <input type="checkbox" name="gdpr" required style="margin-top:2px;accent-color:var(--accent);flex-shrink:0">
+                <span>Súhlasím so <a href="/ochrana-osobnych-udajov/" style="color:var(--accent-txt)">spracovaním osobných údajov</a> za účelom odpovede na môj dopyt. *</span>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:9px;font-size:12px;color:var(--muted);cursor:pointer;line-height:1.55;margin-bottom:16px">
+                <input type="checkbox" name="newsletter" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0">
+                <span>Chcem dostávať novinky a nové ponuky nehnuteľností na e-mail.</span>
+            </label>
             <div id="zcFormMsg"></div>
             <button type="submit" class="zc-btn zc-btn-primary" style="width:100%;justify-content:center">Odoslať správu →</button>
         </form>

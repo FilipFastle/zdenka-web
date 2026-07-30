@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Property Manager Pro
  * Description: Profesionálny real estate plugin na správu nehnuteľností
- * Version: 5.35
+ * Version: 5.52
  * Author: Filip
  */
 
@@ -39,6 +39,31 @@ require_once PROPERTY_PRO_PATH . 'includes/audit-log.php';
 require_once PROPERTY_PRO_PATH . 'includes/backup.php';
 require_once PROPERTY_PRO_PATH . 'includes/media-folders.php';
 
+/**
+ * WordPress 7 vypisuje content_style TinyMCE do inline JavaScriptu.
+ * Úvodzovky okolo viacslovných názvov fontov môžu rozbiť celý inicializačný
+ * skript a editor potom zostane prázdny. Oprava platí pre panel, newsletter
+ * aj ďalšie natívne wp_editor() polia bez zmeny uloženého obsahu.
+ */
+add_filter('tiny_mce_before_init', function ($init) {
+    if (!empty($init['content_style'])) {
+        $init['content_style'] = str_replace(
+            ['font-family:"DM Sans"', 'font-family:"Playfair Display"'],
+            ['font-family:DM Sans', 'font-family:Playfair Display'],
+            (string) $init['content_style']
+        );
+    }
+    return $init;
+}, PHP_INT_MAX);
+
+// Obranné vypnutie starého porovnávača aj v prípade, že niekde zostal shortcode.
+add_action('init', function () {
+    remove_shortcode('porovnanie');
+    add_shortcode('porovnanie', '__return_empty_string');
+    remove_action('wp_ajax_pp_compare', 'pp_ajax_compare');
+    remove_action('wp_ajax_nopriv_pp_compare', 'pp_ajax_compare');
+}, 99);
+
 // Realitný panel beží na vlastnej šablóne — bez hlavičky/pätičky témy
 add_filter('template_include', function ($template) {
     if (function_exists('pp_is_panel_page') ? pp_is_panel_page() : is_page('realitny-panel')) {
@@ -48,18 +73,15 @@ add_filter('template_include', function ($template) {
     return $template;
 });
 
-// Auto-vytvorenie stránky porovnania (raz)
+// Porovnávanie ponúk bolo odstránené. Starú automatickú stránku iba skryjeme
+// do konceptov, aby sa nič nenávratne nemazalo.
 add_action('admin_init', function () {
-    if (get_page_by_path('porovnanie')) return;
-    if (get_option('pp_porovnanie_created')) return;
-    wp_insert_post([
-        'post_type'    => 'page',
-        'post_title'   => 'Porovnanie ponúk',
-        'post_name'    => 'porovnanie',
-        'post_content' => '[porovnanie]',
-        'post_status'  => 'publish',
-    ]);
-    update_option('pp_porovnanie_created', 1);
+    if (get_option('pp_porovnanie_removed') === '1') return;
+    $page = get_page_by_path('porovnanie', OBJECT, 'page');
+    if ($page && $page->post_status === 'publish') {
+        wp_update_post(['ID' => $page->ID, 'post_status' => 'draft']);
+    }
+    update_option('pp_porovnanie_removed', '1', false);
 });
 
 // Admin CSS for meta boxes
