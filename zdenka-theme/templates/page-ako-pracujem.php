@@ -102,9 +102,9 @@ $ap_vcount = count($ap_videos);
 <!-- HERO -->
 <div class="ap-hero">
     <div class="zc-container" style="max-width:700px">
-        <div class="zc-eyebrow" style="justify-content:center">Postup spolupráce</div>
-        <h1>Ako <em>pracujem</em></h1>
-        <p>Transparentný, overený proces – od prvého stretnutia po odovzdanie kľúčov. Každý krok robím osobne a vždy v záujme klienta.</p>
+        <div class="zc-eyebrow" style="justify-content:center"><?php echo zc_t('work.eyebrow') ?></div>
+        <h1>Ako <em><?php echo zc_t('work.title_hl') ?></em></h1>
+        <p><?php echo zc_t('work.sub') ?></p>
     </div>
 </div>
 
@@ -112,8 +112,8 @@ $ap_vcount = count($ap_videos);
 <section class="ap-services">
 <div class="zc-container">
     <div style="text-align:center;max-width:560px;margin:0 auto 48px">
-        <div class="zc-eyebrow" style="justify-content:center">Čo robím pre vás</div>
-        <h2 style="font-family:var(--serif)">Kompletný servis <em>v každom kroku</em></h2>
+        <div class="zc-eyebrow" style="justify-content:center"><?php echo zc_t('work.serv_eye') ?></div>
+        <h2 style="font-family:var(--serif)"><?php echo zc_t('work.serv_t') ?> <em><?php echo zc_t('work.serv_hl') ?></em></h2>
     </div>
     <div class="ap-grid">
 
@@ -159,9 +159,9 @@ $ap_vcount = count($ap_videos);
 <section class="ap-video-section">
 <div class="zc-container">
     <div style="text-align:center;margin-bottom:40px">
-        <div class="zc-eyebrow" style="justify-content:center">Ukážka práce</div>
-        <h2 style="font-family:var(--serif)">Video <em>prehliadka</em></h2>
-        <p style="color:var(--muted);max-width:520px;margin:12px auto 0">Pozrite si, ako vyzerá naša video prezentácia nehnuteľnosti.</p>
+        <div class="zc-eyebrow" style="justify-content:center"><?php echo zc_t('work.vid_eye') ?></div>
+        <h2 style="font-family:var(--serif)">Video <em><?php echo zc_t('work.vid_hl') ?></em></h2>
+        <p style="color:var(--muted);max-width:520px;margin:12px auto 0"><?php echo zc_t('work.vid_sub') ?></p>
     </div>
     <?php if ($ap_vcount):
         // Menej videí = väčšie; tri sa ešte zmestia do jednej obrazovky
@@ -190,12 +190,12 @@ $ap_vcount = count($ap_videos);
 <!-- CTA -->
 <section class="ap-cta">
 <div class="zc-container" style="max-width:600px;text-align:center">
-    <div class="zc-eyebrow" style="justify-content:center">Nezáväzná konzultácia</div>
-    <h2 style="font-family:var(--serif);margin-bottom:16px">Začnime <em>spolupracovať</em></h2>
+    <div class="zc-eyebrow" style="justify-content:center"><?php echo zc_t('work.cta_eye') ?></div>
+    <h2 style="font-family:var(--serif);margin-bottom:16px"><?php echo zc_t('work.cta_t') ?> <em><?php echo zc_t('work.cta_hl') ?></em></h2>
     <p style="color:var(--muted);font-size:16px;line-height:1.8;margin-bottom:32px">
         Prvá konzultácia je bezplatná a nezáväzná. Rada sa s vami stretnem a preberieme vaše možnosti.
     </p>
-    <a href="<?php echo home_url('/kontakt/'); ?>" class="zc-btn zc-btn-primary">Kontaktovať →</a>
+    <a href="<?php echo home_url('/kontakt/'); ?>" class="zc-btn zc-btn-primary"><?php echo zc_t('work.cta_btn') ?></a>
 </div>
 </section>
 

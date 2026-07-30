@@ -94,24 +94,24 @@ $zc_hero_portrait_2x = $zc_sized('portrait', 'zc-1440');    // mobil s retinou
     <?php else: ?><div class="zc-hero-bg" id="zcHeroBg" style="background:#1C1A18"></div><?php endif; ?>
     <div class="zc-hero-overlay"></div>
     <div class="zc-hero-text">
-        <div class="zc-hero-eyebrow">Banská Bystrica · Zvolen</div>
-        <h1 class="zc-hero-h1">Predáme váš domov <em>za najlepšiu cenu</em></h1>
-        <p class="zc-hero-p">Profesionálna realitná maklérka s bohatými skúsenosťami. Predaj, prenájom aj poradenstvo – vždy s osobným prístupom.</p>
+        <div class="zc-hero-eyebrow"><?php echo zc_t('home.badge') ?></div>
+        <h1 class="zc-hero-h1"><?php echo zc_t('home.title') ?> <em><?php echo zc_t('home.title_hl') ?></em></h1>
+        <p class="zc-hero-p"><?php echo zc_t('home.sub') ?></p>
         <div class="zc-hero-btns">
             <?php if (function_exists('zc_ebook_enabled') && zc_ebook_enabled()): zc_ebook_flag(true); ?>
             <button type="button" class="zc-btn zc-btn-primary zc-hero-ebook-btn" data-zc-ebook-open>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:2px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
                 Ebook PDF zdarma
             </button>
-            <a href="<?php echo home_url('/ponuky/'); ?>" class="zc-btn" style="background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.3)">Pozrieť ponuky</a>
+            <a href="<?php echo home_url('/ponuky/'); ?>" class="zc-btn" style="background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.3)"><?php echo zc_t('home.btn1') ?></a>
             <?php else: ?>
-            <a href="<?php echo home_url('/ponuky/'); ?>" class="zc-btn zc-btn-primary">Pozrieť ponuky</a>
-            <a href="<?php echo home_url('/kontakt/'); ?>" class="zc-btn" style="background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.3)">Bezplatná konzultácia</a>
+            <a href="<?php echo home_url('/ponuky/'); ?>" class="zc-btn zc-btn-primary"><?php echo zc_t('home.btn1') ?></a>
+            <a href="<?php echo home_url('/kontakt/'); ?>" class="zc-btn" style="background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.3)"><?php echo zc_t('home.btn2') ?></a>
             <?php endif; ?>
         </div>
     </div>
     <div class="zc-hero-scroll">
-        <span>Scrolluj</span>
+        <span><?php echo zc_t('home.scroll') ?></span>
         <svg width="16" height="20" viewBox="0 0 16 20" fill="none"><rect x="1" y="1" width="14" height="18" rx="7" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="6" r="2" fill="currentColor"/></svg>
     </div>
 </div>
@@ -120,8 +120,8 @@ $zc_hero_portrait_2x = $zc_sized('portrait', 'zc-1440');    // mobil s retinou
 <section class="zc-section bg-section">
 <div class="zc-container">
     <div style="text-align:center;max-width:580px;margin:0 auto 52px">
-        <div class="zc-eyebrow" style="justify-content:center">Moje hodnoty</div>
-        <h2 style="font-family:var(--serif)">Čo ma riadi <em>pri práci</em></h2>
+        <div class="zc-eyebrow" style="justify-content:center"><?php echo zc_t('home.values_eye') ?></div>
+        <h2 style="font-family:var(--serif)"><?php echo zc_t('home.values_t') ?> <em><?php echo zc_t('home.values_hl') ?></em></h2>
     </div>
     <div class="zc-precoja-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:22px">
     <?php foreach([
@@ -140,8 +140,8 @@ $zc_hero_portrait_2x = $zc_sized('portrait', 'zc-1440');    // mobil s retinou
 <section class="zc-section bg-white">
 <div class="zc-container">
     <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:48px;flex-wrap:wrap;gap:20px">
-        <div><div class="zc-eyebrow">Aktuálne na trhu</div><h2 style="font-family:var(--serif)">Vybrané <em>nehnuteľnosti</em></h2></div>
-        <a href="<?php echo home_url('/ponuky/'); ?>" class="zc-btn zc-btn-outline">Všetky ponuky →</a>
+        <div><div class="zc-eyebrow"><?php echo zc_t('home.props_eye') ?></div><h2 style="font-family:var(--serif)"><?php echo zc_t('home.props_t') ?> <em><?php echo zc_t('home.props_hl') ?></em></h2></div>
+        <a href="<?php echo home_url('/ponuky/'); ?>" class="zc-btn zc-btn-outline"><?php echo zc_t('home.props_all') ?></a>
     </div>
     <?php echo do_shortcode('[property_grid per_page="3"]'); ?>
 </div>
@@ -151,15 +151,15 @@ $zc_hero_portrait_2x = $zc_sized('portrait', 'zc-1440');    // mobil s retinou
 <section class="zc-section bg-section">
 <div class="zc-container">
     <div style="text-align:center;max-width:560px;margin:0 auto 52px">
-        <div class="zc-eyebrow" style="justify-content:center">Referencie</div>
-        <h2 style="font-family:var(--serif)">Čo hovoria <em>klienti</em></h2>
+        <div class="zc-eyebrow" style="justify-content:center"><?php echo zc_t('home.refs_eye') ?></div>
+        <h2 style="font-family:var(--serif)"><?php echo zc_t('home.refs_t') ?> <em><?php echo zc_t('home.refs_hl') ?></em></h2>
     </div>
     <?php
     if (function_exists('zcr_table')) {
         // Všetky recenzie v karuseli – bez obmedzenia počtu
         echo do_shortcode('[zc_reviews carousel="1" cols="3"]');
         if (get_page_by_path('referencie')) {
-            echo '<div style="text-align:center;margin-top:26px"><a href="' . esc_url(home_url('/referencie/')) . '" class="zc-btn zc-btn-outline">Všetky referencie →</a></div>';
+            echo '<div style="text-align:center;margin-top:26px"><a href="' . esc_url(home_url('/referencie/')) . '" class="zc-btn zc-btn-outline">' . zc_t('home.refs_all') . '</a></div>';
         }
     } else {
         // Fallback – hardcoded kým plugin nie je aktívny
@@ -186,9 +186,9 @@ $zc_hero_portrait_2x = $zc_sized('portrait', 'zc-1440');    // mobil s retinou
 <section style="background:var(--section);padding:100px 0;border-top:1px solid var(--border)">
 <div class="zc-container zc-cta-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center">
     <div>
-        <div class="zc-eyebrow">Nezáväzná konzultácia</div>
-        <h2 style="font-family:var(--serif);margin-bottom:16px">Predávate alebo hľadáte <em>nový domov?</em></h2>
-        <p style="color:var(--muted);font-size:16px;line-height:1.75;margin-bottom:32px">Prvá konzultácia je bezplatná a nezáväzná.</p>
+        <div class="zc-eyebrow"><?php echo zc_t('home.cta_eye') ?></div>
+        <h2 style="font-family:var(--serif);margin-bottom:16px"><?php echo zc_t('home.cta_t') ?> <em><?php echo zc_t('home.cta_hl') ?></em></h2>
+        <p style="color:var(--muted);font-size:16px;line-height:1.75;margin-bottom:32px"><?php echo zc_t('home.cta_sub') ?></p>
         <?php foreach([
             ['<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>',$phone,"tel:".preg_replace('/[^0-9+]/','',$phone)],
             ['<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>','WhatsApp',"https://wa.me/".preg_replace('/[^0-9]/','',$wa)],
@@ -205,7 +205,7 @@ $zc_hero_portrait_2x = $zc_sized('portrait', 'zc-1440');    // mobil s retinou
         <?php endif; ?>
     </div>
     <div class="zc-cta-card" style="background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:40px;box-shadow:var(--sh)">
-        <h3 style="font-family:var(--serif);font-size:22px;margin-bottom:24px">Napíšte mi správu</h3>
+        <h3 style="font-family:var(--serif);font-size:22px;margin-bottom:24px"><?php echo zc_t('home.form_t') ?></h3>
         <form id="zcContactForm" style="position:relative">
             <?php echo function_exists('zc_honeypot_fields') ? zc_honeypot_fields() : ''; ?>
             <?php foreach([['name','text','Vaše meno *'],['email','email','E-mail *'],['phone','tel','Telefón']] as [$n,$t,$p]): ?>

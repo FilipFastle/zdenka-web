@@ -66,7 +66,10 @@ function pp_is_agent($user = null) {
 function pp_is_sitekit_dashboard_request() {
     $script = basename($_SERVER['PHP_SELF'] ?? '');
     $page   = sanitize_key($_GET['page'] ?? '');
-    return $script === 'admin.php' && $page === 'googlesitekit-dashboard';
+    // Site Kit má viac obrazoviek (dashboard, splash, detail modulu) a sám
+    // medzi nimi presmerúva. Keby sme povolili len jednu, maklérka by sa
+    // po prvom presmerovaní vrátila do panela a nikam by sa nedostala.
+    return $script === 'admin.php' && strpos($page, 'googlesitekit') === 0;
 }
 
 function pp_sitekit_dashboard_url() {
@@ -122,11 +125,27 @@ add_action('admin_init', function () {
     if (in_array($script, ['admin-ajax.php', 'admin-post.php', 'async-upload.php', 'media-upload.php'], true)) return;
     if (pp_is_sitekit_dashboard_request()) return;
 
+    // Bez Site Kitu (alebo keby ho odmietol) posielame do panela – nikdy
+    // nie na obrazovku, z ktorej by sa hneď presmerovalo naspäť.
     $target = pp_sitekit_available()
         ? pp_sitekit_dashboard_url()
         : (function_exists('pp_panel_url') ? pp_panel_url('action=sitekit') : home_url('/'));
     wp_safe_redirect($target);
     exit;
+});
+
+/**
+ * Site Kit ukáže dáta inej role len vtedy, keď má správca zapnuté
+ * „Dashboard sharing". Bez toho by maklérka videla prázdnu obrazovku
+ * a nevedela prečo – tak jej to rovno napíšeme.
+ */
+add_action('admin_notices', function () {
+    if (!pp_is_agent() || current_user_can('manage_options')) return;
+    if (!pp_is_sitekit_dashboard_request()) return;
+    if (current_user_can('googlesitekit_view_shared_dashboard')) return;
+    echo '<div class="notice notice-warning"><p>Prehľad zatiaľ nie je zdieľaný. '
+       . 'Správca ho zapne v <strong>Site Kit → Settings → Dashboard sharing</strong> '
+       . 'pre rolu <em>Realitný maklér</em>.</p></div>';
 });
 
 // V ľavom menu wp-adminu zostane maklérke iba položka Site Kit.
@@ -135,21 +154,18 @@ add_action('admin_menu', function () {
     if (!pp_is_agent() || current_user_can('manage_options')) return;
 
     global $menu, $submenu;
+    // Site Kit registruje menu pod rôznymi slugmi podľa toho, či je už
+    // nastavený (dashboard) alebo ešte nie (splash) – necháme oba.
+    $keep = static function ($slug) {
+        return strpos((string) $slug, 'googlesitekit') === 0;
+    };
     foreach ((array) $menu as $item) {
         $slug = (string) ($item[2] ?? '');
-        if ($slug === 'googlesitekit-dashboard') continue;
+        if ($keep($slug)) continue;
         remove_menu_page($slug);
     }
     foreach (array_keys((array) $submenu) as $parent) {
-        if ($parent !== 'googlesitekit-dashboard') unset($submenu[$parent]);
-    }
-    if (!empty($submenu['googlesitekit-dashboard'])) {
-        $submenu['googlesitekit-dashboard'] = array_values(array_filter(
-            $submenu['googlesitekit-dashboard'],
-            static function ($item) {
-                return (string) ($item[2] ?? '') === 'googlesitekit-dashboard';
-            }
-        ));
+        if (!$keep($parent)) unset($submenu[$parent]);
     }
 }, 999);
 

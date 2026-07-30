@@ -226,10 +226,38 @@ jedného kontaktu možnosť *Poslať potvrdzovací e-mail*.
 Rovnaká adresa sa nikdy nevytvorí druhýkrát — existujúci záznam sa aktualizuje
 a zdroje sa zlúčia, takže je vždy vidieť, odkiaľ kontakt prišiel.
 
+## Texty stránok — meniť sa dajú sám
+**Web Zdenky → Texty stránok.** Nadpisy, popisy a tlačidlá na stránkach
+*Úvod*, *O mne* a *Ako pracujem* sú tu ako obyčajné polia.
+
+- **Prázdne pole = ostáva pôvodný text.** Keď políčko vymažeš, vráti sa presne to,
+  čo tam bolo — pokaziť sa nedá nič.
+- Zmenené polia sú označené štítkom *zmenené*, takže hneď vidíš, čoho si sa dotkol.
+- Tlačidlo **Vrátiť všetko na pôvodné** obnoví celý web naraz.
+- Povolené sú jednoduché značky `<br>`, `<strong>`, `<em>` a odkaz `<a href="">`.
+  Zvyšok sa odstráni, aby sa nedal rozbiť vzhľad.
+
+### A čo Breakdance?
+Tieto stránky majú dizajn napísaný v kóde, takže ich Breakdance neotvorí ako hotovú
+skladačku — zobrazil by prázdne plátno. Preto ti fungovali len novo vytvorené stránky.
+
+Ak niektorú stránku chceš mať **celú v Breakdance**, otvor ju v ňom, postav ju a ulož.
+Téma sa vtedy sama odsunie a zobrazí tvoju verziu (platí aj pre existujúce stránky).
+Rátaj ale s tým, že pôvodný vzhľad tej stránky tým nahradíš. Realitný panel a detail
+ponuky si Breakdance nikdy neprevezme — tie musia ostať funkčné.
+
+Na bežnú zmenu textu stačí obrazovka *Texty stránok*.
+
 ## Site Kit pre maklérku
 Rola *Realitný maklér* má vo wp-admine sprístupnenú **jedinú položku — Google
 Site Kit**, a to len na čítanie. Ostatné obrazovky wp-adminu ju presmerujú späť.
 Nastavovanie Site Kitu, pripájanie účtov ani správa modulov v tom nie sú.
+
+> **Musíš to ešte raz povoliť v samotnom Site Kite.** Ten si prístup stráži sám
+> a inej role dáta neukáže, kým to nezapneš:
+> **Site Kit → Settings → Dashboard sharing** → pri každom module zaškrtni rolu
+> *Realitný maklér*. Bez toho jej Site Kit ukáže prázdno alebo hlášku o prístupe —
+> a to už neovplyvní žiadne nastavenie z našej strany.
 
 ## Aktualizácia nahratím .zip (a hláška „Priečinok už existuje")
 Od témy **3.36.3** stačí nahrať `.zip` cez **Pluginy → Pridať nový → Nahrať
