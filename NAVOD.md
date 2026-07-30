@@ -186,6 +186,28 @@ Kde to použiješ:
 > Fotka môže byť vo viacerých priečinkoch naraz a priečinky nič nepresúvajú na disku —
 > ide o označenie, takže sa nemôže stať, že sa niekde stratí odkaz na súbor.
 
+## „Priečinok už existuje" pri nahrávaní pluginu
+Nie je to chyba pluginu — takto sa bráni WordPress, keď priečinok s tým istým
+názvom už v `wp-content/plugins/` je a on ho nevie ponúknuť na prepísanie.
+
+**Riešenie A — raz a natrvalo (odporúčam): ZC Inštalátor**
+1. Nahraj `zc-installer.zip` (Pluginy → Pridať nový → Nahrať plugin) a aktivuj.
+2. **Web Zdenky → Inštalátor** → *Nainštalovať všetko jedným klikom*.
+3. Prepíše tému aj všetkých päť pluginov naraz a rovno ich aktivuje.
+
+V inštalátore je celý balík už pribalený, takže netreba nič vyberať.
+Vie aj hromadný upload — vyberieš viac `.zip` naraz (Ctrl / Cmd).
+Po dokončení ho môžeš zmazať, na chod webu nie je potrebný.
+
+**Riešenie B — ručne**
+1. **Pluginy** → pri danom plugine *Deaktivovať*, potom *Zmazať*.
+2. Nahraj `.zip` znova a aktivuj.
+
+> **Odberatelia, recenzie, ponuky ani dopyty sa tým nestratia.** Žiadny z týchto
+> pluginov nemá odinštalačný skript — dáta žijú v databáze webu a mazanie
+> priečinka sa ich nedotkne. Napriek tomu je pred väčším zásahom rozumné
+> stiahnuť si zálohu (Web Zdenky → Zálohy).
+
 ## DÔLEŽITÉ pri inštalácii newslettera
 Balík newslettera musí byť v priečinku **`zc-newsletter`**. Keby ho niekedy dostaneš
 pod iným názvom (napr. `zc-newsletter-plugin`), WordPress ho nainštaluje ako
