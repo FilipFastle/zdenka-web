@@ -597,12 +597,75 @@ function zcn_handle_set_interest() {
     ]);
 }
 
-/** Možnosti pre okno s výberom – v tvare pre JavaScript. */
+/** Možnosti pre okno s výberom – zoskupené, pre JavaScript. */
 function zcn_interest_choices() {
-    $out = [['value' => '', 'label' => 'Všetky ponuky']];
-    foreach (zcn_offer_interests() as $value => $label) {
-        $out[] = ['value' => $value, 'label' => $label];
+    $out = [];
+    foreach (zcn_interest_groups() as $glabel => $items) {
+        $opts = [];
+        foreach ($items as $value => $label) $opts[] = ['value' => $value, 'label' => $label];
+        if ($opts) $out[] = ['group' => $glabel, 'items' => $opts];
     }
-    $out[] = ['value' => 'ziadne', 'label' => 'Žiadne – len novinky a ebook'];
     return $out;
+}
+
+/* ── Úprava tém pre existujúceho odberateľa ──────────────────────────────
+ * Na stránke Newsletter si človek vypýta odkaz, ktorý mu pošleme e-mailom.
+ * Nikde tak neprezradíme, či je daná adresa v databáze, a nikto cudzí sa
+ * k nastaveniam nedostane.
+ */
+add_action('wp_ajax_zcn_prefs_link',        'zcn_handle_prefs_link');
+add_action('wp_ajax_nopriv_zcn_prefs_link', 'zcn_handle_prefs_link');
+
+function zcn_handle_prefs_link() {
+    check_ajax_referer('zcn_nonce', 'nonce');
+
+    $ip  = $_SERVER['REMOTE_ADDR'] ?? '';
+    $key = 'zcn_prefs_' . md5($ip);
+    if ((int) get_transient($key) >= 5) {
+        wp_send_json_error(['message' => 'Príliš veľa pokusov. Skúste to o chvíľu.']);
+    }
+    set_transient($key, (int) get_transient($key) + 1, 10 * MINUTE_IN_SECONDS);
+
+    $email = strtolower(sanitize_email(wp_unslash($_POST['email'] ?? '')));
+    if (!is_email($email)) wp_send_json_error(['message' => 'Zadajte platnú e-mailovú adresu.']);
+
+    // Rovnaká odpoveď bez ohľadu na to, či adresu poznáme
+    $answer = 'Ak je táto adresa v našej databáze, poslali sme na ňu odkaz na úpravu tém.';
+
+    global $wpdb;
+    $row = $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM " . zcn_table() . " WHERE email = %s", $email
+    ));
+    if (!$row) wp_send_json_success(['message' => $answer]);
+
+    $url  = add_query_arg(['zcn_action' => 'prefs', 'token' => $row->token], home_url('/'));
+    $site = function_exists('zc_agent') ? zc_agent('name', 'Mgr. Zdenka Cibuľová') : 'Mgr. Zdenka Cibuľová';
+    $from = function_exists('zc_mail_from') ? zc_mail_from() : get_option('admin_email');
+
+    $subject = "Úprava odoberaných tém – {$site}";
+    $body    = zcn_email_wrap($subject, "
+        <p style='font-size:16px;color:#2C2825;margin:0 0 18px'>Dobrý deň,</p>
+        <p style='color:#555;line-height:1.75;margin:0 0 24px'>
+            požiadali ste o úpravu tém, ktoré vám posielame. Kliknutím nižšie si
+            vyberiete, čo vás zaujíma – alebo sa jedným klikom odhlásite.
+        </p>
+        <div style='text-align:center;margin:30px 0'>
+            <a href='" . esc_url($url) . "'
+               style='display:inline-block;padding:14px 32px;background:#B8A47A;color:#1C1A18;
+                      text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;
+                      letter-spacing:.5px;font-family:DM Sans,sans-serif'>
+                Upraviť moje témy
+            </a>
+        </div>
+        <p style='font-size:12px;color:#999;text-align:center'>
+            Ak ste o to nežiadali, e-mail pokojne ignorujte – nič sa nezmení.
+        </p>
+    ");
+
+    wp_mail($email, $subject, $body, [
+        'Content-Type: text/html; charset=UTF-8',
+        "From: {$site} <{$from}>",
+    ]);
+
+    wp_send_json_success(['message' => $answer]);
 }

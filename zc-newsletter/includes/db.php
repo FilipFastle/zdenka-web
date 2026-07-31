@@ -34,30 +34,71 @@ function zcn_install() {
  * Prázdna hodnota znamená „všetko".
  */
 function zcn_interest_groups() {
+    $groups = [];
+    foreach (zcn_categories() as $key => $cat) {
+        $groups[$cat['group']][$key] = $cat['label'];
+    }
+    return $groups;
+}
+
+/** Predvolené kategórie – použijú sa, kým si ich správca neupraví. */
+function zcn_default_categories() {
     return [
-        'Nehnuteľnosti' => zcn_offer_interests(),
-        'Ostatné'       => [
-            'ebook' => 'Ebook a materiály zdarma',
-            'tipy'  => 'Realitné tipy a novinky',
-        ],
+        '1izbovy'      => ['label' => '1-izbový byt',              'group' => 'Nehnuteľnosti', 'offer' => 1],
+        '2izbovy'      => ['label' => '2-izbový byt',              'group' => 'Nehnuteľnosti', 'offer' => 1],
+        '3plus_izbovy' => ['label' => '3+-izbový byt',             'group' => 'Nehnuteľnosti', 'offer' => 1],
+        'dom'          => ['label' => 'Dom',                       'group' => 'Nehnuteľnosti', 'offer' => 1],
+        'pozemok'      => ['label' => 'Pozemok',                   'group' => 'Nehnuteľnosti', 'offer' => 1],
+        'ebook'        => ['label' => 'Ebook a materiály zdarma',  'group' => 'Ostatné',       'offer' => 0],
+        'tipy'         => ['label' => 'Realitné tipy a novinky',   'group' => 'Ostatné',       'offer' => 0],
     ];
+}
+
+/**
+ * Kategórie tak, ako ich má nastavené správca.
+ * Upravujú sa vo wp-admine (Newsletter → Kategórie).
+ */
+function zcn_categories() {
+    static $cache = null;
+    if ($cache !== null) return $cache;
+
+    $saved = get_option('zcn_categories', null);
+    if (!is_array($saved) || !$saved) return $cache = zcn_default_categories();
+
+    $out = [];
+    foreach ($saved as $key => $cat) {
+        $key = sanitize_key($key);
+        if ($key === '' || $key === 'ziadne') continue;
+        $label = trim((string) ($cat['label'] ?? ''));
+        if ($label === '') continue;
+        $out[$key] = [
+            'label' => $label,
+            'group' => trim((string) ($cat['group'] ?? 'Ostatné')) ?: 'Ostatné',
+            'offer' => !empty($cat['offer']) ? 1 : 0,
+        ];
+    }
+    return $cache = ($out ?: zcn_default_categories());
+}
+
+/** Uloží kategórie a zabudne vyrovnávaciu pamäť v tomto requeste. */
+function zcn_save_categories($cats) {
+    update_option('zcn_categories', $cats);
+    wp_cache_delete('zcn_categories', 'options');
 }
 
 /** Kategórie, ktoré znamenajú záujem o nehnuteľnosti. */
 function zcn_offer_interests() {
-    return [
-        '1izbovy'       => '1-izbový byt',
-        '2izbovy'       => '2-izbový byt',
-        '3plus_izbovy'  => '3+-izbový byt',
-        'dom'           => 'Dom',
-        'pozemok'       => 'Pozemok',
-    ];
+    $out = [];
+    foreach (zcn_categories() as $key => $cat) {
+        if (!empty($cat['offer'])) $out[$key] = $cat['label'];
+    }
+    return $out;
 }
 
 /** Plochý zoznam všetkých kategórií vrátane staršej hodnoty „ziadne". */
 function zcn_interests() {
     $flat = [];
-    foreach (zcn_interest_groups() as $items) $flat += $items;
+    foreach (zcn_categories() as $key => $cat) $flat[$key] = $cat['label'];
     // Staršie kontakty môžu mať ešte pôvodnú hodnotu – nech ju vieme pomenovať
     $flat['ziadne'] = 'Bez ponúk – iba novinky a ebook';
     return $flat;

@@ -46,6 +46,10 @@
             <a href="<?php echo home_url('/referencie/'); ?>"
                <?php echo is_page('referencie') ? 'class="active"' : ''; ?>>Referencie</a>
             <?php endif; ?>
+            <?php if (shortcode_exists('zc_newsletter_full')): ?>
+            <a href="<?php echo home_url('/newsletter/'); ?>"
+               <?php echo is_page('newsletter') ? 'class="active"' : ''; ?>>Newsletter</a>
+            <?php endif; ?>
             <?php if (function_exists('zc_ebook_enabled') && zc_ebook_enabled()): zc_ebook_flag(true); ?>
             <a href="#" data-zc-ebook-open class="zc-nav-ebook">Ebook</a>
             <?php endif; ?>

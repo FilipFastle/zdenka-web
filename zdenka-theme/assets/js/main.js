@@ -67,6 +67,8 @@ if (!document.getElementById('zcOvCSS')) {
         '#zcOv.open .zco-nav a:nth-child(6){opacity:1;transform:none;transition-delay:.71s;}',
         '#zcOv.open .zco-nav a:nth-child(7){opacity:1;transform:none;transition-delay:.78s;}',
         '#zcOv.open .zco-nav a:nth-child(8){opacity:1;transform:none;transition-delay:.85s;}',
+        '#zcOv.open .zco-nav a:nth-child(9){opacity:1;transform:none;transition-delay:.92s;}',
+        '#zcOv.open .zco-nav a:nth-child(10){opacity:1;transform:none;transition-delay:.99s;}',
         /* Closing: links snap out quickly */
         '#zcOv.closing .zco-nav a{opacity:0;transform:translateY(-8px);transition:opacity .15s,transform .15s;}',
 
@@ -86,7 +88,7 @@ if (!document.getElementById('zcOvCSS')) {
         '.nav-open .zc-hamburger span:nth-child(2){opacity:0;transform:translateX(-8px);}',
         '.nav-open .zc-hamburger span:nth-child(3){transform:rotate(-45deg) translate(4.5px,-4.5px);}',
 
-        '@media(min-width:769px){#zcOv{display:none!important}}',
+        '@media(min-width:1181px){#zcOv{display:none!important}}',
     ].join('');
     document.head.appendChild(menuCSS);
 }
@@ -110,6 +112,7 @@ if (!document.getElementById('zcOv')) {
     var nav = document.getElementById('zcOvNav');
     [['/', 'Domov'], ['/o-mne/', 'O mne'], ['/ako-pracujem/', 'Ako pracujem'],
      ['/ponuky/', 'Ponuky'], ['/referencie/', 'Referencie'],
+     ['/newsletter/', 'Newsletter'],
      ['/odhad/', 'Odhad ZDARMA'], ['/kontakt/', 'Kontakt']
     ].forEach(function (item) {
         var a = document.createElement('a');
@@ -230,22 +233,35 @@ function zcInterestModal(token) {
     wrap.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;' +
         'justify-content:center;padding:20px;background:rgba(20,17,14,.55);opacity:0;transition:opacity .25s';
 
-    var buttons = opts.map(function (o) {
-        return '<button type="button" data-v="' + o.value + '" style="display:block;width:100%;text-align:left;' +
-            'padding:13px 16px;margin-bottom:8px;border:1.5px solid #E2DACE;border-radius:10px;background:#fff;' +
-            'font:600 14px/1.3 inherit;color:#2C2825;cursor:pointer;transition:border-color .15s,background .15s">' +
-            o.label + '</button>';
+    var boxes = opts.map(function (g) {
+        var items = (g.items || []).map(function (o) {
+            return '<label class="zci-opt"><input type="checkbox" value="' + o.value + '"><span>' +
+                o.label + '</span></label>';
+        }).join('');
+        return '<div class="zci-grp">' + (g.group || '') + '</div>' + items;
     }).join('');
 
     wrap.innerHTML =
-        '<div style="background:#fff;border-radius:16px;max-width:420px;width:100%;padding:28px 26px;' +
-        'box-shadow:0 24px 64px rgba(0,0,0,.28);font-family:inherit;max-height:90vh;overflow:auto">' +
+        '<style>' +
+        '#zcIntModal .zci-card{background:#fff;border-radius:16px;max-width:440px;width:100%;padding:28px 26px;' +
+        'box-shadow:0 24px 64px rgba(0,0,0,.28);font-family:inherit;max-height:90vh;overflow:auto}' +
+        '#zcIntModal .zci-grp{font:800 10px/1.4 inherit;letter-spacing:1.2px;text-transform:uppercase;color:#9A8660;margin:16px 0 8px}' +
+        '#zcIntModal .zci-opt{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid #E2DACE;' +
+        'border-radius:10px;margin-bottom:7px;cursor:pointer;font:600 14px/1.3 inherit;color:#2C2825}' +
+        '#zcIntModal .zci-opt:hover{border-color:#B8A47A;background:#FBF8F2}' +
+        '#zcIntModal .zci-opt input{width:17px;height:17px;accent-color:#B8A47A;flex:0 0 auto}' +
+        '</style>' +
+        '<div class="zci-card">' +
         '<h3 style="margin:0 0 6px;font-size:19px;color:#1C1A18">Ďakujeme za prihlásenie!</h3>' +
-        '<p style="margin:0 0 18px;font-size:13.5px;line-height:1.6;color:#6B6560">' +
-        'O aké nehnuteľnosti máte záujem? Budeme vám posielať len to, čo vás naozaj zaujíma.</p>' +
-        buttons +
-        '<div id="zcIntMsg" style="display:none;margin-top:12px;font-size:13px;color:#15803d"></div>' +
-        '<button type="button" data-close style="display:block;width:100%;margin-top:6px;padding:11px;' +
+        '<p style="margin:0 0 4px;font-size:13.5px;line-height:1.6;color:#6B6560">' +
+        'Čo vám máme posielať? Označte pokojne aj viac možností.</p>' +
+        boxes +
+        '<p style="margin:12px 0 14px;font-size:12px;color:#9A8660;line-height:1.6">' +
+        'Nič neoznačené = pošleme vám všetko.</p>' +
+        '<div id="zcIntMsg" style="display:none;margin-bottom:10px;font-size:13px;color:#15803d"></div>' +
+        '<button type="button" data-save style="display:block;width:100%;padding:13px;border:none;border-radius:9px;' +
+        'background:#B8A47A;color:#1C1A18;font:700 14px/1.2 inherit;cursor:pointer">Uložiť výber</button>' +
+        '<button type="button" data-close style="display:block;width:100%;margin-top:6px;padding:10px;' +
         'border:none;background:none;color:#9A8660;font:600 12.5px/1.3 inherit;cursor:pointer">Teraz nie</button>' +
         '</div>';
 
@@ -262,18 +278,17 @@ function zcInterestModal(token) {
 
     wrap.addEventListener('click', function (e) {
         if (e.target === wrap || e.target.hasAttribute('data-close')) { close(); return; }
-        var btn = e.target.closest('[data-v]');
-        if (!btn) return;
+        if (!e.target.hasAttribute('data-save')) return;
 
-        wrap.querySelectorAll('[data-v]').forEach(function (b) { b.disabled = true; });
-        btn.style.borderColor = '#B8A47A';
-        btn.style.background = '#F5F1EA';
+        var picks = [].map.call(wrap.querySelectorAll('input:checked'), function (c) { return c.value; });
+        e.target.disabled = true;
+        e.target.textContent = 'Ukladám…';
 
         var d = new FormData();
         d.append('action', 'zcn_set_interest');
         d.append('nonce', (window.zcData || {}).nlNonce || '');
         d.append('token', token);
-        d.append('interest', btn.getAttribute('data-v'));
+        d.append('interest', picks.join(','));
         fetch((window.zcData || {}).ajaxurl || '/wp-admin/admin-ajax.php', { method: 'POST', body: d })
         .then(function (r) { return r.json(); })
         .then(function (res) {

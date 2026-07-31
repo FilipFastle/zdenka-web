@@ -509,10 +509,14 @@ ul { list-style: none; }
     .zc-container { padding: 0 28px; }
     .zc-footer-grid { grid-template-columns: 1fr 1fr; gap: 36px; }
 }
-@media (max-width: 768px) {
-    :root { --hh: 60px; }
+/* Menu má veľa položiek – na užšom monitore radšej hamburger,
+   inak by sa prekrývalo s logom a menom. */
+@media (max-width: 1180px) {
     .zc-nav { display: none; }
     .zc-hamburger { display: flex; }
+}
+@media (max-width: 768px) {
+    :root { --hh: 60px; }
     .zc-header { padding: 0 20px; }
     .zc-container { padding: 0 20px; }
     .zc-section { padding: 56px 0; }

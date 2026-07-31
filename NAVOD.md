@@ -201,6 +201,28 @@ a dajú sa kedykoľvek zmeniť priamo v riadku zoznamu.
 Kto si nevyberie žiadnu nehnuteľnosť (len ebook alebo tipy), **ponuky mu chodiť
 nebudú** — tlačidlo *Poslať odberateľom* pri ponuke ho automaticky vynechá.
 
+### Vlastné kategórie
+**Web Zdenky → Newsletter → Kategórie.** Pridáš, premenuješ alebo zmažeš čokoľvek.
+
+- **Názov** — čo uvidí návštevník.
+- **Skupina** — nadpis, pod ktorý sa možnosť zaradí (napr. *Nehnuteľnosti*, *Ostatné*).
+- **Ponuka** — zaškrtni pri kategóriách nehnuteľností. Kontaktu, ktorý nemá ani jednu
+  takú, sa ponuky neposielajú.
+- **Kontaktov** — koľko ľudí danú kategóriu má; uvidíš, čoho sa zmena dotkne.
+
+Kategóriu zmažeš tak, že vymažeš jej názov a uložíš. Kontaktom, ktorí ju mali,
+ostane v databáze — len sa už nikde neponúka. *Vrátiť predvolené* obnoví pôvodných sedem.
+
+Zmena sa hneď premietne všade: formulár na stránke Newsletter, e-mail s výberom tém,
+filtre v paneli aj vo wp-admine, aj okno pri odosielaní ponuky.
+
+### Stránka /newsletter/
+- Kategórie sú **zaškrtávacie políčka** — dá sa označiť viac naraz, nič neoznačené = všetko.
+- Odkaz **„Už odoberáte? Upravte si témy alebo sa odhláste"** — človek zadá e-mail
+  a pošleme mu odkaz na stránku, kde si témy zmení alebo sa odhlási.
+  Kvôli súkromiu odpovedáme rovnako, aj keď adresu v databáze nemáme.
+- Newsletter je aj v hlavnom menu (na PC aj v mobile).
+
 ### Ako si kategórie vyberá návštevník
 Vo formulári sa naň nepýtame, aby nezdržiaval. Postup je takýto:
 

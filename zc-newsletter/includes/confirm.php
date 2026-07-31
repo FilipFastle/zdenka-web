@@ -41,6 +41,21 @@ add_action('init', function() {
         wp_die(zcn_interest_picker_page($token, $row, $already), 'Potvrdené');
     }
 
+    if ($action === 'prefs') {
+        if (isset($_POST['zcn_pick']) && wp_verify_nonce($_POST['_zcnpick'] ?? '', 'zcn_pick_' . $token)) {
+            $wpdb->update($table,
+                ['interest' => zcn_sanitize_interests($_POST['interest'] ?? []), 'status' => 'active'],
+                ['token' => $token]
+            );
+            wp_die(zcn_page_response(
+                'Zmeny uložené',
+                'Odteraz vám budeme posielať presne to, čo ste si vybrali.',
+                '← Späť na web'
+            ), 'Hotovo');
+        }
+        wp_die(zcn_interest_picker_page($token, $row, true, 'prefs'), 'Moje témy');
+    }
+
     if ($action === 'unsubscribe') {
         $wpdb->update($table,
             ['status' => 'unsubscribed'],
@@ -75,7 +90,7 @@ function zcn_page_response($title, $text, $btn_label) {
  * Stránka po potvrdení odberu – výber tém.
  * Zaškrtnúť sa dá viac možností; nič nezaškrtnuté = posielame všetko.
  */
-function zcn_interest_picker_page($token, $row, $already = false) {
+function zcn_interest_picker_page($token, $row, $already = false, $mode = 'confirm') {
     $current = zcn_interest_list($row->interest ?? '');
     $groups  = zcn_interest_groups();
 
@@ -94,12 +109,20 @@ function zcn_interest_picker_page($token, $row, $already = false) {
         <?php endforeach; endforeach; ?>
         <p class="hint">Nič nezaškrtnuté = pošleme vám všetko. Vybrať sa dá aj viac možností naraz.</p>
         <button type="submit" class="btn">Uložiť výber</button>
+        <?php if ($mode === 'prefs'): ?>
+        <a class="unsub" href="<?php echo esc_url(add_query_arg(['zcn_action' => 'unsubscribe', 'token' => $token], home_url('/'))); ?>">Nechcem už dostávať nič – odhlásiť sa</a>
+        <?php endif; ?>
     </form>
     <?php
     $form = ob_get_clean();
 
-    $title = $already ? 'Odber už máte potvrdený' : 'Prihlásenie potvrdené!';
-    $text  = 'Vyberte si, čo vás zaujíma – budeme vám posielať len to.';
+    if ($mode === 'prefs') {
+        $title = 'Moje témy';
+        $text  = 'Označte, čo vám máme posielať. Zmeny sa uložia okamžite.';
+    } else {
+        $title = $already ? 'Odber už máte potvrdený' : 'Prihlásenie potvrdené!';
+        $text  = 'Vyberte si, čo vás zaujíma – budeme vám posielať len to.';
+    }
 
     $html = zcn_page_response($title, $text, '← Späť na web');
     // Formulár vložíme nad tlačidlo „Späť na web"
@@ -116,6 +139,8 @@ function zcn_interest_picker_page($token, $row, $already = false) {
          font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;margin-bottom:14px}
     .btn:hover{background:#9A8660}
     .card > a{display:block;text-align:center;background:none;color:#9A8660;font-weight:600}
+    .unsub{display:block;text-align:center;font-size:12.5px;color:#B0A898;text-decoration:underline;padding:4px 0 10px;background:none}
+    .unsub:hover{color:#dc2626;background:none}
     .card > a:hover{background:none;color:#7C5E33}
     </style>';
 

@@ -83,6 +83,44 @@ function zcn_admin_page() {
         printf('<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
             $ok ? 'success' : 'warning', esc_html($msg));
     }
+    // Správa kategórií
+    if (isset($_POST['zcn_cats_save']) && check_admin_referer('zcn_admin')) {
+        $in   = (array) ($_POST['cat'] ?? []);
+        $cats = [];
+        foreach ($in as $row) {
+            $label = trim(sanitize_text_field(wp_unslash($row['label'] ?? '')));
+            if ($label === '') continue;                       // prázdny riadok = zmazané
+            $key = sanitize_key($row['key'] ?? '');
+            if ($key === '' || $key === 'ziadne') {
+                $key = sanitize_key(remove_accents($label));
+                if ($key === '') $key = 'kat_' . substr(md5($label), 0, 6);
+            }
+            $group = trim(sanitize_text_field(wp_unslash($row['group'] ?? ''))) ?: 'Ostatné';
+            $cats[$key] = ['label' => $label, 'group' => $group, 'offer' => !empty($row['offer']) ? 1 : 0];
+        }
+        // Nová kategória z posledného riadku
+        $new_label = trim(sanitize_text_field(wp_unslash($_POST['new_label'] ?? '')));
+        if ($new_label !== '') {
+            $key = sanitize_key(remove_accents($new_label)) ?: 'kat_' . substr(md5($new_label), 0, 6);
+            $cats[$key] = [
+                'label' => $new_label,
+                'group' => trim(sanitize_text_field(wp_unslash($_POST['new_group'] ?? ''))) ?: 'Ostatné',
+                'offer' => !empty($_POST['new_offer']) ? 1 : 0,
+            ];
+        }
+        if ($cats) {
+            zcn_save_categories($cats);
+            echo '<div class="notice notice-success is-dismissible"><p>Kategórie uložené.</p></div>';
+        } else {
+            echo '<div class="notice notice-error is-dismissible"><p>Aspoň jedna kategória musí ostať.</p></div>';
+        }
+    }
+    if (isset($_POST['zcn_cats_reset']) && check_admin_referer('zcn_admin')) {
+        delete_option('zcn_categories');
+        wp_cache_delete('zcn_categories', 'options');
+        echo '<div class="notice notice-success is-dismissible"><p>Kategórie vrátené na predvolené.</p></div>';
+    }
+
     if (isset($_GET['zcn_export']) && current_user_can('manage_options')) {
         $rows = $wpdb->get_results("SELECT * FROM {$table} WHERE status='active' ORDER BY confirmed_at DESC");
         header('Content-Type: text/csv; charset=UTF-8');
@@ -136,7 +174,7 @@ function zcn_admin_page() {
 
     <!-- Tabs -->
     <div style="display:flex;gap:2px;border-bottom:2px solid #e5e7eb;margin-bottom:20px">
-    <?php foreach(['subscribers'=>'Odberatelia','send'=>'Odoslať','log'=>'História','import'=>'Pridať kontakty'] as $t=>$l): ?>
+    <?php foreach(['subscribers'=>'Odberatelia','send'=>'Odoslať','log'=>'História','import'=>'Pridať kontakty','cats'=>'Kategórie'] as $t=>$l): ?>
     <a href="?page=zc-newsletter&tab=<?php echo $t ?>"
        style="padding:9px 16px;text-decoration:none;font-size:13px;font-weight:600;border-radius:8px 8px 0 0;margin-bottom:-2px;
               border:1px solid <?php echo $tab===$t?'#e5e7eb':'transparent' ?>;
@@ -474,6 +512,65 @@ function zcn_admin_page() {
         Aktívny kontakt pridávaj len vtedy, keď ti preukázateľne udelil súhlas.
         Zdroj sa uloží ako „Ručne vo wp-admine“, takže je vždy dohľadateľné, odkiaľ prišiel.
     </p>
+    
+    <?php elseif ($tab === 'cats'): ?>
+    <?php // Vlastné kategórie – premietnu sa všade: formulár, e-mail, panel aj filtre ?>
+    <div style="max-width:820px">
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:26px">
+            <h3 style="margin:0 0 6px">Kategórie záujmu</h3>
+            <p style="color:#666;font-size:13px;margin:0 0 18px;line-height:1.6">
+                Tieto možnosti si vyberá návštevník pri prihlásení aj neskôr pri úprave tém.
+                <strong>Skupina</strong> je len nadpis, pod ktorý sa možnosť zaradí.
+                <strong>Ponuka</strong> označuje kategórie nehnuteľností — kontaktu, ktorý nemá
+                žiadnu z nich, sa ponuky neposielajú.<br>
+                Kategóriu zmažeš tak, že vymažeš jej názov a uložíš.
+            </p>
+            <form method="post">
+                <?php wp_nonce_field('zcn_admin') ?>
+                <table class="wp-list-table widefat striped" style="margin-bottom:16px">
+                    <thead><tr>
+                        <th style="width:42%">Názov</th>
+                        <th style="width:32%">Skupina</th>
+                        <th style="width:12%">Ponuka</th>
+                        <th style="width:14%">Kontaktov</th>
+                    </tr></thead>
+                    <tbody>
+                    <?php $i = 0; foreach (zcn_categories() as $key => $cat):
+                        $used = (int) $wpdb->get_var($wpdb->prepare(
+                            "SELECT COUNT(*) FROM {$table} WHERE FIND_IN_SET(%s, interest)", $key)); ?>
+                    <tr>
+                        <td>
+                            <input type="hidden" name="cat[<?php echo $i ?>][key]" value="<?php echo esc_attr($key) ?>">
+                            <input type="text" name="cat[<?php echo $i ?>][label]" value="<?php echo esc_attr($cat['label']) ?>" style="width:100%">
+                        </td>
+                        <td><input type="text" name="cat[<?php echo $i ?>][group]" value="<?php echo esc_attr($cat['group']) ?>" style="width:100%" list="zcnGroups"></td>
+                        <td style="text-align:center"><input type="checkbox" name="cat[<?php echo $i ?>][offer]" value="1" <?php checked(!empty($cat['offer'])) ?>></td>
+                        <td style="text-align:center;color:#666"><?php echo $used ?></td>
+                    </tr>
+                    <?php $i++; endforeach; ?>
+                    <tr style="background:#fbfaf7">
+                        <td><input type="text" name="new_label" placeholder="Nová kategória…" style="width:100%"></td>
+                        <td><input type="text" name="new_group" placeholder="Skupina" style="width:100%" list="zcnGroups"></td>
+                        <td style="text-align:center"><input type="checkbox" name="new_offer" value="1"></td>
+                        <td></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <datalist id="zcnGroups">
+                    <?php foreach (array_unique(wp_list_pluck(zcn_categories(), 'group')) as $g): ?>
+                    <option value="<?php echo esc_attr($g) ?>"></option>
+                    <?php endforeach; ?>
+                </datalist>
+                <button class="button button-primary" name="zcn_cats_save" value="1">Uložiť kategórie</button>
+                <button class="button" name="zcn_cats_reset" value="1"
+                    onclick="return confirm('Vrátiť predvolené kategórie? Priradenia kontaktov ostanú.')">Vrátiť predvolené</button>
+            </form>
+        </div>
+        <p style="color:#999;font-size:12px;margin-top:14px">
+            Keď kategóriu zmažeš, kontaktom, ktorí ju mali priradenú, ostane v databáze —
+            len sa už nikde neponúka. Stĺpec <em>Kontaktov</em> ukazuje, koľkých sa to týka.
+        </p>
+    </div>
     <?php endif; ?>
 
     </div>
