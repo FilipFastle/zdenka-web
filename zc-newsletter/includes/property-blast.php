@@ -16,10 +16,17 @@ function zcn_blast_settings() {
 
 // Kontaktný blok makléra (z Customizeru / profilu)
 function zcn_blast_contact_html() {
-    $name  = function_exists('zc_agent') ? zc_agent('name', 'Mgr. Zdenka Cibuľová') : 'Mgr. Zdenka Cibuľová';
-    $title = function_exists('zc_agent') ? zc_agent('title', 'Realitná maklérka') : '';
-    $phone = function_exists('zc_agent') ? zc_agent('phone', '') : '';
-    $email = function_exists('zc_agent') ? zc_agent('email', '') : '';
+    // Rovnaký zdroj ako vizitka: profil používateľa → Prispôsobiť
+    $d = function_exists('pp_agent_data') ? pp_agent_data(0) : [];
+    $pick = function ($key, $mod, $def = '') use ($d) {
+        $v = trim((string) ($d[$key] ?? ''));
+        if ($v !== '') return $v;
+        return function_exists('zc_agent') ? (string) zc_agent($mod, $def) : $def;
+    };
+    $name  = $pick('name',  'name',  'Mgr. Zdenka Cibuľová');
+    $title = $pick('title', 'title', 'Realitná maklérka');
+    $phone = $pick('phone', 'phone');
+    $email = $pick('email', 'email');
     if (!$email) $email = get_option('admin_email');
 
     $h  = '<div style="margin:28px 0 4px;padding:20px 22px;background:#F7F3EC;border-radius:12px">';
@@ -105,7 +112,11 @@ function zcn_handle_property_blast() {
         wp_send_json_error(['message' => 'Ponuka neexistuje alebo nie je publikovaná.']);
     }
 
-    $parts      = zcn_property_email_parts($pid);
+    $parts = zcn_property_email_parts($pid);
+    // Šablóna ponuky má vlastný kontaktný blok. Keby sme nechali aj vizitku
+    // v pätičke, kontakt by bol v e-maile dvakrát pod sebou.
+    $cfg       = zcn_blast_settings();
+    $wrap_args = ['signature' => empty($cfg['show_contact'])];
     $from_name  = function_exists('zc_agent') ? zc_agent('name', 'Mgr. Zdenka Cibuľová') : 'Mgr. Zdenka Cibuľová';
     $from_email = function_exists('zc_mail_from') ? zc_mail_from() : (get_theme_mod('zc_email_from', '') ?: get_option('admin_email'));
     $headers    = ['Content-Type: text/html; charset=UTF-8', "From: {$from_name} <{$from_email}>"];
@@ -113,32 +124,54 @@ function zcn_handle_property_blast() {
     // Náhľad – vráti hotové HTML bez odoslania
     if (!empty($_POST['preview'])) {
         $body = zcn_apply_vars($parts['body'], ['meno' => 'Jana', 'email' => 'jana@email.sk']);
-        $html = zcn_build_newsletter_email($parts['subject'], $body, zcn_generate_token(), 'Jana');
+        $html = zcn_build_newsletter_email($parts['subject'], $body, zcn_generate_token(), 'Jana', $wrap_args);
         wp_send_json_success(['html' => $html]);
     }
 
     // Testovací e-mail – pošle iba na zadanú adresu
     $test = !empty($_POST['test_email']) ? sanitize_email($_POST['test_email']) : '';
     if ($test) {
-        $html = zcn_build_newsletter_email($parts['subject'], $parts['body'], zcn_generate_token(), '');
+        $html = zcn_build_newsletter_email($parts['subject'], $parts['body'], zcn_generate_token(), '', $wrap_args);
         $ok   = wp_mail($test, '[TEST] ' . $parts['subject'], $html, $headers);
         wp_send_json_success(['message' => $ok ? "Test odoslaný na {$test}" : 'Odoslanie zlyhalo.']);
     }
 
     global $wpdb;
-    // Kontakty s kategóriou „Bez ponúk" dostávajú len novinky a ebook,
-    // ponuky nehnuteľností im zámerne neposielame.
-    $subscribers = $wpdb->get_results(
-        "SELECT * FROM " . zcn_table() . " WHERE status='active'" . zcn_offers_sql_where()
-    );
-    if (empty($subscribers)) wp_send_json_error(['message' => 'Žiadni odberatelia so záujmom o ponuky.']);
+    // Príjemcov si maklérka vyberie v okne pri tlačidle: skupiny, konkrétni
+    // ľudia, alebo všetci. Kontakty bez záujmu o ponuky sa vynechávajú vždy.
+    $mode   = sanitize_key($_POST['mode'] ?? 'all');
+    $where  = "status='active'" . zcn_offers_sql_where();
+    $note   = '';
+
+    if ($mode === 'groups') {
+        $groups = zcn_interest_list($_POST['groups'] ?? '');
+        if (!$groups) wp_send_json_error(['message' => 'Nevybral si žiadnu skupinu.']);
+        $or = ["interest IS NULL", "interest = ''"]; // „všetko" dostáva vždy
+        foreach ($groups as $g) $or[] = "FIND_IN_SET('" . esc_sql($g) . "', interest)";
+        $where = "status='active' AND (" . implode(' OR ', $or) . ')';
+        $note  = ' (skupiny: ' . zcn_interest_label(implode(',', $groups)) . ')';
+    } elseif ($mode === 'people') {
+        $emails = [];
+        foreach (explode(',', (string) ($_POST['emails'] ?? '')) as $e) {
+            $e = strtolower(sanitize_email(trim($e)));
+            if (is_email($e)) $emails[] = $e;
+        }
+        $emails = array_slice(array_unique($emails), 0, 500);
+        if (!$emails) wp_send_json_error(['message' => 'Nevybral si žiadneho príjemcu.']);
+        $in    = "'" . implode("','", array_map('esc_sql', $emails)) . "'";
+        $where = "status='active' AND email IN ({$in})";
+        $note  = ' (vybraní príjemcovia)';
+    }
+
+    $subscribers = $wpdb->get_results("SELECT * FROM " . zcn_table() . " WHERE " . $where);
+    if (empty($subscribers)) wp_send_json_error(['message' => 'Pre tento výber sa nenašiel žiadny odberateľ.']);
 
     $sent = 0; $failed = 0;
     foreach ($subscribers as $sub) {
         $vars = ['meno' => $sub->name ?: '', 'email' => $sub->email];
         $subj = zcn_apply_vars($parts['subject'], $vars);
         $body = zcn_apply_vars($parts['body'], $vars);
-        $html = zcn_build_newsletter_email($subj, $body, $sub->token, $sub->name);
+        $html = zcn_build_newsletter_email($subj, $body, $sub->token, $sub->name, $wrap_args);
         $hdr = array_merge($headers, ['List-Unsubscribe: <' . esc_url_raw(zcn_unsubscribe_url($sub->token)) . '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click']);
         wp_mail($sub->email, $subj, $html, $hdr) ? $sent++ : $failed++;
         usleep(150000);
@@ -149,5 +182,5 @@ function zcn_handle_property_blast() {
     update_option('zcn_send_log', array_slice($log, 0, 30));
     update_post_meta($pid, '_zcn_blast_sent', current_time('mysql'));
 
-    wp_send_json_success(['message' => "Ponuka odoslaná {$sent} odberateľom" . ($failed ? " | Zlyhalo: {$failed}" : '')]);
+    wp_send_json_success(['message' => "Ponuka odoslaná {$sent} odberateľom{$note}" . ($failed ? " | Zlyhalo: {$failed}" : '')]);
 }

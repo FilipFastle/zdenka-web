@@ -59,7 +59,20 @@ function zcn_signature_html() {
   </tr>';
 }
 
-function zcn_email_wrap($subject, $content, $footer_extra = '') {
+/** Má sa do pätičky e-mailu vkladať vizitka maklérky? */
+function zcn_signature_enabled() {
+    return get_option('zcn_signature_on', '1') === '1';
+}
+
+/**
+ * $args['signature'] = false vypne vizitku pre konkrétny e-mail.
+ * Používa to rozposlanie ponuky, keď má vlastný kontaktný blok –
+ * inak by bola vizitka v e-maile dvakrát pod sebou.
+ */
+function zcn_email_wrap($subject, $content, $footer_extra = '', $args = []) {
+    $show_signature = array_key_exists('signature', $args)
+        ? (bool) $args['signature']
+        : zcn_signature_enabled();
     $site    = function_exists('zc_agent') ? zc_agent('name', 'Mgr. Zdenka Cibuľová') : 'Mgr. Zdenka Cibuľová';
     $url     = home_url();
     $year    = date('Y');
@@ -139,7 +152,7 @@ body  { margin:0; padding:0; background:#F2EEE8; }
   </tr>
 
   <!-- Vizitka maklérky -->
-  ' . zcn_signature_html() . '
+  ' . ($show_signature ? zcn_signature_html() : '') . '
 
   <!-- Divider -->
   <tr>

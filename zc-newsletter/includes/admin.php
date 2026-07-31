@@ -53,7 +53,7 @@ function zcn_admin_page() {
     if (isset($_POST['zcn_interest_save']) && check_admin_referer('zcn_admin')) {
         $wpdb->update(
             $table,
-            ['interest' => zcn_sanitize_interest($_POST['interest'] ?? '')],
+            ['interest' => zcn_sanitize_interests($_POST['interest'] ?? '')],
             ['id' => intval($_POST['zcn_interest_save'])]
         );
         echo '<div class="notice notice-success is-dismissible"><p>Kategória kontaktu uložená.</p></div>';
@@ -63,7 +63,7 @@ function zcn_admin_page() {
         [$msg, $ok] = zcn_add_contact(
             wp_unslash($_POST['zcn_add_email'] ?? ''),
             sanitize_text_field(wp_unslash($_POST['zcn_add_name'] ?? '')),
-            zcn_sanitize_interest($_POST['zcn_add_interest'] ?? ''),
+            zcn_sanitize_interests($_POST['zcn_add_interest'] ?? ''),
             sanitize_key($_POST['zcn_add_mode'] ?? 'active'),
             'manual_admin'
         );
@@ -75,8 +75,9 @@ function zcn_admin_page() {
     if (isset($_POST['zcn_import']) && check_admin_referer('zcn_admin')) {
         $counts = zcn_add_contacts_bulk(
             wp_unslash($_POST['zcn_import_emails'] ?? ''),
-            zcn_sanitize_interest($_POST['zcn_import_interest'] ?? ''),
-            'manual_admin'
+            zcn_sanitize_interests($_POST['zcn_import_interest'] ?? ''),
+            'manual_admin',
+            sanitize_key($_POST['zcn_import_mode'] ?? 'active')
         );
         [$msg, $ok] = zcn_bulk_notice($counts);
         printf('<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
@@ -108,7 +109,7 @@ function zcn_admin_page() {
     $interest_counts = [];
     foreach (zcn_interests() as $value => $label) {
         $interest_counts[$value] = (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$table} WHERE status='active' AND interest=%s",
+            "SELECT COUNT(*) FROM {$table} WHERE status='active' AND FIND_IN_SET(%s, interest)",
             $value
         ));
     }
@@ -154,7 +155,7 @@ function zcn_admin_page() {
             ? $requested_status : 'active';
         $search = sanitize_text_field($_GET['s'] ?? '');
         $interest_filter = zcn_sanitize_interest($_GET['interest'] ?? '');
-        $where_interest = $interest_filter ? ' AND interest=%s' : '';
+        $where_interest = $interest_filter ? ' AND FIND_IN_SET(%s, interest)' : '';
         if ($search) {
             $like = '%' . $wpdb->esc_like($search) . '%';
             $sql = "SELECT * FROM {$table} WHERE status=%s{$where_interest} AND (email LIKE %s OR name LIKE %s) ORDER BY subscribed_at DESC LIMIT 500";
@@ -205,10 +206,10 @@ function zcn_admin_page() {
                 <form method="post" style="display:flex;gap:4px">
                     <?php wp_nonce_field('zcn_admin') ?>
                     <input type="hidden" name="zcn_interest_save" value="<?php echo (int) $r->id ?>">
-                    <select name="interest" style="max-width:125px;font-size:11px">
-                        <option value="">Všetky</option>
+                    <?php $row_int = zcn_interest_list($r->interest ?? ''); ?>
+                    <select name="interest[]" multiple size="4" style="max-width:150px;font-size:11px">
                         <?php foreach (zcn_interests() as $value => $label): ?>
-                        <option value="<?php echo esc_attr($value); ?>" <?php selected($r->interest ?? '', $value); ?>><?php echo esc_html($label); ?></option>
+                        <option value="<?php echo esc_attr($value); ?>" <?php selected(in_array($value, $row_int, true)); ?>><?php echo esc_html($label); ?></option>
                         <?php endforeach; ?>
                     </select>
                     <button class="button button-small" title="Uložiť kategóriu">✓</button>
@@ -412,12 +413,16 @@ function zcn_admin_page() {
                 </p>
                 <p style="margin:0 0 10px">
                     <label style="display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px">Kategória</label>
-                    <select name="zcn_add_interest" style="width:100%">
-                        <option value="">Všetky ponuky</option>
-                        <?php foreach (zcn_interests() as $value => $label): ?>
-                        <option value="<?php echo esc_attr($value); ?>"><?php echo esc_html($label); ?></option>
+                    <select name="zcn_add_interest[]" multiple size="7" style="width:100%">
+                        <?php foreach (zcn_interest_groups() as $glabel => $items): ?>
+                        <optgroup label="<?php echo esc_attr($glabel); ?>">
+                            <?php foreach ($items as $value => $label): ?>
+                            <option value="<?php echo esc_attr($value); ?>"><?php echo esc_html($label); ?></option>
+                            <?php endforeach; ?>
+                        </optgroup>
                         <?php endforeach; ?>
                     </select>
+                    <span style="font-size:11px;color:#999">Nič nevybrané = všetko. Viac naraz cez Ctrl / Cmd.</span>
                 </p>
                 <p style="margin:0 0 14px">
                     <label style="display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px">Spôsob pridania</label>
@@ -441,11 +446,19 @@ function zcn_admin_page() {
                 <textarea name="zcn_import_emails" rows="9" required spellcheck="false"
                     style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:ui-monospace,Consolas,monospace;font-size:13px;line-height:1.55"
                     placeholder="Jana;Nováková;jana@example.sk&#10;Peter;Kováč;peter@example.sk&#10;maria@email.sk"></textarea>
-                <select name="zcn_import_interest" style="width:100%;margin-top:10px">
-                    <option value="">Spoločná kategória: všetky ponuky</option>
-                    <?php foreach (zcn_interests() as $value => $label): ?>
-                    <option value="<?php echo esc_attr($value); ?>"><?php echo esc_html($label); ?></option>
+                <select name="zcn_import_interest[]" multiple size="7" style="width:100%;margin-top:10px">
+                    <?php foreach (zcn_interest_groups() as $glabel => $items): ?>
+                    <optgroup label="<?php echo esc_attr($glabel); ?>">
+                        <?php foreach ($items as $value => $label): ?>
+                        <option value="<?php echo esc_attr($value); ?>"><?php echo esc_html($label); ?></option>
+                        <?php endforeach; ?>
+                    </optgroup>
                     <?php endforeach; ?>
+                </select>
+                <span style="display:block;font-size:11px;color:#999;margin-top:4px">Spoločná kategória. Nič nevybrané = všetko.</span>
+                <select name="zcn_import_mode" style="width:100%;margin-top:10px">
+                    <option value="active">Pridať priamo, bez potvrdzovacieho e-mailu</option>
+                    <option value="pending">Poslať každému potvrdzovací e-mail</option>
                 </select>
                 <button type="submit" name="zcn_import" value="1" class="button button-primary" style="margin-top:12px">Pridať celú dávku</button>
             </form>

@@ -15,19 +15,30 @@ add_action('init', function() {
     }
 
     if ($action === 'confirm') {
-        if ($row->status === 'active') {
-            wp_die('<div style="font-family:sans-serif;max-width:480px;margin:80px auto;text-align:center"><h2>Odber už potvrdený</h2><p>Ste prihlásený na odber noviniek.</p><a href="' . home_url() . '">← Späť na web</a></div>', 'Potvrdené');
+        // Uloženie výberu tém priamo z tejto stránky
+        if (isset($_POST['zcn_pick']) && wp_verify_nonce($_POST['_zcnpick'] ?? '', 'zcn_pick_' . $token)) {
+            $wpdb->update($table,
+                ['interest' => zcn_sanitize_interests($_POST['interest'] ?? [])],
+                ['token' => $token]
+            );
+            wp_die(zcn_page_response(
+                'Máme to, ďakujeme!',
+                'Budeme vám posielať presne to, čo ste si vybrali. Kedykoľvek to viete zmeniť – stačí nám napísať.',
+                '← Späť na web'
+            ), 'Hotovo');
         }
-        $wpdb->update($table,
-            ['status' => 'active', 'confirmed_at' => current_time('mysql')],
-            ['token'  => $token]
-        );
-        if (function_exists('zcn_send_welcome')) zcn_send_welcome($row->email, $row->name);
-        wp_die(zcn_page_response(
-            'Prihlásenie potvrdené!',
-            'Ste prihlásený na odber noviniek. Budeme vás informovať o nových ponukách.',
-            '← Späť na web'
-        ), 'Potvrdené');
+
+        $already = ($row->status === 'active');
+        if (!$already) {
+            $wpdb->update($table,
+                ['status' => 'active', 'confirmed_at' => current_time('mysql')],
+                ['token'  => $token]
+            );
+            if (function_exists('zcn_send_welcome')) zcn_send_welcome($row->email, $row->name);
+        }
+
+        // Po potvrdení si človek vyberie, čo ho zaujíma – môže označiť aj viac
+        wp_die(zcn_interest_picker_page($token, $row, $already), 'Potvrdené');
     }
 
     if ($action === 'unsubscribe') {
@@ -58,4 +69,57 @@ function zcn_page_response($title, $text, $btn_label) {
     <p>' . esc_html($text) . '</p>
     <a href="' . home_url() . '">' . esc_html($btn_label) . '</a>
     </div></body></html>';
+}
+
+/**
+ * Stránka po potvrdení odberu – výber tém.
+ * Zaškrtnúť sa dá viac možností; nič nezaškrtnuté = posielame všetko.
+ */
+function zcn_interest_picker_page($token, $row, $already = false) {
+    $current = zcn_interest_list($row->interest ?? '');
+    $groups  = zcn_interest_groups();
+
+    ob_start(); ?>
+    <form method="post" style="text-align:left">
+        <?php wp_nonce_field('zcn_pick_' . $token, '_zcnpick'); ?>
+        <input type="hidden" name="zcn_pick" value="1">
+        <?php foreach ($groups as $glabel => $items): ?>
+        <div class="grp"><?php echo esc_html($glabel); ?></div>
+        <?php foreach ($items as $value => $label): ?>
+        <label class="opt">
+            <input type="checkbox" name="interest[]" value="<?php echo esc_attr($value); ?>"
+                <?php checked(in_array($value, $current, true)); ?>>
+            <span><?php echo esc_html($label); ?></span>
+        </label>
+        <?php endforeach; endforeach; ?>
+        <p class="hint">Nič nezaškrtnuté = pošleme vám všetko. Vybrať sa dá aj viac možností naraz.</p>
+        <button type="submit" class="btn">Uložiť výber</button>
+    </form>
+    <?php
+    $form = ob_get_clean();
+
+    $title = $already ? 'Odber už máte potvrdený' : 'Prihlásenie potvrdené!';
+    $text  = 'Vyberte si, čo vás zaujíma – budeme vám posielať len to.';
+
+    $html = zcn_page_response($title, $text, '← Späť na web');
+    // Formulár vložíme nad tlačidlo „Späť na web"
+    $extra_css = '<style>
+    .card{max-width:520px;text-align:left}
+    .card h2,.card > p{text-align:center}
+    .grp{font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#9A8660;margin:18px 0 8px}
+    .opt{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid #E0D8CE;border-radius:10px;
+         margin-bottom:8px;cursor:pointer;font-size:14.5px;color:#2C2825;background:#fff;transition:border-color .15s,background .15s}
+    .opt:hover{border-color:#B8A47A;background:#FBF8F2}
+    .opt input{width:18px;height:18px;accent-color:#B8A47A;flex:0 0 auto}
+    .hint{font-size:12.5px;color:#9A8660;line-height:1.6;margin:14px 0 18px;text-align:left}
+    .btn{width:100%;padding:13px;background:#B8A47A;color:#1C1A18;border:none;border-radius:8px;
+         font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;margin-bottom:14px}
+    .btn:hover{background:#9A8660}
+    .card > a{display:block;text-align:center;background:none;color:#9A8660;font-weight:600}
+    .card > a:hover{background:none;color:#7C5E33}
+    </style>';
+
+    $html = str_replace('</head>', $extra_css . '</head>', $html);
+    $html = str_replace('<a href="' . home_url() . '">', $form . '<a href="' . home_url() . '">', $html);
+    return $html;
 }

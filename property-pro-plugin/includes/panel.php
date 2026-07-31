@@ -302,6 +302,23 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 
 /* CONTENT */
 .pc{max-width:1440px;margin:0 auto;padding:32px 40px;min-height:calc(100vh - 66px)}
+/* Písanie newslettera a šablóna ponuky: na PC využijeme šírku monitora,
+   na mobile ostáva všetko pod sebou. Text sa nikdy neroztiahne donekonečna –
+   editor je vľavo, nastavenia vpravo. */
+.pnl-wide{max-width:100%}
+.pnl-nl-form{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:start}
+@media(min-width:1100px){
+    .pnl-nl-form{grid-template-columns:minmax(0,1.9fr) minmax(300px,.85fr)}
+    .pnl-nl-form .pnl-nl-main{min-width:0}
+    .pnl-nl-form .pnl-nl-side{position:sticky;top:86px}
+}
+.pnl-nl-side{display:flex;flex-direction:column;gap:14px;min-width:0}
+.pnl-wide .wp-editor-wrap .mce-edit-area iframe,
+.pnl-wide textarea.wp-editor-area{min-height:420px}
+@media(max-width:900px){
+    .pnl-wide .wp-editor-wrap .mce-edit-area iframe,
+    .pnl-wide textarea.wp-editor-area{min-height:260px}
+}
 .pc--home{display:flex;flex-direction:column}
 /* Grid deti musia môcť zmenšiť pod obsah – inak dlhé texty vytláčajú stránku */
 .pnl-home-grid>*,.pnl-stats>*,.prop-list>*{min-width:0}
@@ -964,21 +981,123 @@ function pnlStatus(id, sel){
     }).catch(function(){toast('Chyba pripojenia',false)});
 }
 <?php if (function_exists('zcn_handle_property_blast')): ?>
+/* Výber príjemcov pred odoslaním ponuky – skupiny alebo konkrétni ľudia. */
 function pnlBlast(id, btn){
-    if(!confirm('Poslať túto ponuku e-mailom všetkým odberateľom newslettera?'))return;
-    btn.disabled=true;var orig=btn.innerHTML;btn.innerHTML='Odosielam…';
+    var box=document.getElementById('pnlBlastPick');
+    if(!box){pnlBlastRun(id,btn,{});return;}
+    box.dataset.pid=id;
+    box.dataset.btn='';
+    window._pnlBlastBtn=btn;
+    box.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=false});
+    var m=box.querySelector('[data-mode]');if(m)m.value='groups';
+    pnlBlastMode();
+    box.style.display='flex';
+    pnlBlastCount();
+}
+function pnlBlastClose(){var b=document.getElementById('pnlBlastPick');if(b)b.style.display='none';}
+function pnlBlastMode(){
+    var box=document.getElementById('pnlBlastPick');if(!box)return;
+    var mode=box.querySelector('[data-mode]').value;
+    box.querySelector('[data-pane=groups]').style.display=(mode==='groups')?'block':'none';
+    box.querySelector('[data-pane=people]').style.display=(mode==='people')?'block':'none';
+    pnlBlastCount();
+}
+function pnlBlastCount(){
+    var box=document.getElementById('pnlBlastPick');if(!box)return;
+    var mode=box.querySelector('[data-mode]').value;
+    var out=box.querySelector('[data-count]');if(!out)return;
+    if(mode==='all'){out.textContent='Pošle sa všetkým so záujmom o ponuky.';return;}
+    var sel=box.querySelectorAll('[data-pane='+mode+'] input:checked').length;
+    out.textContent=sel?('Vybrané: '+sel):'Zatiaľ nie je nič vybrané – vyber aspoň jednu položku.';
+}
+function pnlBlastConfirm(){
+    var box=document.getElementById('pnlBlastPick');if(!box)return;
+    var mode=box.querySelector('[data-mode]').value;
+    var extra={mode:mode};
+    if(mode!=='all'){
+        var vals=[].map.call(box.querySelectorAll('[data-pane='+mode+'] input:checked'),function(c){return c.value});
+        if(!vals.length){alert('Vyber aspoň jednu položku.');return;}
+        extra[mode==='groups'?'groups':'emails']=vals.join(',');
+    }
+    pnlBlastClose();
+    pnlBlastRun(box.dataset.pid,window._pnlBlastBtn,extra);
+}
+function pnlBlastRun(id, btn, extra){
+    btn=btn||{};
+    var orig=btn.innerHTML;
+    if(btn.disabled!==undefined){btn.disabled=true;btn.innerHTML='Odosielam…';}
     var data=new FormData();
     data.append('action','zcn_send_property');
     data.append('nonce','<?php echo wp_create_nonce('zcn_send_nonce') ?>');
     data.append('property_id',id);
+    Object.keys(extra||{}).forEach(function(k){data.append(k,extra[k])});
     fetch('<?php echo admin_url('admin-ajax.php') ?>',{method:'POST',body:data})
     .then(function(r){return r.json()}).then(function(res){
-        btn.disabled=false;btn.innerHTML=res.success?'✓':orig;
+        if(btn.disabled!==undefined){btn.disabled=false;btn.innerHTML=res.success?'✓':orig;}
         toast((res.data&&res.data.message)||(res.success?'Odoslané':'Chyba'),res.success);
-    }).catch(function(){btn.disabled=false;btn.innerHTML=orig;toast('Chyba pripojenia',false)});
+    }).catch(function(){if(btn.disabled!==undefined){btn.disabled=false;btn.innerHTML=orig;}toast('Chyba pripojenia',false)});
 }
 <?php endif; ?>
 </script>
+
+<?php if (function_exists('zcn_handle_property_blast') && function_exists('zcn_table') && function_exists('zcn_interest_groups')):
+    global $wpdb;
+    $zc_subs = $wpdb->get_results("SELECT email,name,interest FROM " . zcn_table()
+        . " WHERE status='active' ORDER BY name ASC, email ASC LIMIT 500");
+?>
+<div id="pnlBlastPick" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(20,17,14,.55);
+     align-items:center;justify-content:center;padding:20px">
+    <div style="background:var(--white);border-radius:16px;max-width:620px;width:100%;max-height:88vh;
+         display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.3)">
+        <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+            <strong style="font-size:15px">Komu poslať túto ponuku?</strong>
+            <button type="button" onclick="pnlBlastClose()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted)">✕</button>
+        </div>
+        <div style="padding:20px 22px;overflow:auto">
+            <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Príjemcovia</label>
+            <select data-mode onchange="pnlBlastMode()" style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px;margin-bottom:16px">
+                <option value="groups">Vybrané skupiny</option>
+                <option value="people">Vybraní ľudia</option>
+                <option value="all">Všetci so záujmom o ponuky</option>
+            </select>
+
+            <div data-pane="groups">
+                <?php foreach (zcn_interest_groups() as $glabel => $items): ?>
+                <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 7px"><?php echo esc_html($glabel) ?></div>
+                <?php foreach ($items as $value => $label): ?>
+                <label style="display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;font-size:13.5px">
+                    <input type="checkbox" value="<?php echo esc_attr($value) ?>" onchange="pnlBlastCount()" style="accent-color:#B8A47A;width:16px;height:16px">
+                    <?php echo esc_html($label) ?>
+                </label>
+                <?php endforeach; endforeach; ?>
+            </div>
+
+            <div data-pane="people" style="display:none">
+                <input type="search" placeholder="Hľadať meno alebo e-mail"
+                    oninput="var q=this.value.toLowerCase();this.parentNode.querySelectorAll('label').forEach(function(l){l.style.display=l.textContent.toLowerCase().indexOf(q)>-1?'flex':'none'})"
+                    style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;margin-bottom:10px;font-size:13.5px">
+                <?php if ($zc_subs): foreach ($zc_subs as $sub): ?>
+                <label style="display:flex;align-items:center;gap:9px;padding:7px 10px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px">
+                    <input type="checkbox" value="<?php echo esc_attr($sub->email) ?>" onchange="pnlBlastCount()" style="accent-color:#B8A47A;width:16px;height:16px">
+                    <span><?php echo esc_html($sub->name ?: $sub->email) ?>
+                        <?php if ($sub->name): ?><span style="color:var(--muted)"> · <?php echo esc_html($sub->email) ?></span><?php endif; ?>
+                    </span>
+                </label>
+                <?php endforeach; else: ?>
+                <p style="color:var(--muted);font-size:13px">Zatiaľ nemáš žiadnych aktívnych odberateľov.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+        <div style="padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            <span data-count style="font-size:12.5px;color:var(--muted)"></span>
+            <div style="display:flex;gap:8px">
+                <button type="button" class="btn btn-ghost" onclick="pnlBlastClose()">Zrušiť</button>
+                <button type="button" class="btn btn-primary" onclick="pnlBlastConfirm()">Odoslať ponuku</button>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 <?php
     return ob_get_clean();
 }
@@ -1788,7 +1907,7 @@ function panel_newsletter() {
     if (isset($_POST['pnl_nadd']) && wp_verify_nonce($_POST['_pnlnonce'] ?? '', 'pnl_nl')) {
         $add_email = strtolower(sanitize_email($_POST['email'] ?? ''));
         $add_name = sanitize_text_field($_POST['name'] ?? '');
-        $add_interest = pp_nl_interest($_POST['interest'] ?? '');
+        $add_interest = pp_nl_interests_value($_POST['interest'] ?? '');
         $add_mode = sanitize_key($_POST['add_mode'] ?? 'active');
         if (function_exists('zcn_add_contact')) {
             [$subscriber_notice, $subscriber_notice_ok] =
@@ -1799,7 +1918,8 @@ function panel_newsletter() {
     }
     if (isset($_POST['pnl_nbatch']) && wp_verify_nonce($_POST['_pnlnonce'] ?? '', 'pnl_nl')) {
         $batch = pp_parse_subscriber_batch(wp_unslash($_POST['batch_contacts'] ?? ''));
-        $batch_interest = pp_nl_interest($_POST['batch_interest'] ?? '');
+        $batch_interest = pp_nl_interests_value($_POST['batch_interest'] ?? '');
+        $batch_mode = sanitize_key($_POST['batch_mode'] ?? 'active');
         $counts = ['created' => 0, 'reactivated' => 0, 'updated' => 0, 'failed' => 0];
 
         if (!$batch['contacts']) {
@@ -1808,12 +1928,9 @@ function panel_newsletter() {
             $subscriber_notice = 'Aktualizujte aj plugin ZC Newsletter – hromadné pridanie potrebuje jeho novú verziu.';
         } else {
             foreach ($batch['contacts'] as $contact) {
-                $result = zcn_upsert_manual_active(
-                    $contact['email'],
-                    $contact['name'],
-                    'manual_batch',
-                    $batch_interest
-                );
+                $result = ($batch_mode === 'pending' && function_exists('zcn_subscribe_direct'))
+                    ? (zcn_subscribe_direct($contact['email'], $contact['name'], 'manual_batch', $batch_interest) ? 'created' : new WP_Error('zcn', 'zlyhalo'))
+                    : zcn_upsert_manual_active($contact['email'], $contact['name'], 'manual_batch', $batch_interest);
                 if (is_wp_error($result)) {
                     $counts['failed']++;
                 } elseif (isset($counts[$result])) {
@@ -1839,7 +1956,9 @@ function panel_newsletter() {
             if ($batch['truncated']) {
                 $subscriber_notice .= ' Naraz sa spracuje najviac 500 riadkov; zvyšok vložte v ďalšej dávke.';
             }
-            $subscriber_notice .= ' Potvrdzovacie ani uvítacie e-maily sa neposielali.';
+            $subscriber_notice .= ($batch_mode === 'pending')
+                ? ' Každému odišiel potvrdzovací e-mail.'
+                : ' Potvrdzovacie ani uvítacie e-maily sa neposielali.';
             $subscriber_notice_ok = ($counts['created'] + $counts['reactivated'] + $counts['updated']) > 0
                 && $counts['failed'] === 0;
         }
@@ -1855,7 +1974,7 @@ function panel_newsletter() {
     if (isset($_POST['pnl_ninterest']) && wp_verify_nonce($_POST['_pnlnonce'],'pnl_nl')) {
         $wpdb->update(
             $table,
-            ['interest' => pp_nl_interest($_POST['interest'] ?? '')],
+            ['interest' => pp_nl_interests_value($_POST['interest'] ?? '')],
             ['id' => intval($_POST['pnl_ninterest'])]
         );
         $subscriber_notice = 'Kategória kontaktu bola uložená.';
@@ -1895,7 +2014,7 @@ function panel_newsletter() {
     $interest_counts = [];
     foreach (pp_nl_interests() as $value => $label) {
         $interest_counts[$value] = (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$table} WHERE status='active' AND interest=%s",
+            "SELECT COUNT(*) FROM {$table} WHERE status='active' AND FIND_IN_SET(%s, interest)",
             $value
         ));
     }
@@ -1936,7 +2055,7 @@ function panel_newsletter() {
         $sample = get_posts(['post_type'=>'property','posts_per_page'=>1,'post_status'=>'publish','fields'=>'ids']);
         $sample_id = $sample[0] ?? 0;
     ?>
-    <div style="max-width:720px">
+    <div class="pnl-wide">
         <?php if (!empty($blast_saved)): ?>
         <div style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;padding:12px 16px;border-radius:8px;margin-bottom:18px;font-size:14px">Šablóna uložená.</div>
         <?php endif; ?>
@@ -2001,10 +2120,30 @@ function panel_newsletter() {
 
     <?php if ($subtab === 'send'): ?>
     <!-- SEND -->
-    <div style="max-width:720px">
-        <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:28px">
-            <div id="pnlNlMsg" style="display:none;margin-bottom:16px;padding:12px 16px;border-radius:8px;font-size:14px"></div>
+    <div class="pnl-wide">
+        <div id="pnlNlMsg" style="display:none;margin-bottom:16px;padding:12px 16px;border-radius:8px;font-size:14px"></div>
+        <div class="pnl-nl-form">
+        <div class="pnl-nl-main" style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:28px">
             <div style="margin-bottom:14px">
+                <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Predmet *</label>
+                <input type="text" id="pnlSubject"
+                    style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px;color:var(--text);outline:none;transition:border .2s"
+                    placeholder="Nová ponuka – 3-izbový byt Banská Bystrica">
+            </div>
+            <?php if (function_exists('zcn_render_tpl_toolbar')) zcn_render_tpl_toolbar('pnlBody', 'pnlSubject'); ?>
+            <div>
+                <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Obsah *</label>
+                <?php
+                if (function_exists('zc_render_editor_tools')) {
+                    zc_render_editor_tools('pnlBody', ['template'=>'newsletter','label'=>'Obsah newslettera']);
+                }
+                wp_editor('', 'pnlBody', pp_panel_editor_settings('pnl_body', 18));
+                ?>
+            </div>
+        </div>
+
+        <div class="pnl-nl-side">
+            <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px">
                 <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Príjemcovia</label>
                 <select id="pnlInterest" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px">
                     <option value="">Všetci aktívni odberatelia (aj bez záujmu o ponuky)</option>
@@ -2014,23 +2153,7 @@ function panel_newsletter() {
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div style="margin-bottom:14px">
-                <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Predmet *</label>
-                <input type="text" id="pnlSubject"
-                    style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px;color:var(--text);outline:none;transition:border .2s"
-                    placeholder="Nová ponuka – 3-izbový byt Banská Bystrica">
-            </div>
-            <?php if (function_exists('zcn_render_tpl_toolbar')) zcn_render_tpl_toolbar('pnlBody', 'pnlSubject'); ?>
-            <div style="margin-bottom:14px">
-                <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Obsah *</label>
-                <?php
-                if (function_exists('zc_render_editor_tools')) {
-                    zc_render_editor_tools('pnlBody', ['template'=>'newsletter','label'=>'Obsah newslettera']);
-                }
-                wp_editor('', 'pnlBody', pp_panel_editor_settings('pnl_body', 12));
-                ?>
-            </div>
-            <div style="background:var(--section);border-radius:var(--r-sm);padding:14px;margin-bottom:16px;display:flex;gap:8px;align-items:flex-end">
+            <div style="background:var(--section);border-radius:var(--r-sm);padding:14px;margin-top:16px;display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
                 <div style="flex:1">
                     <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Testovací e-mail</label>
                     <input type="email" id="pnlTestEmail"
@@ -2042,21 +2165,19 @@ function panel_newsletter() {
                     Test
                 </button>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-                <div>
-                    <span style="font-size:13px;color:var(--muted)">Odošle sa <strong id="pnlNlCount" style="color:var(--dark)"><?php echo $stats['active'] ?></strong> odberateľom</span>
-                    <a href="?action=newsletter&sub=subscribers" style="font-size:12px;color:var(--accent-txt);margin-left:12px;text-decoration:none">zobraziť →</a>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+                <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Odošle sa <strong id="pnlNlCount" style="color:var(--dark)"><?php echo $stats['active'] ?></strong> odberateľom
+                    <a href="?action=newsletter&sub=subscribers" style="font-size:12px;color:var(--accent-txt);margin-left:8px;text-decoration:none">zobraziť →</a>
                 </div>
-                <div style="display:flex;gap:8px">
-                    <button onclick="pnlNlPreview()"
-                        style="padding:11px 18px;background:var(--section);border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer">
-                        Náhľad
-                    </button>
-                    <button onclick="pnlNlSend(false)" class="btn btn-primary" style="padding:11px 22px;font-size:12px">
-                        Odoslať všetkým →
-                    </button>
-                </div>
+                <button onclick="pnlNlPreview()"
+                    style="width:100%;padding:11px 18px;margin-bottom:8px;background:var(--section);border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer">
+                    Náhľad
+                </button>
+                <button onclick="pnlNlSend(false)" class="btn btn-primary" style="width:100%;padding:12px;font-size:12px">
+                    Odoslať →
+                </button>
             </div>
+        </div>
         </div>
     </div>
 
@@ -2140,7 +2261,7 @@ function panel_newsletter() {
         $where = ['1=1'];
         $where_args = [];
         if ($nl_interest) {
-            $where[] = 'interest=%s';
+            $where[] = 'FIND_IN_SET(%s, interest)';
             $where_args[] = $nl_interest;
         }
         if ($nl_status !== 'all') {
@@ -2181,10 +2302,10 @@ function panel_newsletter() {
                 <input type="email" name="email" required style="display:block;width:100%;margin-top:5px;padding:10px;border:1px solid var(--border);border-radius:7px">
             </label>
             <label style="font-size:11px;font-weight:700;color:var(--muted)">Kategória
-                <select name="interest" style="display:block;width:100%;margin-top:5px;padding:10px;border:1px solid var(--border);border-radius:7px">
-                    <option value="">Všetky</option>
+                <select name="interest[]" multiple size="6" style="display:block;width:100%;margin-top:5px;padding:8px;border:1px solid var(--border);border-radius:7px">
                     <?php foreach (pp_nl_interests() as $value => $label): ?><option value="<?php echo esc_attr($value) ?>"><?php echo esc_html($label) ?></option><?php endforeach; ?>
                 </select>
+                <small style="color:var(--muted);font-size:10.5px">Nič = všetko · viac cez Ctrl/Cmd</small>
             </label>
             <label style="font-size:11px;font-weight:700;color:var(--muted)">Spôsob pridania
                 <select name="add_mode" style="display:block;width:100%;margin-top:5px;padding:10px;border:1px solid var(--border);border-radius:7px">
@@ -2207,9 +2328,14 @@ function panel_newsletter() {
             </label>
             <div style="display:grid;gap:10px">
                 <label style="font-size:11px;font-weight:700;color:var(--muted)">Spoločná kategória
-                    <select name="batch_interest" style="display:block;width:100%;margin-top:5px;padding:10px;border:1px solid var(--border);border-radius:7px">
-                        <option value="">Všetky ponuky</option>
+                    <select name="batch_interest[]" multiple size="6" style="display:block;width:100%;margin-top:5px;padding:8px;border:1px solid var(--border);border-radius:7px">
                         <?php foreach (pp_nl_interests() as $value => $label): ?><option value="<?php echo esc_attr($value) ?>"><?php echo esc_html($label) ?></option><?php endforeach; ?>
+                    </select>
+                </label>
+                <label style="font-size:11px;font-weight:700;color:var(--muted)">Spôsob pridania
+                    <select name="batch_mode" style="display:block;width:100%;margin-top:5px;padding:10px;border:1px solid var(--border);border-radius:7px">
+                        <option value="active">Pridať priamo, bez potvrdenia</option>
+                        <option value="pending">Poslať potvrdzovací e-mail</option>
                     </select>
                 </label>
                 <button type="submit" class="btn btn-primary" style="min-height:44px">Pridať celú dávku</button>
@@ -2279,9 +2405,9 @@ function panel_newsletter() {
                 <form method="post" style="display:flex;gap:5px">
                     <?php wp_nonce_field('pnl_nl','_pnlnonce') ?>
                     <input type="hidden" name="pnl_ninterest" value="<?php echo (int) $r->id ?>">
-                    <select name="interest" style="max-width:125px;padding:5px;border:1px solid var(--border);border-radius:5px;font-size:11px">
-                        <option value="">Všetky</option>
-                        <?php foreach (pp_nl_interests() as $value => $label): ?><option value="<?php echo esc_attr($value) ?>" <?php selected($r->interest ?? '',$value) ?>><?php echo esc_html($label) ?></option><?php endforeach; ?>
+                    <?php $row_int = function_exists('zcn_interest_list') ? zcn_interest_list($r->interest ?? '') : []; ?>
+                    <select name="interest[]" multiple size="4" style="max-width:150px;padding:4px;border:1px solid var(--border);border-radius:5px;font-size:11px">
+                        <?php foreach (pp_nl_interests() as $value => $label): ?><option value="<?php echo esc_attr($value) ?>" <?php selected(in_array($value, $row_int, true)) ?>><?php echo esc_html($label) ?></option><?php endforeach; ?>
                     </select>
                     <button class="btn btn-ghost" style="padding:5px 8px" title="Uložiť">✓</button>
                 </form>

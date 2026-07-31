@@ -359,3 +359,8 @@ function pp_nl_source_label($source) {
     $source = trim((string) $source);
     return $source !== '' ? ucwords(str_replace('_', ' ', $source)) : 'Neznámy zdroj';
 }
+
+/** Viac kategórií naraz (zoznam oddelený čiarkou). */
+function pp_nl_interests_value($value) {
+    return function_exists('zcn_sanitize_interests') ? zcn_sanitize_interests($value) : '';
+}

@@ -18,8 +18,8 @@ function zcn_handle_subscribe() {
 
     $email = strtolower(sanitize_email($_POST['email'] ?? ''));
     $name  = sanitize_text_field($_POST['name']  ?? '');
-    $interest = function_exists('zcn_sanitize_interest')
-        ? zcn_sanitize_interest($_POST['interest'] ?? '')
+    $interest = function_exists('zcn_sanitize_interests')
+        ? zcn_sanitize_interests($_POST['interest'] ?? '')
         : '';
     $source = function_exists('zcn_merge_sources')
         ? zcn_merge_sources('', $_POST['source'] ?? 'newsletter')
@@ -123,23 +123,34 @@ function zcn_send_confirmation($email, $name, $token) {
     $from_email  = function_exists('zc_mail_from') ? zc_mail_from() : (get_theme_mod('zc_email_from', '') ?: get_option('admin_email'));
     $greeting    = $name ? "Dobrý deň {$name}," : 'Dobrý deň,';
 
-    $subject = "Potvrďte prihlásenie na odber – {$site}";
+    $subject = "Žiadosť o prihlásenie na odber – {$site}";
     $body    = zcn_email_wrap($subject, "
-        <p style='font-size:16px;color:#2C2825;margin:0 0 20px'>{$greeting}</p>
-        <p style='color:#555;line-height:1.75;margin:0 0 28px'>
-            Dostali sme žiadosť o prihlásenie na odber noviniek z webu <strong>{$site}</strong>.<br>
-            Ak ste to boli vy, kliknite na tlačidlo nižšie pre potvrdenie.
+        <p style='font-size:16px;color:#2C2825;margin:0 0 18px'>{$greeting}</p>
+        <p style='color:#555;line-height:1.75;margin:0 0 18px'>
+            prišla nám žiadosť o prihlásenie na odber z webu <strong>{$site}</strong>.
+            Ak ste to boli vy, potvrďte ju tlačidlom nižšie.
         </p>
-        <div style='text-align:center;margin:32px 0'>
+        <p style='color:#555;line-height:1.75;margin:0 0 10px'><strong>Čo vám budeme posielať:</strong></p>
+        <ul style='color:#555;line-height:1.9;margin:0 0 18px;padding-left:20px'>
+            <li>nové ponuky nehnuteľností skôr, než sa dostanú na inzertné portály,</li>
+            <li>zníženia cien a novinky pri ponukách, ktoré vás zaujímajú,</li>
+            <li>ebook a materiály zdarma k predaju a kúpe nehnuteľnosti,</li>
+            <li>realitné tipy – čo si postrážiť pri zmluve, hypotéke či obhliadke.</li>
+        </ul>
+        <p style='color:#555;line-height:1.75;margin:0 0 24px'>
+            Po potvrdení si <strong>sami vyberiete, čo vás zaujíma</strong> – môžete si označiť aj viac
+            možností naraz a kedykoľvek to zmeniť. Odhlásiť sa dá jedným klikom v každom e-maile.
+        </p>
+        <div style='text-align:center;margin:30px 0'>
             <a href='" . esc_url($confirm_url) . "'
                style='display:inline-block;padding:14px 32px;background:#B8A47A;color:#1C1A18;
                       text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;
                       letter-spacing:.5px;font-family:DM Sans,sans-serif'>
-                Potvrdiť prihlásenie
+                Prihlásiť sa a vybrať si témy
             </a>
         </div>
         <p style='font-size:12px;color:#999;text-align:center'>
-            Ak ste o prihlásenie nežiadali, ignorujte tento e-mail.<br>
+            Ak ste o prihlásenie nežiadali, tento e-mail pokojne ignorujte – bez potvrdenia vám nič neprí­de.<br>
             <a href='" . esc_url($unsub_url) . "' style='color:#bbb'>Odhlásiť sa</a>
         </p>
     ");
@@ -238,7 +249,7 @@ function zcn_upsert_manual_active($email, $name = '', $source = 'manual_batch', 
     $email = strtolower(sanitize_email($email));
     $name = sanitize_text_field($name);
     $source = sanitize_key($source) ?: 'manual_batch';
-    $interest = function_exists('zcn_sanitize_interest') ? zcn_sanitize_interest($interest) : '';
+    $interest = function_exists('zcn_sanitize_interests') ? zcn_sanitize_interests($interest) : '';
 
     if (!is_email($email)) {
         return new WP_Error('zcn_invalid_email', 'Neplatná e-mailová adresa.');
@@ -325,7 +336,7 @@ function zcn_subscribe_forced($email, $name = '', $source = 'form', $interest = 
     if (!is_email($email)) return false;
     if (function_exists('zcn_ensure_table_ready') && !zcn_ensure_table_ready()) return false;
     $email = strtolower(sanitize_email($email));
-    $interest = function_exists('zcn_sanitize_interest') ? zcn_sanitize_interest($interest) : '';
+    $interest = function_exists('zcn_sanitize_interests') ? zcn_sanitize_interests($interest) : '';
     global $wpdb;
     $table = zcn_table();
     $existing = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE email=%s", $email));
@@ -367,7 +378,7 @@ function zcn_subscribe_direct($email, $name = '', $source = 'web', $interest = '
     if (!is_email($email)) return false;
     if (function_exists('zcn_ensure_table_ready') && !zcn_ensure_table_ready()) return false;
     $email = strtolower(sanitize_email($email));
-    $interest = function_exists('zcn_sanitize_interest') ? zcn_sanitize_interest($interest) : '';
+    $interest = function_exists('zcn_sanitize_interests') ? zcn_sanitize_interests($interest) : '';
     global $wpdb;
     $table = zcn_table();
     $existing = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE email=%s", $email));
@@ -465,17 +476,24 @@ function zcn_parse_contacts($raw, $limit = 500) {
  * Pridá naraz celú dávku kontaktov.
  * Vracia počty [created, reactivated, updated, failed] + poznámky k vstupu.
  */
-function zcn_add_contacts_bulk($raw, $interest = '', $source = 'manual_batch') {
+function zcn_add_contacts_bulk($raw, $interest = '', $source = 'manual_batch', $mode = 'active') {
     $batch  = zcn_parse_contacts($raw);
     $counts = ['created' => 0, 'reactivated' => 0, 'updated' => 0, 'failed' => 0];
+    $mode   = ($mode === 'pending') ? 'pending' : 'active';
 
     foreach ($batch['contacts'] as $contact) {
+        if ($mode === 'pending') {
+            // Vedomá voľba – každému odíde potvrdzovací e-mail
+            $ok = zcn_subscribe_direct($contact['email'], $contact['name'], $source, $interest);
+            $ok ? $counts['created']++ : $counts['failed']++;
+            continue;
+        }
         $result = zcn_upsert_manual_active($contact['email'], $contact['name'], $source, $interest);
         if (is_wp_error($result))          $counts['failed']++;
         elseif (isset($counts[$result]))   $counts[$result]++;
     }
 
-    return $counts + [
+    return $counts + ['mode' => $mode] + [
         'total'          => count($batch['contacts']),
         'invalid_rows'   => $batch['invalid_rows'],
         'duplicate_rows' => $batch['duplicate_rows'],
@@ -496,7 +514,9 @@ function zcn_bulk_notice($counts) {
     if (!empty($counts['invalid_rows']))   $msg .= ' Neplatné riadky: ' . implode(', ', array_slice($counts['invalid_rows'], 0, 12)) . '.';
     if (!empty($counts['failed']))         $msg .= ' Neuložené pre chybu databázy: ' . (int) $counts['failed'] . '.';
     if (!empty($counts['truncated']))      $msg .= ' Naraz sa spracuje najviac 500 riadkov; zvyšok vlož v ďalšej dávke.';
-    $msg .= ' Žiadne e-maily sa neposielali.';
+    $msg .= (($counts['mode'] ?? 'active') === 'pending')
+        ? ' Každému odišiel potvrdzovací e-mail.'
+        : ' Žiadne e-maily sa neposielali.';
 
     $ok = ($counts['created'] + $counts['reactivated'] + $counts['updated']) > 0 && empty($counts['failed']);
     return [$msg, $ok];
@@ -559,7 +579,7 @@ function zcn_handle_set_interest() {
         wp_send_json_error(['message' => 'Platnosť voľby vypršala. Kategóriu ti nastavíme na požiadanie.']);
     }
 
-    $interest = zcn_sanitize_interest($_POST['interest'] ?? '');
+    $interest = zcn_sanitize_interests($_POST['interest'] ?? '');
     if (function_exists('zcn_ensure_table_ready')) zcn_ensure_table_ready();
 
     global $wpdb;

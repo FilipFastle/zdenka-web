@@ -13,7 +13,7 @@ function zcn_install() {
         id          BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
         email       VARCHAR(191) NOT NULL,
         name        VARCHAR(191) DEFAULT '',
-        interest    VARCHAR(32) DEFAULT '',
+        interest    VARCHAR(191) DEFAULT '',
         status      ENUM('pending','active','unsubscribed') NOT NULL DEFAULT 'pending',
         token       VARCHAR(64)  NOT NULL,
         source      VARCHAR(100) DEFAULT 'web',
@@ -28,10 +28,18 @@ function zcn_install() {
     update_option('zcn_db_version', ZCN_VERSION);
 }
 
-function zcn_interests() {
-    return zcn_offer_interests() + [
-        // Nechce ponuky – dostane len novinky, ebook a informačné e-maily
-        'ziadne' => 'Bez ponúk – iba novinky a ebook',
+/**
+ * Kategórie záujmu. Kontakt ich môže mať naraz viac – v databáze sú
+ * uložené ako zoznam oddelený čiarkou (napr. „dom,pozemok,tipy").
+ * Prázdna hodnota znamená „všetko".
+ */
+function zcn_interest_groups() {
+    return [
+        'Nehnuteľnosti' => zcn_offer_interests(),
+        'Ostatné'       => [
+            'ebook' => 'Ebook a materiály zdarma',
+            'tipy'  => 'Realitné tipy a novinky',
+        ],
     ];
 }
 
@@ -46,27 +54,73 @@ function zcn_offer_interests() {
     ];
 }
 
-/** Má tento kontakt dostávať ponuky nehnuteľností? */
-function zcn_wants_offers($interest) {
-    return zcn_sanitize_interest($interest) !== 'ziadne';
+/** Plochý zoznam všetkých kategórií vrátane staršej hodnoty „ziadne". */
+function zcn_interests() {
+    $flat = [];
+    foreach (zcn_interest_groups() as $items) $flat += $items;
+    // Staršie kontakty môžu mať ešte pôvodnú hodnotu – nech ju vieme pomenovať
+    $flat['ziadne'] = 'Bez ponúk – iba novinky a ebook';
+    return $flat;
 }
 
-/**
- * Podmienka do SQL, ktorá vynechá kontakty bez záujmu o ponuky.
- * Prázdna kategória = „všetky ponuky", tá sa posiela.
- */
-function zcn_offers_sql_where() {
-    return " AND (interest IS NULL OR interest <> 'ziadne')";
-}
-
+/** Jedna platná kategória, alebo prázdny reťazec. */
 function zcn_sanitize_interest($value) {
     $value = sanitize_key((string) $value);
     return isset(zcn_interests()[$value]) ? $value : '';
 }
 
-function zcn_interest_label($value, $empty = 'Všetky ponuky') {
-    $value = zcn_sanitize_interest($value);
-    return $value ? zcn_interests()[$value] : $empty;
+/** Zoznam kategórií z reťazca alebo poľa → pole platných kľúčov. */
+function zcn_interest_list($value) {
+    if (is_string($value)) $value = explode(',', $value);
+    if (!is_array($value)) return [];
+    $out = [];
+    foreach ($value as $item) {
+        $key = zcn_sanitize_interest(trim((string) $item));
+        if ($key !== '' && !in_array($key, $out, true)) $out[] = $key;
+    }
+    return $out;
+}
+
+/** Normalizovaná hodnota do databázy: „dom,pozemok" alebo prázdny reťazec. */
+function zcn_sanitize_interests($value) {
+    return implode(',', array_slice(zcn_interest_list($value), 0, 12));
+}
+
+/** Popis kategórií na výpis. */
+function zcn_interest_label($value, $empty = 'Všetko') {
+    $keys = zcn_interest_list($value);
+    if (!$keys) return $empty;
+    $all = zcn_interests();
+    $out = [];
+    foreach ($keys as $key) $out[] = $all[$key] ?? $key;
+    return implode(', ', $out);
+}
+
+/** Má tento kontakt dostávať ponuky nehnuteľností? */
+function zcn_wants_offers($value) {
+    $keys = zcn_interest_list($value);
+    if (!$keys) return true;                       // prázdne = všetko
+    if ($keys === ['ziadne']) return false;        // staršia hodnota
+    return (bool) array_intersect($keys, array_keys(zcn_offer_interests()));
+}
+
+/**
+ * Podmienka do SQL: komu sa smú posielať ponuky nehnuteľností.
+ * Prázdna kategória = „všetko", tomu sa posiela vždy.
+ */
+function zcn_offers_sql_where() {
+    $parts = ["interest IS NULL", "interest = ''"];
+    foreach (array_keys(zcn_offer_interests()) as $key) {
+        $parts[] = "FIND_IN_SET('" . esc_sql($key) . "', interest)";
+    }
+    return ' AND (' . implode(' OR ', $parts) . ')';
+}
+
+/** Podmienka do SQL pre jednu konkrétnu kategóriu (prázdna = všetko). */
+function zcn_interest_sql_where($interest) {
+    $key = zcn_sanitize_interest($interest);
+    if ($key === '') return '';
+    return " AND (interest IS NULL OR interest = '' OR FIND_IN_SET('" . esc_sql($key) . "', interest))";
 }
 
 function zcn_source_labels() {
@@ -136,11 +190,11 @@ function zcn_dedupe_subscribers($table = '') {
         if (count($rows) < 2) continue;
         $keep = array_shift($rows);
         $name = trim((string) $keep->name);
-        $interest = property_exists($keep, 'interest') ? zcn_sanitize_interest($keep->interest) : '';
+        $interest = property_exists($keep, 'interest') ? zcn_sanitize_interests($keep->interest) : '';
         $source = property_exists($keep, 'source') ? (string) $keep->source : '';
         foreach ($rows as $row) {
             if (!$name && !empty($row->name)) $name = trim((string) $row->name);
-            if (!$interest && property_exists($row, 'interest')) $interest = zcn_sanitize_interest($row->interest);
+            if (property_exists($row, 'interest')) $interest = zcn_sanitize_interests($interest . ',' . $row->interest);
             if (property_exists($row, 'source')) $source = zcn_merge_sources($source, $row->source);
             $wpdb->delete($table, ['id' => (int) $row->id], ['%d']);
             $removed++;
@@ -182,7 +236,7 @@ function zcn_ensure_table_ready() {
         $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table)) === $table;
     }
     if ($exists && !zcn_has_interest_column()) {
-        $wpdb->query("ALTER TABLE {$table} ADD COLUMN interest VARCHAR(32) DEFAULT '' AFTER name");
+        $wpdb->query("ALTER TABLE {$table} ADD COLUMN interest VARCHAR(191) DEFAULT '' AFTER name");
         zcn_has_interest_column(true); // prepočítať po zmene
     }
     return $exists;

@@ -188,43 +188,60 @@ Kde to použiješ:
 
 ## Newsletter — kategórie a pridávanie kontaktov
 
-### Kategórie záujmu
-| Kategória | Čo dostáva |
+### Kategórie záujmu (dá sa vybrať aj viac naraz)
+| Skupina | Možnosti |
 |---|---|
-| *Všetky ponuky* (prázdna) | všetko — novinky, ebook aj ponuky |
-| 1-izbový / 2-izbový / 3+-izbový / Dom / Pozemok | novinky, ebook a **len ponuky svojho typu** |
-| **Bez ponúk – iba novinky a ebook** | novinky a ebook, **žiadne ponuky nehnuteľností** |
+| Nehnuteľnosti | 1-izbový byt · 2-izbový byt · 3+-izbový byt · Dom · Pozemok |
+| Ostatné | Ebook a materiály zdarma · Realitné tipy a novinky |
 
-Kto si stiahne **ebook**, zaradí sa automaticky do *Všetky ponuky*.
+**Nič nevybrané = dostáva všetko.** Kontakt môže mať naraz aj viac kategórií
+(napr. *Dom + Pozemok + Realitné tipy*) — v databáze sú uložené vedľa seba
+a dajú sa kedykoľvek zmeniť priamo v riadku zoznamu.
 
-Pri odosielaní si vyberáš príjemcov:
-- **Všetci aktívni odberatelia (aj bez záujmu o ponuky)** — pre novinky a oznamy,
-- **Všetci so záujmom o ponuky** — vynechá tých s kategóriou *Bez ponúk*,
-- konkrétna kategória.
+Kto si nevyberie žiadnu nehnuteľnosť (len ebook alebo tipy), **ponuky mu chodiť
+nebudú** — tlačidlo *Poslať odberateľom* pri ponuke ho automaticky vynechá.
 
-Tlačidlo **„Poslať odberateľom newslettera"** pri ponuke vynecháva kategóriu
-*Bez ponúk* vždy automaticky — netreba na to myslieť.
+### Ako si kategórie vyberá návštevník
+Vo formulári sa naň nepýtame, aby nezdržiaval. Postup je takýto:
 
-### Kde sa pýtame na kategóriu
-Vo formulári sa na typ nehnuteľnosti **už nepýtame**, aby nezdržiaval toho, kto
-chce len napísať správu. Kto si zaškrtne newsletter, dostane **hneď po odoslaní
-malé okno** s výberom. Kto ho zavrie alebo zvolí *Žiadne*, ostane v kategórii
-*Bez ponúk* — novinky a ebook mu chodiť budú, ponuky nie.
+1. Zaškrtne si newsletter a odošle formulár.
+2. Príde mu e-mail **„Žiadosť o prihlásenie na odber"** — v bodoch je v ňom
+   napísané, čo mu budeme posielať.
+3. Klikne na **Prihlásiť sa a vybrať si témy** → otvorí sa stránka, kde si
+   zaškrtne, čo ho zaujíma (aj viac naraz). Nič nezaškrtnuté = posielame všetko.
+
+Kto si stiahne **ebook**, zaradí sa automaticky do *Všetko*.
+
+### Komu poslať konkrétnu ponuku
+Pri tlačidle **„Poslať odberateľom newslettera"** sa otvorí okno s výberom:
+
+- **Vybrané skupiny** — zaškrtneš kategórie (napr. len *Dom* a *Pozemok*),
+- **Vybraní ľudia** — zoznam odberateľov s vyhľadávaním, zaškrtneš konkrétne mená,
+- **Všetci so záujmom o ponuky**.
+
+Kontakty, ktoré ponuky nechcú, sa vynechajú v každom prípade.
 
 ### Pridávanie kontaktov
 Rovnaké možnosti sú v **realitnom paneli** aj vo **wp-admine**
 (*Web Zdenky → Newsletter → Pridať kontakty*):
 
-- **Po jednom** — meno, e-mail, kategória.
+- **Po jednom** — meno, e-mail, kategórie, spôsob pridania.
 - **Viac naraz** — jeden človek na riadok vo formáte `Meno;Priezvisko;e-mail`
   (funguje aj CSV s čiarkou/tabulátorom, aj samotný e-mail). Naraz max. 500 riadkov.
 
-Ručne pridaný kontakt sa uloží rovno ako aktívny a **nedostane žiadny e-mail** —
-ani uvítací, ani potvrdzovací. Ak chceš potvrdenie poslať, zvoľ pri pridávaní
-jedného kontaktu možnosť *Poslať potvrdzovací e-mail*.
+Pri oboch si vyberáš spôsob:
+- **Pridať priamo, bez potvrdenia** (predvolené) — kontakt je hneď aktívny
+  a **nedostane žiadny e-mail**,
+- **Poslať potvrdzovací e-mail** — človek si prihlásenie potvrdí sám a rovno si
+  vyberie témy.
 
 Rovnaká adresa sa nikdy nevytvorí druhýkrát — existujúci záznam sa aktualizuje
 a zdroje sa zlúčia, takže je vždy vidieť, odkiaľ kontakt prišiel.
+
+### Vizitka v e-maile
+Pri e-maile s ponukou bola vizitka dvakrát — raz z tela e-mailu a raz z pätičky.
+Teraz platí: keď má šablóna zapnuté *„Pridať na koniec kontakt na makléra"*,
+pätičková vizitka sa vynechá. Prepínač je v *Newsletter → Šablóna novej ponuky*.
 
 ## Texty stránok — meniť sa dajú sám
 **Web Zdenky → Texty stránok.** Nadpisy, popisy a tlačidlá na stránkach

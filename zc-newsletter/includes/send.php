@@ -62,10 +62,10 @@ function zcn_handle_send() {
     // Bez stĺpca „interest" by filtrovaná otázka zlyhala a vyzeralo by to,
     // akoby web nemal žiadnych odberateľov.
     if (function_exists('zcn_ensure_table_ready')) zcn_ensure_table_ready();
-    $subscribers = $interest
-        ? $wpdb->get_results($wpdb->prepare("SELECT * FROM " . zcn_table() . " WHERE status='active' AND interest=%s", $interest))
-        : $wpdb->get_results("SELECT * FROM " . zcn_table() . " WHERE status='active'"
-            . ($only_offers ? zcn_offers_sql_where() : ''));
+    $subscribers = $wpdb->get_results(
+        "SELECT * FROM " . zcn_table() . " WHERE status='active'"
+        . ($interest ? zcn_interest_sql_where($interest) : ($only_offers ? zcn_offers_sql_where() : ''))
+    );
     if (empty($subscribers)) {
         wp_send_json_error(['message' => $interest
             ? 'V tejto kategórii zatiaľ nikto nie je. Skús „Všetci aktívni odberatelia".'
@@ -109,10 +109,10 @@ add_action('zcn_do_scheduled', function($key) {
 
     global $wpdb;
     $interest = function_exists('zcn_sanitize_interest') ? zcn_sanitize_interest($item['interest'] ?? '') : '';
-    $subscribers = $interest
-        ? $wpdb->get_results($wpdb->prepare("SELECT * FROM " . zcn_table() . " WHERE status='active' AND interest=%s", $interest))
-        : $wpdb->get_results("SELECT * FROM " . zcn_table() . " WHERE status='active'"
-            . (!empty($item['only_offers']) ? zcn_offers_sql_where() : ''));
+    $subscribers = $wpdb->get_results(
+        "SELECT * FROM " . zcn_table() . " WHERE status='active'"
+        . ($interest ? zcn_interest_sql_where($interest) : (!empty($item['only_offers']) ? zcn_offers_sql_where() : ''))
+    );
     if (empty($subscribers)) return;
 
     $from_name  = function_exists('zc_agent') ? zc_agent('name', 'Mgr. Zdenka Cibuľová') : 'Mgr. Zdenka Cibuľová';
@@ -137,11 +137,11 @@ add_action('zcn_do_scheduled', function($key) {
     update_option('zcn_send_log', array_slice($log, 0, 30));
 }, 10, 1);
 
-function zcn_build_newsletter_email($subject, $body_html, $token, $name = '') {
+function zcn_build_newsletter_email($subject, $body_html, $token, $name = '', $args = []) {
     $unsub = zcn_unsubscribe_url($token);
     // Oslovenie sem nedopĺňame – píše ho maklérka v texte kampane.
     // Ak ho chce mať s menom, použije v texte premennú {meno}.
     $footer = 'Dostávate tento e-mail pretože ste prihlásení na odber noviniek. · <a href="' . esc_url($unsub) . '" style="color:#9A8660">Odhlásiť sa</a><br>';
 
-    return zcn_email_wrap($subject, $body_html, $footer);
+    return zcn_email_wrap($subject, $body_html, $footer, $args);
 }
