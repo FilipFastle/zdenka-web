@@ -80,7 +80,7 @@ function zcn_multiselect_assets() {
     .zc-ms.is-open .zc-ms-btn svg{transform:rotate(180deg)}
     .zc-ms-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .zc-ms-label.is-empty{color:#9A9186;font-weight:500}
-    .zc-ms-menu{position:absolute;z-index:9500;left:0;right:0;top:calc(100% + 5px);min-width:230px;
+    .zc-ms-menu{position:absolute;z-index:100010;left:0;right:0;top:calc(100% + 5px);min-width:230px;
         max-height:320px;overflow:auto;padding:8px;background:#fff;border:1px solid #E0D8CE;border-radius:11px;
         box-shadow:0 14px 38px rgba(40,32,20,.16)}
     .zc-ms-menu[hidden]{display:none}
@@ -156,10 +156,31 @@ function zcn_multiselect_assets() {
             labelOf(box);
         }
         function init(){ document.querySelectorAll('[data-zc-ms]').forEach(bind); }
+        // Po programovom prepnutí políčok treba obnoviť popis v tlačidle
+        window.zcMsRefresh=function(root){
+            (root||document).querySelectorAll('[data-zc-ms]').forEach(function(b){bind(b);labelOf(b)});
+        };
         document.addEventListener('click',function(){ document.querySelectorAll('.zc-ms.is-open').forEach(close); });
         document.addEventListener('keydown',function(e){ if(e.key==='Escape')document.querySelectorAll('.zc-ms.is-open').forEach(close); });
-        window.addEventListener('resize',function(){ document.querySelectorAll('.zc-ms.is-open').forEach(close); });
-        window.addEventListener('scroll',function(){ document.querySelectorAll('.zc-ms.is-open').forEach(close); },true);
+
+        // Pri scrollovaní okienko len presunieme za tlačidlom – nezatvárame ho.
+        // Zatvorí sa až vtedy, keď tlačidlo odscrolluje mimo obrazovky.
+        function reposition(){
+            document.querySelectorAll('.zc-ms.is-open').forEach(function(box){
+                var btn=box.querySelector('.zc-ms-btn'), menu=box.querySelector('.zc-ms-menu');
+                if(!btn||!menu)return;
+                var r=btn.getBoundingClientRect();
+                if(r.bottom<0||r.top>window.innerHeight){close(box);return;}
+                place(box,btn,menu);
+            });
+        }
+        window.addEventListener('resize',reposition);
+        window.addEventListener('scroll',function(e){
+            // scrollovanie vnútri samotného okienka nechávame na pokoji
+            var t=e.target;
+            if(t&&t.closest&&t.closest('.zc-ms-menu'))return;
+            reposition();
+        },true);
         if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init); else init();
     })();
     </script>

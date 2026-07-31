@@ -989,7 +989,7 @@ function pnlBlast(id, btn){
     box.dataset.btn='';
     window._pnlBlastBtn=btn;
     box.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=false});
-    box.querySelectorAll('[data-zc-ms] .zc-ms-label').forEach(function(l){l.textContent='Vyber kategórie';l.classList.add('is-empty')});
+    if(window.zcMsRefresh)window.zcMsRefresh(box);
     var m=box.querySelector('[data-mode]');if(m)m.value='groups';
     pnlBlastMode();
     box.style.display='flex';

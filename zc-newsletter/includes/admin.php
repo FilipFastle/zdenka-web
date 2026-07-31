@@ -385,6 +385,7 @@ function zcn_admin_page() {
         var b = zcnGetBody().trim();
         var t = document.getElementById('zcnTestEmail').value.trim();
         var sch = document.getElementById('zcnScheduleAt') ? document.getElementById('zcnScheduleAt').value : '';
+        if (!s||!b) { alert('Vyplňte predmet aj obsah.'); return; }
         var scope = document.getElementById('zcnScope').value;
         var interest = '';
         if (scope === 'cats') {
@@ -392,7 +393,6 @@ function zcn_admin_page() {
             if (!cats.length) { alert('Vyber aspoň jednu kategóriu.'); return; }
             interest = cats.join(',');
         } else if (scope === 'offers') { interest = 'offers'; }
-        if (!s||!b) { alert('Vyplňte predmet aj obsah.'); return; }
         if (isSchedule && !sch) { alert('Zvoľte dátum a čas odoslania.'); return; }
         if (isSchedule && !confirm('Naplánovať newsletter na ' + sch + '?')) return;
         var recipientCount=document.getElementById('zcnRecipientCount').textContent;

@@ -172,10 +172,11 @@ padding: 8px 20px 16px; position: absolute; width: 100%; left: 0;
 box-shadow: 0 12px 32px rgba(40,32,20,.12);
 }
 .zc-mobile-nav a {
-display: flex; align-items: center; padding: 13px 4px;
+display: flex; align-items: center; padding: min(13px, 1.6vh) 4px;
 border-bottom: 1px solid var(--border); font-size: 14px;
 font-weight: 600; color: var(--text); transition: color .2s;
 }
+.zc-mobile-nav { max-height: calc(100vh - var(--hh, 72px)); overflow-y: auto; }
 .zc-mobile-nav a:last-child { border-bottom: none; }
 .zc-mobile-nav a:hover { color: var(--accent-txt); }
 .zc-footer { background: linear-gradient(180deg, #F3EBDD 0%, #EBDfC8 100%); font-family: var(--sans); border-top: 1px solid #E3D5BC; }

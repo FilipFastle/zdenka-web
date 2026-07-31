@@ -38,7 +38,10 @@ if (!document.getElementById('zcOvCSS')) {
         '#zcOv.open .zco-bg{transform:scaleY(1);}',
 
         /* Logo */
-        '.zco-logo{position:relative;z-index:2;width:80px;height:80px;filter:brightness(0);',
+        /* Rozmery viaže výška okna – menu sa musí vojsť aj na zoomnutom PC
+           či na nízkom okne, bez toho aby sa muselo scrollovať. */
+        '#zcOv{padding:min(4vh,28px) 16px;overflow:hidden;}',
+        '.zco-logo{position:relative;z-index:2;width:min(80px,9vh);height:min(80px,9vh);filter:brightness(0);',
         '  opacity:0;transform:scale(.6) rotate(-14deg);',
         '  transition:opacity .4s ease .28s,transform .52s cubic-bezier(.34,1.56,.64,1) .28s;}',
         '#zcOv.open .zco-logo{opacity:1;transform:scale(1) rotate(0);}',
@@ -48,14 +51,17 @@ if (!document.getElementById('zcOvCSS')) {
 
         /* Divider */
         '.zco-div{position:relative;z-index:2;width:32px;height:1px;background:rgba(154,134,96,.5);',
-        '  margin:12px 0;opacity:0;transition:opacity .3s .5s;}',
+        '  margin:min(12px,1.4vh) 0;opacity:0;transition:opacity .3s .5s;}',
         '#zcOv.open .zco-div{opacity:1;}',
         '#zcOv.closing .zco-div{opacity:0;transition:opacity .1s;}',
 
         /* Nav links */
         '.zco-nav{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;}',
-        '.zco-nav a{font-family:"Playfair Display",Georgia,serif;font-size:clamp(28px,7vw,42px);',
-        '  font-weight:700;color:#1C1A18;text-decoration:none;line-height:1.3;padding:3px 0;',
+        '.zco-nav{max-height:100%;}',
+        '.zco-nav a{font-family:"Playfair Display",Georgia,serif;',
+        /* menšie z dvoch: podľa šírky aj podľa výšky – rozhoduje ten tesnejší */
+        '  font-size:clamp(15px,min(6.6vw,4.4vh),42px);',
+        '  font-weight:700;color:#1C1A18;text-decoration:none;line-height:1.24;padding:min(3px,.4vh) 0;',
         '  opacity:0;transform:translateY(20px);',
         '  transition:opacity .32s,transform .36s,color .18s;display:block;}',
         '.zco-nav a:hover{color:#9A8660;}',
@@ -88,6 +94,7 @@ if (!document.getElementById('zcOvCSS')) {
         '.nav-open .zc-hamburger span:nth-child(2){opacity:0;transform:translateX(-8px);}',
         '.nav-open .zc-hamburger span:nth-child(3){transform:rotate(-45deg) translate(4.5px,-4.5px);}',
 
+        '@media(max-height:620px){.zco-logo,.zco-div{display:none;}}',
         '@media(min-width:1181px){#zcOv{display:none!important}}',
     ].join('');
     document.head.appendChild(menuCSS);
