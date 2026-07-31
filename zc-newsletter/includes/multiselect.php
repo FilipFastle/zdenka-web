@@ -190,3 +190,105 @@ function zcn_multiselect_assets() {
     </script>
     <?php
 }
+
+/**
+ * Výber konkrétnych odberateľov – zoznam s vyhľadávaním.
+ * Používa sa pri odosielaní newslettera v paneli aj vo wp-admine.
+ */
+function zcn_people_picker($id = 'zcnPeople', $limit = 800) {
+    global $wpdb;
+    $rows = $wpdb->get_results($wpdb->prepare(
+        "SELECT email, name FROM " . zcn_table() . "
+         WHERE status='active' ORDER BY name ASC, email ASC LIMIT %d", $limit
+    ));
+    ?>
+    <div class="zc-people" id="<?php echo esc_attr($id); ?>">
+        <input type="search" class="zc-people-search" placeholder="Hľadať meno alebo e-mail…"
+               aria-label="Hľadať odberateľa">
+        <div class="zc-people-list">
+            <?php if ($rows): foreach ($rows as $r): ?>
+            <label class="zc-people-row">
+                <input type="checkbox" value="<?php echo esc_attr($r->email); ?>">
+                <span><strong><?php echo esc_html($r->name ?: $r->email); ?></strong>
+                    <?php if ($r->name): ?><em><?php echo esc_html($r->email); ?></em><?php endif; ?>
+                </span>
+            </label>
+            <?php endforeach; else: ?>
+            <p class="zc-people-empty">Zatiaľ nemáš žiadnych aktívnych odberateľov.</p>
+            <?php endif; ?>
+        </div>
+        <div class="zc-people-foot">
+            <button type="button" data-zc-people-all>Označiť zobrazených</button>
+            <button type="button" data-zc-people-none>Zrušiť výber</button>
+            <span class="zc-people-count">0 vybraných</span>
+        </div>
+    </div>
+    <?php
+    zcn_people_picker_assets();
+}
+
+function zcn_people_picker_assets() {
+    static $done = false;
+    if ($done) return;
+    $done = true;
+    ?>
+    <style id="zc-people-css">
+    .zc-people{border:1.5px solid #E0D8CE;border-radius:10px;background:#fff;overflow:hidden}
+    .zc-people *{box-sizing:border-box}
+    .zc-people-search{width:100%;padding:11px 13px;border:none;border-bottom:1px solid #F1EBE0;
+        font:500 13.5px/1.3 inherit;color:#2C2825;outline:none}
+    .zc-people-list{max-height:260px;overflow:auto}
+    .zc-people-row{display:flex;align-items:center;gap:10px;padding:9px 13px;cursor:pointer;
+        border-bottom:1px solid #F7F3EC;font:500 13px/1.35 inherit;color:#2C2825}
+    .zc-people-row:hover{background:#FBF8F2}
+    .zc-people-row input{width:16px;height:16px;min-height:auto;accent-color:#B8A47A;margin:0;flex:0 0 auto}
+    .zc-people-row strong{font-weight:700}
+    .zc-people-row em{font-style:normal;color:#9A8660;margin-left:6px}
+    .zc-people-empty{padding:16px;margin:0;font-size:13px;color:#9A8660}
+    .zc-people-foot{display:flex;align-items:center;gap:7px;padding:9px 11px;background:#FBF8F2;
+        border-top:1px solid #F1EBE0}
+    .zc-people-foot button{padding:6px 10px;border:1px solid #E0D8CE;border-radius:7px;background:#fff;
+        color:#6B6560;font:600 11px/1.2 inherit;cursor:pointer}
+    .zc-people-foot button:hover{border-color:#B8A47A;color:#2C2825}
+    .zc-people-count{margin-left:auto;font-size:11.5px;color:#9A8660;font-weight:700}
+    </style>
+    <script id="zc-people-js">
+    (function(){
+        function count(box){
+            var n=box.querySelectorAll('.zc-people-row input:checked').length;
+            var out=box.querySelector('.zc-people-count');
+            if(out)out.textContent=n+' vybraných';
+        }
+        function bind(box){
+            if(box.dataset.peopleBound)return; box.dataset.peopleBound='1';
+            var search=box.querySelector('.zc-people-search');
+            if(search)search.addEventListener('input',function(){
+                var q=this.value.toLowerCase();
+                box.querySelectorAll('.zc-people-row').forEach(function(r){
+                    r.style.display=r.textContent.toLowerCase().indexOf(q)>-1?'flex':'none';
+                });
+            });
+            box.addEventListener('change',function(){count(box)});
+            var all=box.querySelector('[data-zc-people-all]'), none=box.querySelector('[data-zc-people-none]');
+            if(all)all.addEventListener('click',function(){
+                box.querySelectorAll('.zc-people-row').forEach(function(r){
+                    if(r.style.display!=='none')r.querySelector('input').checked=true;
+                });
+                count(box);
+            });
+            if(none)none.addEventListener('click',function(){
+                box.querySelectorAll('.zc-people-row input').forEach(function(c){c.checked=false});
+                count(box);
+            });
+            count(box);
+        }
+        function init(){ document.querySelectorAll('.zc-people').forEach(bind); }
+        window.zcPeoplePicked=function(id){
+            var box=document.getElementById(id); if(!box)return [];
+            return [].map.call(box.querySelectorAll('.zc-people-row input:checked'),function(c){return c.value});
+        };
+        if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init); else init();
+    })();
+    </script>
+    <?php
+}

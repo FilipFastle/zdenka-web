@@ -279,8 +279,10 @@ function zcn_admin_page() {
                 <option value="all">Všetci aktívni odberatelia</option>
                 <option value="offers">Všetci so záujmom o ponuky</option>
                 <option value="cats">Vybrané kategórie…</option>
+                <option value="people">Vybraní ľudia…</option>
             </select>
             <div id="zcnCatsWrap" style="display:none"><?php zcn_multiselect('zcn_send_interest', '', ['empty' => 'Vyber kategórie']); ?></div>
+            <div id="zcnPeopleWrap" style="display:none"><?php zcn_people_picker('zcnPeople'); ?></div>
         </div>
         <div style="margin-bottom:16px">
             <label style="display:block;font-size:11px;font-weight:700;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Predmet *</label>
@@ -361,11 +363,17 @@ function zcn_admin_page() {
     function zcnScopeChange(){
         var scope=document.getElementById('zcnScope').value;
         document.getElementById('zcnCatsWrap').style.display=(scope==='cats')?'block':'none';
+        var pw=document.getElementById('zcnPeopleWrap');
+        if(pw)pw.style.display=(scope==='people')?'block':'none';
         zcnRecalc();
     }
     function zcnRecalc(){
         var scope=document.getElementById('zcnScope').value, out=document.getElementById('zcnRecipientCount');
         var total='<?php echo (int) $stats['active'] ?>';
+        if(scope==='people'){
+            var picked=window.zcPeoplePicked?zcPeoplePicked('zcnPeople'):[];
+            out.textContent=picked.length; return;
+        }
         if(scope!=='cats'){ out.textContent=total; return; }
         var boxes=document.querySelectorAll('#zcnCatsWrap .zc-ms-opt input');
         var cats=zcnPickedCats();
@@ -374,7 +382,12 @@ function zcn_admin_page() {
         out.textContent='max. '+n;
     }
     document.addEventListener('change',function(e){
-        if(e.target.closest && e.target.closest('#zcnCatsWrap')) zcnRecalc();
+        if(!e.target.closest)return;
+        if(e.target.closest('#zcnCatsWrap')||e.target.closest('#zcnPeopleWrap')) zcnRecalc();
+    });
+    document.addEventListener('click',function(e){
+        if(e.target.hasAttribute&&(e.target.hasAttribute('data-zc-people-all')||e.target.hasAttribute('data-zc-people-none')))
+            setTimeout(zcnRecalc,10);
     });
     function zcnGetBody() {
         if (window.tinymce && tinymce.get('zcnBody') && !tinymce.get('zcnBody').isHidden()) {
@@ -391,7 +404,12 @@ function zcn_admin_page() {
         if (!s||!b) { alert('Vyplňte predmet aj obsah.'); return; }
         var scope = document.getElementById('zcnScope').value;
         var interest = '';
-        if (scope === 'cats') {
+        var pickedEmails = '';
+        if (scope === 'people') {
+            var picked = window.zcPeoplePicked ? zcPeoplePicked('zcnPeople') : [];
+            if (!picked.length) { alert('Vyber aspoň jedného príjemcu.'); return; }
+            pickedEmails = picked.join(',');
+        } else if (scope === 'cats') {
             var cats = zcnPickedCats();
             var boxes = document.querySelectorAll('#zcnCatsWrap .zc-ms-opt input');
             if (!cats.length) { alert('Vyber aspoň jednu kategóriu.'); return; }
@@ -407,6 +425,7 @@ function zcn_admin_page() {
         data.append('nonce','<?php echo wp_create_nonce("zcn_send_nonce") ?>');
         data.append('subject',s); data.append('body',b); data.append('is_html','1');
         data.append('interest',interest);
+        if (pickedEmails) data.append('emails', pickedEmails);
         if (isTest && t) data.append('test_email',t);
         if (isSchedule && sch) data.append('schedule_at',sch);
         fetch(ajaxurl,{method:'POST',body:data})

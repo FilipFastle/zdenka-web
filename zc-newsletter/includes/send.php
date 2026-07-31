@@ -19,6 +19,14 @@ function zcn_handle_send() {
     $cats         = $only_offers ? [] : zcn_interest_list($raw_interest);
     $interest     = implode(',', $cats);
 
+    // Konkrétne vybraní príjemcovia majú prednosť pred kategóriami
+    $emails = [];
+    foreach (explode(',', (string) ($_POST['emails'] ?? '')) as $e) {
+        $e = strtolower(sanitize_email(trim($e)));
+        if (is_email($e)) $emails[] = $e;
+    }
+    $emails = array_slice(array_unique($emails), 0, 800);
+
     if (!$subject || !$body_md) {
         wp_send_json_error(['message' => 'Predmet a obsah sú povinné.']);
     }
@@ -54,7 +62,8 @@ function zcn_handle_send() {
         $queue = get_option('zcn_scheduled', []);
         $key   = 'sch_' . time() . '_' . wp_rand(100, 999);
         $queue[$key] = ['subject' => $subject, 'body' => $body_html, 'interest' => $interest,
-                        'only_offers' => $only_offers, 'created' => current_time('mysql'), 'at' => $schedule_at];
+                        'only_offers' => $only_offers, 'emails' => implode(',', $emails),
+                        'created' => current_time('mysql'), 'at' => $schedule_at];
         update_option('zcn_scheduled', $queue);
         wp_schedule_single_event($ts, 'zcn_do_scheduled', [$key]);
         wp_send_json_success(['message' => 'Newsletter naplánovaný na ' . esc_html($schedule_at) . '.']);
@@ -64,14 +73,21 @@ function zcn_handle_send() {
     // Bez stĺpca „interest" by filtrovaná otázka zlyhala a vyzeralo by to,
     // akoby web nemal žiadnych odberateľov.
     if (function_exists('zcn_ensure_table_ready')) zcn_ensure_table_ready();
-    $subscribers = $wpdb->get_results(
-        "SELECT * FROM " . zcn_table() . " WHERE status='active'"
-        . ($cats ? zcn_interests_sql_where($cats) : ($only_offers ? zcn_offers_sql_where() : ''))
-    );
+    if ($emails) {
+        $in = "'" . implode("','", array_map('esc_sql', $emails)) . "'";
+        $subscribers = $wpdb->get_results(
+            "SELECT * FROM " . zcn_table() . " WHERE status='active' AND email IN ({$in})"
+        );
+    } else {
+        $subscribers = $wpdb->get_results(
+            "SELECT * FROM " . zcn_table() . " WHERE status='active'"
+            . ($cats ? zcn_interests_sql_where($cats) : ($only_offers ? zcn_offers_sql_where() : ''))
+        );
+    }
     if (empty($subscribers)) {
-        wp_send_json_error(['message' => $cats
-            ? 'Vo vybraných kategóriách zatiaľ nikto nie je.'
-            : 'Žiadni aktívni odberatelia.']);
+        wp_send_json_error(['message' => $emails
+            ? 'Vybraní príjemcovia už nie sú medzi aktívnymi odberateľmi.'
+            : ($cats ? 'Vo vybraných kategóriách zatiaľ nikto nie je.' : 'Žiadni aktívni odberatelia.')]);
     }
 
     $cid  = function_exists('zcn_new_campaign') ? zcn_new_campaign($subject, count($subscribers)) : '';
@@ -111,10 +127,18 @@ add_action('zcn_do_scheduled', function($key) {
 
     global $wpdb;
     $cats = zcn_interest_list($item['interest'] ?? '');
-    $subscribers = $wpdb->get_results(
-        "SELECT * FROM " . zcn_table() . " WHERE status='active'"
-        . ($cats ? zcn_interests_sql_where($cats) : (!empty($item['only_offers']) ? zcn_offers_sql_where() : ''))
-    );
+    $q_emails = array_filter(array_map('sanitize_email', explode(',', (string) ($item['emails'] ?? ''))));
+    if ($q_emails) {
+        $in = "'" . implode("','", array_map('esc_sql', $q_emails)) . "'";
+        $subscribers = $wpdb->get_results(
+            "SELECT * FROM " . zcn_table() . " WHERE status='active' AND email IN ({$in})"
+        );
+    } else {
+        $subscribers = $wpdb->get_results(
+            "SELECT * FROM " . zcn_table() . " WHERE status='active'"
+            . ($cats ? zcn_interests_sql_where($cats) : (!empty($item['only_offers']) ? zcn_offers_sql_where() : ''))
+        );
+    }
     if (empty($subscribers)) return;
 
     $from_name  = function_exists('zc_agent') ? zc_agent('name', 'Mgr. Zdenka Cibuľová') : 'Mgr. Zdenka Cibuľová';

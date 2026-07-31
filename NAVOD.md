@@ -211,9 +211,17 @@ so zaškrtávacími políčkami** — žiadne Ctrl+klik. V tlačidle vidíš, č
 a v okienku sú tlačidlá *Označiť všetko* / *Zrušiť výber*.
 
 Pri odosielaní newslettera si najprv zvolíš rozsah:
-*Všetci aktívni* · *Všetci so záujmom o ponuky* · *Vybrané kategórie…* —
-pri poslednej možnosti sa objaví to isté okienko a môžeš označiť aj viac kategórií naraz.
-Počet príjemcov sa priebežne prepočítava.
+
+| Možnosť | Komu odíde |
+|---|---|
+| Všetci aktívni odberatelia | všetkým |
+| Všetci so záujmom o ponuky | vynechá tých, čo ponuky nechcú |
+| Vybrané kategórie… | otvorí sa výber kategórií (viac naraz) |
+| **Vybraní ľudia…** | **zoznam odberateľov s vyhľadávaním – zaškrtneš konkrétne mená** |
+
+Počet príjemcov sa priebežne prepočítava. Pri *Vybraní ľudia* môžeš hľadať podľa mena
+aj e-mailu a tlačidlom *Označiť zobrazených* naraz označiť všetkých, čo prešli hľadaním.
+Rovnaký výber je aj v okne pri tlačidle *Poslať odberateľom newslettera* pri ponuke.
 
 ### Vlastné kategórie
 **Web Zdenky → Newsletter → Kategórie.** Pridáš, premenuješ alebo zmažeš čokoľvek.

@@ -2151,8 +2151,10 @@ function panel_newsletter() {
                     <option value="all">Všetci aktívni odberatelia</option>
                     <option value="offers">Všetci so záujmom o ponuky</option>
                     <option value="cats">Vybrané kategórie…</option>
+                    <option value="people">Vybraní ľudia…</option>
                 </select>
                 <div id="pnlCatsWrap" style="display:none"><?php pp_nl_multiselect('pnl_interest', '', ['empty' => 'Vyber kategórie']) ?></div>
+                <div id="pnlPeopleWrap" style="display:none"><?php if (function_exists('zcn_people_picker')) zcn_people_picker('pnlPeople'); ?></div>
             </div>
             <div style="background:var(--section);border-radius:var(--r-sm);padding:14px;margin-top:16px;display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
                 <div style="flex:1">
@@ -2208,6 +2210,8 @@ function panel_newsletter() {
     function pnlScopeChange(){
         var scope=document.getElementById('pnlScope').value;
         document.getElementById('pnlCatsWrap').style.display=(scope==='cats')?'block':'none';
+        var pw=document.getElementById('pnlPeopleWrap');
+        if(pw)pw.style.display=(scope==='people')?'block':'none';
         pnlRecalc();
     }
     function pnlPickedCats(){
@@ -2216,6 +2220,10 @@ function panel_newsletter() {
     function pnlRecalc(){
         var scope=document.getElementById('pnlScope').value, out=document.getElementById('pnlNlCount');
         var total='<?php echo (int) $stats['active'] ?>';
+        if(scope==='people'){
+            var picked=window.zcPeoplePicked?zcPeoplePicked('pnlPeople'):[];
+            out.textContent=picked.length; return;
+        }
         if(scope!=='cats'){ out.textContent=total; return; }
         var boxes=document.querySelectorAll('#pnlCatsWrap .zc-ms-opt input');
         var cats=pnlPickedCats();
@@ -2225,7 +2233,12 @@ function panel_newsletter() {
         out.textContent='max. '+n;
     }
     document.addEventListener('change',function(e){
-        if(e.target.closest && e.target.closest('#pnlCatsWrap')) pnlRecalc();
+        if(!e.target.closest)return;
+        if(e.target.closest('#pnlCatsWrap')||e.target.closest('#pnlPeopleWrap')) pnlRecalc();
+    });
+    document.addEventListener('click',function(e){
+        if(e.target.hasAttribute&&(e.target.hasAttribute('data-zc-people-all')||e.target.hasAttribute('data-zc-people-none')))
+            setTimeout(pnlRecalc,10);
     });
     function pnlNlGetBody() {
         // TinyMCE (visual mode) or plain textarea (text mode)
@@ -2245,7 +2258,11 @@ function panel_newsletter() {
         data.append('subject',s); data.append('body',b);
         data.append('is_html','1');
         var scope=document.getElementById('pnlScope').value;
-        if(scope==='cats'){
+        if(scope==='people'){
+            var picked=window.zcPeoplePicked?zcPeoplePicked('pnlPeople'):[];
+            if(!picked.length){alert('Vyber aspoň jedného príjemcu.');btn&&(btn.disabled=false);return;}
+            data.append('emails',picked.join(','));
+        } else if(scope==='cats'){
             var cats=pnlPickedCats();
             var boxes=document.querySelectorAll('#pnlCatsWrap .zc-ms-opt input');
             if(!cats.length){alert('Vyber aspoň jednu kategóriu.');btn&&(btn.disabled=false);return;}
