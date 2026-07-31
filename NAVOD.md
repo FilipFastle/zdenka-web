@@ -229,8 +229,10 @@ filtre v paneli aj vo wp-admine, aj okno pri odosielaní ponuky.
 ### Stránka /newsletter/
 - Kategórie sú **zaškrtávacie políčka** — dá sa označiť viac naraz, nič neoznačené = všetko.
 - Odkaz **„Už odoberáte? Upravte si témy alebo sa odhláste"** — človek zadá e-mail
-  a pošleme mu odkaz na stránku, kde si témy zmení alebo sa odhlási.
-  Kvôli súkromiu odpovedáme rovnako, aj keď adresu v databáze nemáme.
+  a **hneď na stránke sa mu otvorí okno** s jeho témami. Zaškrtne, uloží, hotovo.
+  V okne je aj tlačidlo *Odhlásiť sa zo všetkého*.
+  Ak adresu v odbere nemáme, napíše sa mu to a odkážeme ho na formulár vyššie.
+  Skúšanie adries je obmedzené na 12 pokusov za 10 minút z jednej IP.
 - Newsletter je aj v hlavnom menu (na PC aj v mobile).
 
 ### Ako si kategórie vyberá návštevník

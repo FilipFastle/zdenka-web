@@ -24,9 +24,17 @@ function zcn_newsletter_shortcode($atts) {
         plugin_dir_url(dirname(__FILE__)) . 'assets/newsletter.js',
         [], ZCN_VERSION, true
     );
+    // Kategórie posielame do JS, nech ich okno na úpravu tém vie vykresliť
+    $zcn_groups = [];
+    foreach (zcn_interest_groups() as $glabel => $items) {
+        $opts = [];
+        foreach ($items as $value => $label) $opts[] = ['value' => $value, 'label' => $label];
+        if ($opts) $zcn_groups[] = ['group' => $glabel, 'items' => $opts];
+    }
     wp_localize_script('zc-newsletter-js', 'zcnData', [
         'ajaxurl' => admin_url('admin-ajax.php'),
         'nonce'   => wp_create_nonce('zcn_nonce'),
+        'groups'  => $zcn_groups,
     ]);
 
     ob_start(); ?>
@@ -110,7 +118,7 @@ function zcn_newsletter_shortcode($atts) {
             <?php if ($full): ?>
             <div class="zcn-alt" style="color:<?php echo $sub ?>">
                 Už odoberáte novinky? <a data-zcn-prefs>Upravte si témy alebo sa odhláste →</a><br>
-                Pošleme vám e-mail s odkazom, kde si všetko nastavíte.
+                Zadajte e-mail vyššie a otvorí sa vám okno s nastavením.
             </div>
             <?php endif; ?>
             <p style="font-size:11px;color:<?php echo $sub ?>;margin-top:10px;line-height:1.6">

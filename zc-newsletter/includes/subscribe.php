@@ -584,7 +584,8 @@ function zcn_handle_set_interest() {
 
     global $wpdb;
     $updated = $wpdb->update(zcn_table(), ['interest' => $interest], ['email' => $email]);
-    delete_transient('zcn_int_' . $token);
+    // Token zámerne nemažeme – v okne na stránke sa dá výber upraviť viackrát
+    // alebo sa hneď potom odhlásiť. Platnosť aj tak vyprší po 30 minútach.
 
     if ($updated === false) {
         wp_send_json_error(['message' => 'Voľbu sa nepodarilo uložiť.']);
@@ -668,4 +669,63 @@ function zcn_handle_prefs_link() {
     ]);
 
     wp_send_json_success(['message' => $answer]);
+}
+
+/**
+ * Otvorenie úpravy tém priamo na stránke (bez e-mailu).
+ * Vráti krátkodobý token, ktorým sa potom uloží výber cez zcn_set_interest.
+ */
+add_action('wp_ajax_zcn_prefs_open',        'zcn_handle_prefs_open');
+add_action('wp_ajax_nopriv_zcn_prefs_open', 'zcn_handle_prefs_open');
+
+function zcn_handle_prefs_open() {
+    check_ajax_referer('zcn_nonce', 'nonce');
+
+    // Bez obmedzenia by sa dal zoznam adries skúšať dokola
+    $ip  = $_SERVER['REMOTE_ADDR'] ?? '';
+    $key = 'zcn_open_' . md5($ip);
+    if ((int) get_transient($key) >= 12) {
+        wp_send_json_error(['message' => 'Príliš veľa pokusov. Skúste to o chvíľu.']);
+    }
+    set_transient($key, (int) get_transient($key) + 1, 10 * MINUTE_IN_SECONDS);
+
+    $email = strtolower(sanitize_email(wp_unslash($_POST['email'] ?? '')));
+    if (!is_email($email)) wp_send_json_error(['message' => 'Zadajte platnú e-mailovú adresu.']);
+
+    global $wpdb;
+    $row = $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM " . zcn_table() . " WHERE email = %s", $email
+    ));
+    if (!$row) {
+        wp_send_json_error(['message' => 'Túto adresu v odbere nemáme. Prihláste sa formulárom vyššie.']);
+    }
+    if ($row->status === 'unsubscribed') {
+        wp_send_json_error(['message' => 'Táto adresa je odhlásená. Prihláste sa znova formulárom vyššie.']);
+    }
+
+    wp_send_json_success([
+        'token'     => zcn_interest_token($email),
+        'interests' => zcn_interest_list($row->interest ?? ''),
+        'name'      => (string) $row->name,
+    ]);
+}
+
+/** Odhlásenie z okna úpravy tém – rovnaký jednorazový token. */
+add_action('wp_ajax_zcn_prefs_unsub',        'zcn_handle_prefs_unsub');
+add_action('wp_ajax_nopriv_zcn_prefs_unsub', 'zcn_handle_prefs_unsub');
+
+function zcn_handle_prefs_unsub() {
+    check_ajax_referer('zcn_nonce', 'nonce');
+
+    $token = sanitize_text_field(wp_unslash($_POST['token'] ?? ''));
+    $email = $token ? get_transient('zcn_int_' . $token) : '';
+    if (!$email || !is_email($email)) {
+        wp_send_json_error(['message' => 'Platnosť voľby vypršala. Skúste to, prosím, znova.']);
+    }
+
+    global $wpdb;
+    $wpdb->update(zcn_table(), ['status' => 'unsubscribed'], ['email' => $email]);
+    delete_transient('zcn_int_' . $token);
+
+    wp_send_json_success(['message' => 'Odhlásili sme vás. Už vám nebudeme nič posielať.', 'closed' => true]);
 }
