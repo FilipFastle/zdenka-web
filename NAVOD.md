@@ -201,6 +201,16 @@ a dajú sa kedykoľvek zmeniť priamo v riadku zoznamu.
 Kto si nevyberie žiadnu nehnuteľnosť (len ebook alebo tipy), **ponuky mu chodiť
 nebudú** — tlačidlo *Poslať odberateľom* pri ponuke ho automaticky vynechá.
 
+### Výber kategórií
+Všade, kde sa kategórie vyberajú (panel aj wp-admin), je **rozbaľovacie okienko
+so zaškrtávacími políčkami** — žiadne Ctrl+klik. V tlačidle vidíš, čo je vybraté,
+a v okienku sú tlačidlá *Označiť všetko* / *Zrušiť výber*.
+
+Pri odosielaní newslettera si najprv zvolíš rozsah:
+*Všetci aktívni* · *Všetci so záujmom o ponuky* · *Vybrané kategórie…* —
+pri poslednej možnosti sa objaví to isté okienko a môžeš označiť aj viac kategórií naraz.
+Počet príjemcov sa priebežne prepočítava.
+
 ### Vlastné kategórie
 **Web Zdenky → Newsletter → Kategórie.** Pridáš, premenuješ alebo zmažeš čokoľvek.
 

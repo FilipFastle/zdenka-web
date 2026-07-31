@@ -12,10 +12,12 @@ function zcn_handle_send() {
     $body_md = wp_kses_post(wp_unslash($_POST['body'] ?? ''));
     $test    = !empty($_POST['test_email']) ? sanitize_email($_POST['test_email']) : '';
     $preview = !empty($_POST['preview']);
-    // „offers" = všetci okrem tých, ktorí si vypli ponuky nehnuteľností
-    $raw_interest = sanitize_key($_POST['interest'] ?? '');
-    $only_offers  = ($raw_interest === 'offers');
-    $interest     = $only_offers ? '' : (function_exists('zcn_sanitize_interest') ? zcn_sanitize_interest($raw_interest) : '');
+    // „offers" = všetci okrem tých, ktorí si vypli ponuky nehnuteľností.
+    // Inak môže byť vybratých aj viac kategórií naraz.
+    $raw_interest = (string) ($_POST['interest'] ?? '');
+    $only_offers  = (trim($raw_interest) === 'offers');
+    $cats         = $only_offers ? [] : zcn_interest_list($raw_interest);
+    $interest     = implode(',', $cats);
 
     if (!$subject || !$body_md) {
         wp_send_json_error(['message' => 'Predmet a obsah sú povinné.']);
@@ -64,11 +66,11 @@ function zcn_handle_send() {
     if (function_exists('zcn_ensure_table_ready')) zcn_ensure_table_ready();
     $subscribers = $wpdb->get_results(
         "SELECT * FROM " . zcn_table() . " WHERE status='active'"
-        . ($interest ? zcn_interest_sql_where($interest) : ($only_offers ? zcn_offers_sql_where() : ''))
+        . ($cats ? zcn_interests_sql_where($cats) : ($only_offers ? zcn_offers_sql_where() : ''))
     );
     if (empty($subscribers)) {
-        wp_send_json_error(['message' => $interest
-            ? 'V tejto kategórii zatiaľ nikto nie je. Skús „Všetci aktívni odberatelia".'
+        wp_send_json_error(['message' => $cats
+            ? 'Vo vybraných kategóriách zatiaľ nikto nie je.'
             : 'Žiadni aktívni odberatelia.']);
     }
 
@@ -108,10 +110,10 @@ add_action('zcn_do_scheduled', function($key) {
     update_option('zcn_scheduled', $queue);
 
     global $wpdb;
-    $interest = function_exists('zcn_sanitize_interest') ? zcn_sanitize_interest($item['interest'] ?? '') : '';
+    $cats = zcn_interest_list($item['interest'] ?? '');
     $subscribers = $wpdb->get_results(
         "SELECT * FROM " . zcn_table() . " WHERE status='active'"
-        . ($interest ? zcn_interest_sql_where($interest) : (!empty($item['only_offers']) ? zcn_offers_sql_where() : ''))
+        . ($cats ? zcn_interests_sql_where($cats) : (!empty($item['only_offers']) ? zcn_offers_sql_where() : ''))
     );
     if (empty($subscribers)) return;
 

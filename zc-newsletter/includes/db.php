@@ -157,6 +157,18 @@ function zcn_offers_sql_where() {
     return ' AND (' . implode(' OR ', $parts) . ')';
 }
 
+/**
+ * Podmienka do SQL pre viac kategórií naraz.
+ * Kontakt s prázdnou kategóriou („všetko") sa trafí vždy.
+ */
+function zcn_interests_sql_where($cats) {
+    $cats = zcn_interest_list($cats);
+    if (!$cats) return '';
+    $or = ["interest IS NULL", "interest = ''"];
+    foreach ($cats as $key) $or[] = "FIND_IN_SET('" . esc_sql($key) . "', interest)";
+    return ' AND (' . implode(' OR ', $or) . ')';
+}
+
 /** Podmienka do SQL pre jednu konkrétnu kategóriu (prázdna = všetko). */
 function zcn_interest_sql_where($interest) {
     $key = zcn_sanitize_interest($interest);

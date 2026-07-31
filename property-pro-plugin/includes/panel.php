@@ -989,6 +989,7 @@ function pnlBlast(id, btn){
     box.dataset.btn='';
     window._pnlBlastBtn=btn;
     box.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=false});
+    box.querySelectorAll('[data-zc-ms] .zc-ms-label').forEach(function(l){l.textContent='Vyber kategórie';l.classList.add('is-empty')});
     var m=box.querySelector('[data-mode]');if(m)m.value='groups';
     pnlBlastMode();
     box.style.display='flex';
@@ -1010,6 +1011,10 @@ function pnlBlastCount(){
     var sel=box.querySelectorAll('[data-pane='+mode+'] input:checked').length;
     out.textContent=sel?('Vybrané: '+sel):'Zatiaľ nie je nič vybrané – vyber aspoň jednu položku.';
 }
+document.addEventListener('change',function(e){
+    var box=document.getElementById('pnlBlastPick');
+    if(box&&box.contains(e.target))pnlBlastCount();
+});
 function pnlBlastConfirm(){
     var box=document.getElementById('pnlBlastPick');if(!box)return;
     var mode=box.querySelector('[data-mode]').value;
@@ -1062,14 +1067,11 @@ function pnlBlastRun(id, btn, extra){
             </select>
 
             <div data-pane="groups">
-                <?php foreach (zcn_interest_groups() as $glabel => $items): ?>
-                <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 7px"><?php echo esc_html($glabel) ?></div>
-                <?php foreach ($items as $value => $label): ?>
-                <label style="display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;font-size:13.5px">
-                    <input type="checkbox" value="<?php echo esc_attr($value) ?>" onchange="pnlBlastCount()" style="accent-color:#B8A47A;width:16px;height:16px">
-                    <?php echo esc_html($label) ?>
-                </label>
-                <?php endforeach; endforeach; ?>
+                <?php pp_nl_multiselect('blast_groups', '', ['empty' => 'Vyber kategórie']) ?>
+                <p style="font-size:12px;color:var(--muted);line-height:1.6;margin:12px 0 0">
+                    Ponuka odíde tým, čo majú niektorú z označených kategórií –
+                    a tiež tým, ktorí chcú dostávať všetko.
+                </p>
             </div>
 
             <div data-pane="people" style="display:none">
@@ -2145,13 +2147,12 @@ function panel_newsletter() {
         <div class="pnl-nl-side">
             <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px">
                 <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Príjemcovia</label>
-                <select id="pnlInterest" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px">
-                    <option value="">Všetci aktívni odberatelia (aj bez záujmu o ponuky)</option>
+                <select id="pnlScope" onchange="pnlScopeChange()" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:14px;margin-bottom:8px">
+                    <option value="all">Všetci aktívni odberatelia</option>
                     <option value="offers">Všetci so záujmom o ponuky</option>
-                    <?php foreach (pp_nl_interests() as $value => $label): ?>
-                    <option value="<?php echo esc_attr($value) ?>" data-count="<?php echo (int) $interest_counts[$value] ?>"><?php echo esc_html($label) ?> (<?php echo (int) $interest_counts[$value] ?>)</option>
-                    <?php endforeach; ?>
+                    <option value="cats">Vybrané kategórie…</option>
                 </select>
+                <div id="pnlCatsWrap" style="display:none"><?php pp_nl_multiselect('pnl_interest', '', ['empty' => 'Vyber kategórie']) ?></div>
             </div>
             <div style="background:var(--section);border-radius:var(--r-sm);padding:14px;margin-top:16px;display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
                 <div style="flex:1">
@@ -2203,9 +2204,24 @@ function panel_newsletter() {
         el.textContent = msg;
         el.scrollIntoView({behavior:'smooth',block:'nearest'});
     }
-    document.getElementById('pnlInterest').addEventListener('change',function(){
-        var option=this.options[this.selectedIndex];
-        document.getElementById('pnlNlCount').textContent=this.value?(option.dataset.count||'0'):'<?php echo (int) $stats['active'] ?>';
+    var pnlCounts = <?php echo wp_json_encode($interest_counts); ?>;
+    function pnlScopeChange(){
+        var scope=document.getElementById('pnlScope').value;
+        document.getElementById('pnlCatsWrap').style.display=(scope==='cats')?'block':'none';
+        pnlRecalc();
+    }
+    function pnlPickedCats(){
+        return [].map.call(document.querySelectorAll('#pnlCatsWrap input:checked'),function(c){return c.value});
+    }
+    function pnlRecalc(){
+        var scope=document.getElementById('pnlScope').value, out=document.getElementById('pnlNlCount');
+        if(scope!=='cats'){ out.textContent='<?php echo (int) $stats['active'] ?>'; return; }
+        var cats=pnlPickedCats(), n=0;
+        cats.forEach(function(c){ n+=Number(pnlCounts[c]||0) });
+        out.textContent=cats.length?('max. '+n):'0';
+    }
+    document.addEventListener('change',function(e){
+        if(e.target.closest && e.target.closest('#pnlCatsWrap')) pnlRecalc();
     });
     function pnlNlGetBody() {
         // TinyMCE (visual mode) or plain textarea (text mode)
@@ -2224,8 +2240,14 @@ function panel_newsletter() {
         data.append('nonce','<?php echo wp_create_nonce('zcn_send_nonce') ?>');
         data.append('subject',s); data.append('body',b);
         data.append('is_html','1');
-        var interest=document.getElementById('pnlInterest');
-        data.append('interest',interest?interest.value:'');
+        var scope=document.getElementById('pnlScope').value;
+        if(scope==='cats'){
+            var cats=pnlPickedCats();
+            if(!cats.length){alert('Vyber aspoň jednu kategóriu.');btn&&(btn.disabled=false);return;}
+            data.append('interest',cats.join(','));
+        } else if(scope==='offers'){
+            data.append('interest','offers');
+        }
         Object.keys(extra||{}).forEach(function(k){ data.append(k,extra[k]); });
         return data;
     }
@@ -2302,10 +2324,7 @@ function panel_newsletter() {
                 <input type="email" name="email" required style="display:block;width:100%;margin-top:5px;padding:10px;border:1px solid var(--border);border-radius:7px">
             </label>
             <label style="font-size:11px;font-weight:700;color:var(--muted)">Kategória
-                <select name="interest[]" multiple size="6" style="display:block;width:100%;margin-top:5px;padding:8px;border:1px solid var(--border);border-radius:7px">
-                    <?php foreach (pp_nl_interests() as $value => $label): ?><option value="<?php echo esc_attr($value) ?>"><?php echo esc_html($label) ?></option><?php endforeach; ?>
-                </select>
-                <small style="color:var(--muted);font-size:10.5px">Nič = všetko · viac cez Ctrl/Cmd</small>
+                <div style="margin-top:5px"><?php pp_nl_multiselect('interest', '', ['empty' => 'Všetko']) ?></div>
             </label>
             <label style="font-size:11px;font-weight:700;color:var(--muted)">Spôsob pridania
                 <select name="add_mode" style="display:block;width:100%;margin-top:5px;padding:10px;border:1px solid var(--border);border-radius:7px">
@@ -2328,9 +2347,7 @@ function panel_newsletter() {
             </label>
             <div style="display:grid;gap:10px">
                 <label style="font-size:11px;font-weight:700;color:var(--muted)">Spoločná kategória
-                    <select name="batch_interest[]" multiple size="6" style="display:block;width:100%;margin-top:5px;padding:8px;border:1px solid var(--border);border-radius:7px">
-                        <?php foreach (pp_nl_interests() as $value => $label): ?><option value="<?php echo esc_attr($value) ?>"><?php echo esc_html($label) ?></option><?php endforeach; ?>
-                    </select>
+                    <div style="margin-top:5px"><?php pp_nl_multiselect('batch_interest', '', ['empty' => 'Všetko']) ?></div>
                 </label>
                 <label style="font-size:11px;font-weight:700;color:var(--muted)">Spôsob pridania
                     <select name="batch_mode" style="display:block;width:100%;margin-top:5px;padding:10px;border:1px solid var(--border);border-radius:7px">
@@ -2405,10 +2422,7 @@ function panel_newsletter() {
                 <form method="post" style="display:flex;gap:5px">
                     <?php wp_nonce_field('pnl_nl','_pnlnonce') ?>
                     <input type="hidden" name="pnl_ninterest" value="<?php echo (int) $r->id ?>">
-                    <?php $row_int = function_exists('zcn_interest_list') ? zcn_interest_list($r->interest ?? '') : []; ?>
-                    <select name="interest[]" multiple size="4" style="max-width:150px;padding:4px;border:1px solid var(--border);border-radius:5px;font-size:11px">
-                        <?php foreach (pp_nl_interests() as $value => $label): ?><option value="<?php echo esc_attr($value) ?>" <?php selected(in_array($value, $row_int, true)) ?>><?php echo esc_html($label) ?></option><?php endforeach; ?>
-                    </select>
+                    <div style="min-width:170px"><?php pp_nl_multiselect('interest', $r->interest ?? '', ['empty' => 'Všetko', 'compact' => true]) ?></div>
                     <button class="btn btn-ghost" style="padding:5px 8px" title="Uložiť">✓</button>
                 </form>
             </td>

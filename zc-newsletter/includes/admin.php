@@ -244,12 +244,7 @@ function zcn_admin_page() {
                 <form method="post" style="display:flex;gap:4px">
                     <?php wp_nonce_field('zcn_admin') ?>
                     <input type="hidden" name="zcn_interest_save" value="<?php echo (int) $r->id ?>">
-                    <?php $row_int = zcn_interest_list($r->interest ?? ''); ?>
-                    <select name="interest[]" multiple size="4" style="max-width:150px;font-size:11px">
-                        <?php foreach (zcn_interests() as $value => $label): ?>
-                        <option value="<?php echo esc_attr($value); ?>" <?php selected(in_array($value, $row_int, true)); ?>><?php echo esc_html($label); ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <div style="min-width:165px"><?php zcn_multiselect('interest', $r->interest ?? '', ['empty' => 'Všetko', 'compact' => true]); ?></div>
                     <button class="button button-small" title="Uložiť kategóriu">✓</button>
                 </form>
             </td>
@@ -280,13 +275,12 @@ function zcn_admin_page() {
         <h3 style="margin:0 0 20px">Odoslať newsletter</h3>
         <div style="margin-bottom:16px">
             <label style="display:block;font-size:11px;font-weight:700;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Príjemcovia</label>
-            <select id="zcnInterest" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px">
-                <option value="">Všetci aktívni odberatelia (aj bez záujmu o ponuky)</option>
+            <select id="zcnScope" onchange="zcnScopeChange()" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;margin-bottom:8px">
+                <option value="all">Všetci aktívni odberatelia</option>
                 <option value="offers">Všetci so záujmom o ponuky</option>
-                <?php foreach (zcn_interests() as $value => $label): ?>
-                <option value="<?php echo esc_attr($value); ?>" data-count="<?php echo (int) $interest_counts[$value]; ?>"><?php echo esc_html($label); ?> (<?php echo (int) $interest_counts[$value]; ?>)</option>
-                <?php endforeach; ?>
+                <option value="cats">Vybrané kategórie…</option>
             </select>
+            <div id="zcnCatsWrap" style="display:none"><?php zcn_multiselect('zcn_send_interest', '', ['empty' => 'Vyber kategórie']); ?></div>
         </div>
         <div style="margin-bottom:16px">
             <label style="display:block;font-size:11px;font-weight:700;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Predmet *</label>
@@ -360,9 +354,24 @@ function zcn_admin_page() {
         el.style.border = '1px solid ' + (ok ? '#bbf7d0' : '#fecaca');
         el.textContent = msg;
     }
-    document.getElementById('zcnInterest').addEventListener('change',function(){
-        var option=this.options[this.selectedIndex];
-        document.getElementById('zcnRecipientCount').textContent=this.value?(option.dataset.count||'0'):'<?php echo (int) $stats['active'] ?>';
+    var zcnCounts = <?php echo wp_json_encode($interest_counts); ?>;
+    function zcnPickedCats(){
+        return [].map.call(document.querySelectorAll('#zcnCatsWrap input:checked'),function(c){return c.value});
+    }
+    function zcnScopeChange(){
+        var scope=document.getElementById('zcnScope').value;
+        document.getElementById('zcnCatsWrap').style.display=(scope==='cats')?'block':'none';
+        zcnRecalc();
+    }
+    function zcnRecalc(){
+        var scope=document.getElementById('zcnScope').value, out=document.getElementById('zcnRecipientCount');
+        if(scope!=='cats'){ out.textContent='<?php echo (int) $stats['active'] ?>'; return; }
+        var cats=zcnPickedCats(), n=0;
+        cats.forEach(function(c){ n+=Number(zcnCounts[c]||0) });
+        out.textContent=cats.length?('max. '+n):'0';
+    }
+    document.addEventListener('change',function(e){
+        if(e.target.closest && e.target.closest('#zcnCatsWrap')) zcnRecalc();
     });
     function zcnGetBody() {
         if (window.tinymce && tinymce.get('zcnBody') && !tinymce.get('zcnBody').isHidden()) {
@@ -376,7 +385,13 @@ function zcn_admin_page() {
         var b = zcnGetBody().trim();
         var t = document.getElementById('zcnTestEmail').value.trim();
         var sch = document.getElementById('zcnScheduleAt') ? document.getElementById('zcnScheduleAt').value : '';
-        var interest = document.getElementById('zcnInterest') ? document.getElementById('zcnInterest').value : '';
+        var scope = document.getElementById('zcnScope').value;
+        var interest = '';
+        if (scope === 'cats') {
+            var cats = zcnPickedCats();
+            if (!cats.length) { alert('Vyber aspoň jednu kategóriu.'); return; }
+            interest = cats.join(',');
+        } else if (scope === 'offers') { interest = 'offers'; }
         if (!s||!b) { alert('Vyplňte predmet aj obsah.'); return; }
         if (isSchedule && !sch) { alert('Zvoľte dátum a čas odoslania.'); return; }
         if (isSchedule && !confirm('Naplánovať newsletter na ' + sch + '?')) return;
@@ -451,16 +466,8 @@ function zcn_admin_page() {
                 </p>
                 <p style="margin:0 0 10px">
                     <label style="display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px">Kategória</label>
-                    <select name="zcn_add_interest[]" multiple size="7" style="width:100%">
-                        <?php foreach (zcn_interest_groups() as $glabel => $items): ?>
-                        <optgroup label="<?php echo esc_attr($glabel); ?>">
-                            <?php foreach ($items as $value => $label): ?>
-                            <option value="<?php echo esc_attr($value); ?>"><?php echo esc_html($label); ?></option>
-                            <?php endforeach; ?>
-                        </optgroup>
-                        <?php endforeach; ?>
-                    </select>
-                    <span style="font-size:11px;color:#999">Nič nevybrané = všetko. Viac naraz cez Ctrl / Cmd.</span>
+                    <?php zcn_multiselect('zcn_add_interest', '', ['empty' => 'Všetko']); ?>
+                    <span style="font-size:11px;color:#999">Nič nevybrané = pošleme všetko.</span>
                 </p>
                 <p style="margin:0 0 14px">
                     <label style="display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px">Spôsob pridania</label>
@@ -484,16 +491,8 @@ function zcn_admin_page() {
                 <textarea name="zcn_import_emails" rows="9" required spellcheck="false"
                     style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:ui-monospace,Consolas,monospace;font-size:13px;line-height:1.55"
                     placeholder="Jana;Nováková;jana@example.sk&#10;Peter;Kováč;peter@example.sk&#10;maria@email.sk"></textarea>
-                <select name="zcn_import_interest[]" multiple size="7" style="width:100%;margin-top:10px">
-                    <?php foreach (zcn_interest_groups() as $glabel => $items): ?>
-                    <optgroup label="<?php echo esc_attr($glabel); ?>">
-                        <?php foreach ($items as $value => $label): ?>
-                        <option value="<?php echo esc_attr($value); ?>"><?php echo esc_html($label); ?></option>
-                        <?php endforeach; ?>
-                    </optgroup>
-                    <?php endforeach; ?>
-                </select>
-                <span style="display:block;font-size:11px;color:#999;margin-top:4px">Spoločná kategória. Nič nevybrané = všetko.</span>
+                <div style="margin-top:10px"><?php zcn_multiselect('zcn_import_interest', '', ['empty' => 'Spoločná kategória: všetko']); ?></div>
+                <span style="display:block;font-size:11px;color:#999;margin-top:4px">Nič nevybrané = pošleme všetko.</span>
                 <select name="zcn_import_mode" style="width:100%;margin-top:10px">
                     <option value="active">Pridať priamo, bez potvrdzovacieho e-mailu</option>
                     <option value="pending">Poslať každému potvrdzovací e-mail</option>

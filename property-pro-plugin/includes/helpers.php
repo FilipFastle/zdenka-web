@@ -364,3 +364,9 @@ function pp_nl_source_label($source) {
 function pp_nl_interests_value($value) {
     return function_exists('zcn_sanitize_interests') ? zcn_sanitize_interests($value) : '';
 }
+
+/** Výber kategórií – komponent žije v plugine newslettera. */
+function pp_nl_multiselect($name, $selected = '', $args = []) {
+    if (function_exists('zcn_multiselect')) { zcn_multiselect($name, $selected, $args); return; }
+    echo '<em style="font-size:12px;color:#9A8660">Aktualizuj plugin ZC Newsletter.</em>';
+}
