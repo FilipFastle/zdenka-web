@@ -122,9 +122,29 @@ function zcn_interest_list($value) {
     return $out;
 }
 
-/** Normalizovaná hodnota do databázy: „dom,pozemok" alebo prázdny reťazec. */
+/**
+ * Normalizovaná hodnota do databázy: „dom,pozemok" alebo prázdny reťazec.
+ *
+ * Pravidlo, ktoré platí v celom systéme:
+ *   nič neoznačené  = všetko
+ *   všetko označené = tiež všetko (uloží sa prázdna hodnota)
+ *   čokoľvek medzi  = presne to, čo je označené
+ * Vďaka tomu nemôže vzniknúť stav „mám vybraté všetky, a predsa to filtruje".
+ */
 function zcn_sanitize_interests($value) {
-    return implode(',', array_slice(zcn_interest_list($value), 0, 12));
+    $list = zcn_interest_list($value);
+    if (!$list) return '';
+    if (zcn_is_all_interests($list)) return '';
+    return implode(',', array_slice($list, 0, 20));
+}
+
+/** Pokrýva tento výber všetky ponúkané kategórie? */
+function zcn_is_all_interests($value) {
+    $list = zcn_interest_list($value);
+    if (!$list) return false;
+    $all = array_keys(zcn_categories());   // bez staršej hodnoty „ziadne"
+    if (!$all) return false;
+    return !array_diff($all, $list);
 }
 
 /** Popis kategórií na výpis. */
@@ -164,6 +184,7 @@ function zcn_offers_sql_where() {
 function zcn_interests_sql_where($cats) {
     $cats = zcn_interest_list($cats);
     if (!$cats) return '';
+    if (zcn_is_all_interests($cats)) return '';   // všetky = bez obmedzenia
     $or = ["interest IS NULL", "interest = ''"];
     foreach ($cats as $key) $or[] = "FIND_IN_SET('" . esc_sql($key) . "', interest)";
     return ' AND (' . implode(' OR ', $or) . ')';

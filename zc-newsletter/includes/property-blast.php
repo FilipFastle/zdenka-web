@@ -146,10 +146,16 @@ function zcn_handle_property_blast() {
     if ($mode === 'groups') {
         $groups = zcn_interest_list($_POST['groups'] ?? '');
         if (!$groups) wp_send_json_error(['message' => 'Nevybral si žiadnu skupinu.']);
-        $or = ["interest IS NULL", "interest = ''"]; // „všetko" dostáva vždy
-        foreach ($groups as $g) $or[] = "FIND_IN_SET('" . esc_sql($g) . "', interest)";
-        $where = "status='active' AND (" . implode(' OR ', $or) . ')';
-        $note  = ' (skupiny: ' . zcn_interest_label(implode(',', $groups)) . ')';
+        if (zcn_is_all_interests($groups)) {
+            // Označené všetky = neobmedzujeme, ostáva len vynechanie tých,
+            // ktorí ponuky nechcú (to je už v $where).
+            $note = ' (všetky kategórie)';
+        } else {
+            $or = ["interest IS NULL", "interest = ''"]; // „všetko" dostáva vždy
+            foreach ($groups as $g) $or[] = "FIND_IN_SET('" . esc_sql($g) . "', interest)";
+            $where = "status='active' AND (" . implode(' OR ', $or) . ')';
+            $note  = ' (skupiny: ' . zcn_interest_label(implode(',', $groups)) . ')';
+        }
     } elseif ($mode === 'people') {
         $emails = [];
         foreach (explode(',', (string) ($_POST['emails'] ?? '')) as $e) {

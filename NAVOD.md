@@ -202,6 +202,10 @@ Kto si nevyberie žiadnu nehnuteľnosť (len ebook alebo tipy), **ponuky mu chod
 nebudú** — tlačidlo *Poslať odberateľom* pri ponuke ho automaticky vynechá.
 
 ### Výber kategórií
+**Pravidlo, ktoré platí všade:** nič neoznačené = **všetko**, všetko označené = **tiež
+všetko**, čokoľvek medzi = presne to, čo je označené. Preto nemôže vzniknúť stav
+„mám vybraté všetky kategórie, a predsa mi to nič nenašlo".
+
 Všade, kde sa kategórie vyberajú (panel aj wp-admin), je **rozbaľovacie okienko
 so zaškrtávacími políčkami** — žiadne Ctrl+klik. V tlačidle vidíš, čo je vybraté,
 a v okienku sú tlačidlá *Označiť všetko* / *Zrušiť výber*.

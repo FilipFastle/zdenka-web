@@ -365,10 +365,13 @@ function zcn_admin_page() {
     }
     function zcnRecalc(){
         var scope=document.getElementById('zcnScope').value, out=document.getElementById('zcnRecipientCount');
-        if(scope!=='cats'){ out.textContent='<?php echo (int) $stats['active'] ?>'; return; }
-        var cats=zcnPickedCats(), n=0;
-        cats.forEach(function(c){ n+=Number(zcnCounts[c]||0) });
-        out.textContent=cats.length?('max. '+n):'0';
+        var total='<?php echo (int) $stats['active'] ?>';
+        if(scope!=='cats'){ out.textContent=total; return; }
+        var boxes=document.querySelectorAll('#zcnCatsWrap .zc-ms-opt input');
+        var cats=zcnPickedCats();
+        if(!cats.length||cats.length===boxes.length){ out.textContent=total; return; }
+        var n=0; cats.forEach(function(c){ n+=Number(zcnCounts[c]||0) });
+        out.textContent='max. '+n;
     }
     document.addEventListener('change',function(e){
         if(e.target.closest && e.target.closest('#zcnCatsWrap')) zcnRecalc();
@@ -390,8 +393,10 @@ function zcn_admin_page() {
         var interest = '';
         if (scope === 'cats') {
             var cats = zcnPickedCats();
+            var boxes = document.querySelectorAll('#zcnCatsWrap .zc-ms-opt input');
             if (!cats.length) { alert('Vyber aspoň jednu kategóriu.'); return; }
-            interest = cats.join(',');
+            // Všetko označené = všetci, filter neposielame
+            if (cats.length < boxes.length) interest = cats.join(',');
         } else if (scope === 'offers') { interest = 'offers'; }
         if (isSchedule && !sch) { alert('Zvoľte dátum a čas odoslania.'); return; }
         if (isSchedule && !confirm('Naplánovať newsletter na ' + sch + '?')) return;

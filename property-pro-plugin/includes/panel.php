@@ -2215,10 +2215,14 @@ function panel_newsletter() {
     }
     function pnlRecalc(){
         var scope=document.getElementById('pnlScope').value, out=document.getElementById('pnlNlCount');
-        if(scope!=='cats'){ out.textContent='<?php echo (int) $stats['active'] ?>'; return; }
-        var cats=pnlPickedCats(), n=0;
-        cats.forEach(function(c){ n+=Number(pnlCounts[c]||0) });
-        out.textContent=cats.length?('max. '+n):'0';
+        var total='<?php echo (int) $stats['active'] ?>';
+        if(scope!=='cats'){ out.textContent=total; return; }
+        var boxes=document.querySelectorAll('#pnlCatsWrap .zc-ms-opt input');
+        var cats=pnlPickedCats();
+        // Nič alebo všetko označené = všetci
+        if(!cats.length||cats.length===boxes.length){ out.textContent=total; return; }
+        var n=0; cats.forEach(function(c){ n+=Number(pnlCounts[c]||0) });
+        out.textContent='max. '+n;
     }
     document.addEventListener('change',function(e){
         if(e.target.closest && e.target.closest('#pnlCatsWrap')) pnlRecalc();
@@ -2243,8 +2247,10 @@ function panel_newsletter() {
         var scope=document.getElementById('pnlScope').value;
         if(scope==='cats'){
             var cats=pnlPickedCats();
+            var boxes=document.querySelectorAll('#pnlCatsWrap .zc-ms-opt input');
             if(!cats.length){alert('Vyber aspoň jednu kategóriu.');btn&&(btn.disabled=false);return;}
-            data.append('interest',cats.join(','));
+            // Všetko označené znamená všetkých – filter vtedy neposielame
+            if(cats.length<boxes.length) data.append('interest',cats.join(','));
         } else if(scope==='offers'){
             data.append('interest','offers');
         }

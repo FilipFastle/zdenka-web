@@ -54,6 +54,7 @@ function zcn_multiselect($name, $selected = '', $args = []) {
                 </label>
                 <?php endforeach; ?>
             <?php endforeach; ?>
+            <div class="zc-ms-note">Nič alebo všetko označené = <strong>všetko</strong>.</div>
             <div class="zc-ms-foot">
                 <button type="button" data-zc-ms-all>Označiť všetko</button>
                 <button type="button" data-zc-ms-none>Zrušiť výber</button>
@@ -89,6 +90,7 @@ function zcn_multiselect_assets() {
         font:500 13.5px/1.35 inherit;color:#2C2825}
     .zc-ms-opt:hover{background:#FBF8F2}
     .zc-ms-opt input{width:16px;height:16px;min-height:auto;accent-color:#B8A47A;margin:0;flex:0 0 auto}
+    .zc-ms-note{padding:9px 9px 2px;font-size:11px;line-height:1.5;color:#9A8660}
     .zc-ms-foot{display:flex;gap:6px;margin-top:6px;padding-top:8px;border-top:1px solid #F1EBE0}
     .zc-ms-foot button{flex:1;padding:7px;border:1px solid #E0D8CE;border-radius:7px;background:#fff;
         color:#6B6560;font:600 11px/1.2 inherit;cursor:pointer}
@@ -103,14 +105,16 @@ function zcn_multiselect_assets() {
     <script id="zc-ms-js">
     (function(){
         function labelOf(box){
-            var names=[].map.call(box.querySelectorAll('input:checked'),function(c){
-                return c.parentNode.textContent.trim();
-            });
+            var all=box.querySelectorAll('.zc-ms-opt input');
+            var on=box.querySelectorAll('.zc-ms-opt input:checked');
             var out=box.querySelector('.zc-ms-label');
             if(!out)return;
-            out.textContent=names.length?names.join(', '):(box.dataset.empty||'Všetko');
-            out.classList.toggle('is-empty',!names.length);
-            out.title=names.join(', ');
+            // Označené všetko znamená to isté ako neoznačené nič – všetko.
+            var everything=(on.length===0)||(all.length&&on.length===all.length);
+            var names=[].map.call(on,function(c){return c.parentNode.textContent.trim()});
+            out.textContent=everything?(box.dataset.empty||'Všetko'):names.join(', ');
+            out.classList.toggle('is-empty',everything);
+            out.title=everything?'':names.join(', ');
         }
         // Okienko sa otvára ako fixed – aby ho neorezala tabuľka ani modálne okno.
         function place(box,btn,menu){
