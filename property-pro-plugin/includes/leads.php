@@ -231,11 +231,27 @@ function panel_leads() {
         'post_status'    => 'publish',
         'posts_per_page' => $per_page,
         'paged'          => $page,
-        's'              => $search,
         'orderby'        => 'date',
         'order'          => 'DESC',
         'meta_query'     => $meta,
     ];
+
+    // Hľadanie musí prejsť aj e-mail a telefón – tie sú v meta poliach,
+    // kam sa bežné WP hľadanie (parameter „s") vôbec nepozrie.
+    if ($search !== '') {
+        global $wpdb;
+        $like = '%' . $wpdb->esc_like($search) . '%';
+        $ids  = $wpdb->get_col($wpdb->prepare(
+            "SELECT DISTINCT p.ID FROM {$wpdb->posts} p
+             LEFT JOIN {$wpdb->postmeta} m ON m.post_id = p.ID
+                   AND m.meta_key IN ('_lead_name','_lead_email','_lead_phone','_lead_message','_lead_note')
+             WHERE p.post_type = 'pp_lead' AND p.post_status = 'publish'
+               AND (p.post_title LIKE %s OR m.meta_value LIKE %s)",
+            $like, $like
+        ));
+        // Prázdny výsledok musí naozaj nič nevrátiť, nie zobraziť všetko
+        $query_args['post__in'] = $ids ? array_map('intval', $ids) : [0];
+    }
     $q = new WP_Query($query_args);
 
     // Počty pre filtre

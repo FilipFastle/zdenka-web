@@ -228,10 +228,10 @@ filtre v paneli aj vo wp-admine, aj okno pri odosielaní ponuky.
 
 ### Stránka /newsletter/
 - Kategórie sú **zaškrtávacie políčka** — dá sa označiť viac naraz, nič neoznačené = všetko.
-- Odkaz **„Už odoberáte? Upravte si témy alebo sa odhláste"** — človek zadá e-mail
-  a **hneď na stránke sa mu otvorí okno** s jeho témami. Zaškrtne, uloží, hotovo.
-  V okne je aj tlačidlo *Odhlásiť sa zo všetkého*.
-  Ak adresu v odbere nemáme, napíše sa mu to a odkážeme ho na formulár vyššie.
+- Pod formulárom je **zvýraznený pás** *„Už u nás odoberáte novinky?"* s tlačidlom
+  **Zmeniť si témy**. Otvorí okno priamo na stránke: najprv e-mail, potom výber tém.
+  V okne je aj *Odhlásiť sa zo všetkého*.
+  Ak adresu v odbere nemáme, napíše sa to a odkážeme na formulár vyššie.
   Skúšanie adries je obmedzené na 12 pokusov za 10 minút z jednej IP.
 - Newsletter je aj v hlavnom menu (na PC aj v mobile).
 
@@ -298,6 +298,11 @@ Rátaj ale s tým, že pôvodný vzhľad tej stránky tým nahradíš. Realitný
 ponuky si Breakdance nikdy neprevezme — tie musia ostať funkčné.
 
 Na bežnú zmenu textu stačí obrazovka *Texty stránok*.
+
+## Formuláre v paneli — hľadanie
+Vyhľadávanie prejde **meno, e-mail, telefón, správu aj internú poznámku**.
+Predtým hľadalo len v názve záznamu, takže podľa e-mailu ani telefónu nič nenašlo —
+tie sú uložené v doplnkových poliach, kam sa bežné hľadanie WordPressu nepozerá.
 
 ## Site Kit pre maklérku
 Rola *Realitný maklér* má vo wp-admine sprístupnenú **jedinú položku — Google
