@@ -164,8 +164,12 @@ transition: all .22s !important;
 }
 .zc-nav-cta::after { display: none !important; }
 .zc-nav-cta:hover { background: var(--accent-dk) !important; border-color: var(--accent-dk) !important; transform: translateY(-1px); color: var(--dark) !important; }
-.zc-hamburger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 6px; }
-.zc-hamburger span { width: 22px; height: 1.5px; background: var(--dark); border-radius: 2px; transition: all .28s; display: block; }
+.zc-hamburger {
+display: none; flex-direction: column; align-items: center; justify-content: center;
+gap: 5px; background: none; border: none; cursor: pointer;
+width: 44px; height: 44px; min-width: 44px; padding: 0; margin-right: -8px; flex: 0 0 auto;
+}
+.zc-hamburger span { width: 22px; height: 1.5px; flex: 0 0 auto; background: var(--dark); border-radius: 2px; transition: all .28s; display: block; }
 .zc-mobile-nav {
 display: none; background: var(--white); border-top: 1px solid var(--border);
 padding: 8px 20px 16px; position: absolute; width: 100%; left: 0;
@@ -288,9 +292,15 @@ line-height: 0; vertical-align: -16px; margin-right: 3px;
 }
 .zc-testimonial-author { display: flex; align-items: center; gap: 12px; }
 .zc-testimonial-avatar {
-width: 42px; height: 42px; border-radius: 50%;
+width: 42px; height: 42px; min-width: 42px; aspect-ratio: 1;
+border-radius: 50%; overflow: hidden; box-sizing: border-box;
 background: var(--section); display: flex; align-items: center;
-justify-content: center; font-size: 18px; border: 2px solid var(--border); flex-shrink: 0;
+justify-content: center; font-size: 18px; border: 2px solid var(--border);
+flex: 0 0 auto;
+}
+.zc-testimonial-avatar img {
+width: 100%; height: 100%; display: block;
+object-fit: cover; border-radius: 50%; flex: 0 0 auto;
 }
 .zc-testimonial-name { font-size: 14px; font-weight: 700; color: var(--dark); }
 .zc-testimonial-meta { font-size: 12px; color: var(--muted); margin-top: 1px; }
@@ -330,7 +340,9 @@ box-shadow: 0 0 9px rgba(220,38,38,.9), 0 0 24px rgba(220,38,38,.58),0 7px 18px 
 }
 .zc-fav-btn {
 position: absolute; top: 12px; right: 12px; z-index: 3;
-width: 38px; height: 38px; border: none; border-radius: 50%;
+width: 38px; height: 38px; min-width: 38px; aspect-ratio: 1;
+flex: 0 0 auto; padding: 0; box-sizing: border-box;
+border: none; border-radius: 50%;
 background: rgba(255,255,255,.9); backdrop-filter: blur(6px);
 color: var(--muted); cursor: pointer; display: flex;
 align-items: center; justify-content: center;
@@ -338,7 +350,7 @@ box-shadow: 0 2px 10px rgba(0,0,0,.12);
 transition: transform .2s var(--ease), color .2s, background .2s;
 }
 .zc-fav-btn:hover { transform: scale(1.12); background: #fff; }
-.zc-fav-btn svg { transition: fill .25s, stroke .25s; stroke: #6B6560; fill: none; }
+.zc-fav-btn svg { transition: fill .25s, stroke .25s; stroke: #6B6560; fill: none; flex: 0 0 auto; }
 .zc-fav-btn:hover svg { stroke: #e2476d; }
 .zc-fav-btn.is-fav { color: #e2476d; }
 .zc-fav-btn.is-fav svg { fill: #e2476d; stroke: #e2476d; }
@@ -773,6 +785,14 @@ input, select, textarea { font-size: 16px; max-width: 100%; }
 min-height: 44px;
 touch-action: manipulation;
 }
+.zc-fav-btn, .zc-fav-remove, .zc-cmp-btn, .zc-hamburger, .zc-scroll-top,
+.zco-close, .pp-lb-close, .pp-scroll-hint,
+.prop-sc-btn, .prop-sc-dot,
+.zcrc-btn, .zcrc-dot, .zcrgc-btn, .zcrgc-dot,
+.zcr-more, .zcr-page-link, .zcr-page-current, .zcr-page-gap,
+.zc-socials a {
+min-height: 0;
+}
 .zc-mobile-nav a { min-height: 44px; display: flex; align-items: center; }
 .zc-prop-actions, .zc-hero-btns { flex-wrap: wrap; }
 .zc-prop-actions > *, .zc-hero-btns > * { max-width: 100%; }
@@ -780,4 +800,22 @@ touch-action: manipulation;
 @media (max-width: 420px) {
 .zc-container { padding-left: 15px; padding-right: 15px; }
 .zc-header { padding-left: 15px; padding-right: 15px; }
+}
+.zc-logo { min-width: 0; }
+.zc-logo-text { min-width: 0; }
+@media (max-width: 560px) {
+.zc-logo { gap: 8px; }
+.zc-logo-text { font-size: 13.5px; }
+.zc-logo small { font-size: 8px; letter-spacing: 1.4px; }
+.zc-logo .zc-logo-svg { width: 32px !important; height: 32px !important; }
+}
+@media (max-width: 380px) {
+.zc-logo-text { font-size: 12.5px; }
+.zc-logo .zc-logo-svg { width: 28px !important; height: 28px !important; }
+}
+@media (max-height: 560px) {
+:root { --hh: 54px; }
+.zc-logo .zc-logo-svg { width: 30px !important; height: 30px !important; }
+.zc-logo-text { font-size: 13px; }
+.zc-hamburger { width: 40px; height: 40px; min-width: 40px; }
 }

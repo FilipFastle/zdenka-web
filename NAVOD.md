@@ -395,6 +395,38 @@ Prázdne pole nič nemení.
 Obe nastavenia sú pri každej ponuke zvlášť, prenesú sa pri *Duplikovať*
 a sú súčasťou denných záloh.
 
+## Mobil a priblíženie — opravené tvary a menu
+
+Téma dávala na mobile **každému** tlačidlu `min-height: 44px` (dotykový cieľ).
+Tým sa ale rozbili prvky, ktoré majú vlastný pevný rozmer:
+
+| Prvok | Ako to vyzeralo | Teraz |
+|---|---|---|
+| Srdiečko na kartách ponúk | 38 × 44 px → **ovál** | kruh 38 × 38 px |
+| Kolieska pri referenciách | fotka stlačená do oválu | kruh, fotka orezaná `object-fit: cover` |
+| Bodky pod carouselom recenzií | 7 × 44 px → **paličky** | bodky 7 × 7 px |
+| „Zobraziť celé" pod recenziou | 44 px vysoká diera | normálny odkaz |
+| Ikona hamburgeru | prilepená hore, mimo stredu | presne v strede hlavičky |
+
+Tlačidlá s vlastným rozmerom sú teraz z pravidla vyňaté, dotykový cieľ si nesú samy.
+
+**Priblíženie na PC (100 % – 300 %)**
+
+Pri 175 % má bežný monitor len ~617 px výšky a menu vtedy schovávalo logo „ZC".
+Namiesto skrývania sa teraz logo aj odkazy **plynulo zmenšujú**:
+
+- do 700 px výšky — logo 58 px
+- do 560 px výšky — logo 42 px, menšie písmo odkazov, menší krížik
+- pod 380 px výšky — logo a čiarka zmiznú, ostanú len odkazy
+
+Menu má navyše poistku: ak by sa aj tak nezmestilo, dá sa v ňom posúvať —
+nikdy sa nestane, že by položka bola neviditeľná a nedostupná.
+
+Hlavička sa na úzkom okne (aj 300 % priblíženie, ~640 px šírky) zmenšuje tiež:
+logo 38 → 32 → 28 px, meno 15 → 13,5 → 12,5 px. Nikdy sa nezalomí ani nezmizne.
+
+**Čo aktualizovať:** `zdenka-theme.zip` (3.39.0) a `zc-reviews.zip` (1.6.2).
+
 ## Denné zálohovanie panela
 **Web Zdenky → Zálohy** — každý deň o 3:20 sa uloží celý obsah panela:
 

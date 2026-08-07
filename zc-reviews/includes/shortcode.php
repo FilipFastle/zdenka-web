@@ -159,6 +159,24 @@ function zcr_card_styles() {
     /* Google recenzie – odlíšenie */
     .zcr-src{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted,#7A7068);margin-top:4px}
     .zcr-src svg{flex-shrink:0}
+    /* Kruh s fotkou – aspect-ratio a flex:0 0 auto zabránia stlačeniu na ovál */
+    .zc-testimonial-author{display:flex;align-items:center;gap:12px;min-width:0}
+    .zc-testimonial-author>div:last-child{min-width:0}
+    .zc-testimonial-avatar{width:42px;height:42px;min-width:42px;aspect-ratio:1;
+        border-radius:50%;overflow:hidden;box-sizing:border-box;flex:0 0 auto}
+    .zc-testimonial-avatar img{width:100%;height:100%;display:block;
+        object-fit:cover;border-radius:50%;flex:0 0 auto}
+    /* Dlhé mená a e-maily nesmú roztiahnuť kartu do strany */
+    .zc-testimonial{min-width:0;overflow-wrap:anywhere}
+    .zc-testimonial-name{overflow-wrap:anywhere}
+    /* Téma dáva na mobile každému <button> min-height:44px – z bodiek
+       carouselu by boli paličky a pod odkazom „Zobraziť celé" diera. */
+    @media(max-width:768px){
+        .zcr-more,.zcrc-dot,.zcrgc-dot,.zcrc-btn,.zcrgc-btn,
+        .zcr-page-link,.zcr-page-current{min-height:0}
+        .zc-testimonial{padding:22px 20px}
+        .zc-testimonial-quote{font-size:14.5px;line-height:1.75}
+    }
     </style>
     <script>
     (function(){
@@ -194,7 +212,7 @@ function zcr_card($r, $clamp = true) {
         <div class="zc-testimonial-author">
             <?php if ($r->avatar_url): ?>
             <div class="zc-testimonial-avatar">
-                <img src="<?php echo esc_url($r->avatar_url) ?>" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover">
+                <img src="<?php echo esc_url($r->avatar_url) ?>" alt="" loading="lazy" decoding="async">
             </div>
             <?php endif; ?>
             <div>

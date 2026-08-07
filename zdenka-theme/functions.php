@@ -11,12 +11,12 @@ add_action('wp_enqueue_scripts', function() {
     $use_min = get_option('zc_min_css', '1') === '1'
             && file_exists($dir . '/assets/css/main.min.css');
     $css = $use_min ? '/assets/css/main.min.css' : '/assets/css/main.css';
-    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.38.1');
+    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.39.0');
     // Malé kritické úpravy musia platiť aj pri zapnutej staršej minifikovanej verzii.
     wp_add_inline_style('zdenka-main',
         '.zc-nav a{font-size:11px}.zc-prop-badge.is-sold{background:#DC2626!important;color:#fff!important;box-shadow:0 0 9px rgba(220,38,38,.85),0 0 20px rgba(220,38,38,.5)}'
     );
-    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.38.1', true);
+    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.39.0', true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.png','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0,'interests'=>function_exists('zcn_interest_choices')?zcn_interest_choices():[],'nlNonce'=>wp_create_nonce('zcn_nonce')]);
 });
 

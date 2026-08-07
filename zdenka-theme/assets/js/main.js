@@ -57,7 +57,9 @@ if (!document.getElementById('zcOvCSS')) {
 
         /* Nav links */
         '.zco-nav{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;}',
-        '.zco-nav{max-height:100%;}',
+        '.zco-nav{width:100%;max-height:100%;overflow-y:auto;overscroll-behavior:contain;',
+        '  -webkit-overflow-scrolling:touch;scrollbar-width:none;}',
+        '.zco-nav::-webkit-scrollbar{width:0;height:0;}',
         '.zco-nav a{font-family:"Playfair Display",Georgia,serif;',
         /* menšie z dvoch: podľa šírky aj podľa výšky – rozhoduje ten tesnejší */
         '  font-size:clamp(15px,min(6.6vw,4.4vh),42px);',
@@ -94,7 +96,12 @@ if (!document.getElementById('zcOvCSS')) {
         '.nav-open .zc-hamburger span:nth-child(2){opacity:0;transform:translateX(-8px);}',
         '.nav-open .zc-hamburger span:nth-child(3){transform:rotate(-45deg) translate(4.5px,-4.5px);}',
 
-        '@media(max-height:620px){.zco-logo,.zco-div{display:none;}}',
+        '@media(max-height:700px){.zco-logo{width:min(58px,7.6vh);height:min(58px,7.6vh);}}',
+        '@media(max-height:560px){.zco-logo{width:min(42px,6.6vh);height:min(42px,6.6vh);}',
+        '  .zco-div{margin:min(7px,.9vh) 0;}',
+        '  .zco-nav a{font-size:clamp(13px,min(6vw,5vh),26px);line-height:1.2;padding:min(2px,.3vh) 0;}',
+        '  .zco-close{top:10px;right:10px;width:38px;height:38px;}}',
+        '@media(max-height:380px){.zco-logo,.zco-div{display:none;}}',
         '@media(min-width:1181px){#zcOv{display:none!important}}',
     ].join('');
     document.head.appendChild(menuCSS);
