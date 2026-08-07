@@ -40,16 +40,25 @@ function zcn_newsletter_shortcode($atts) {
     ob_start(); ?>
     <style>
     .zcn-form-wrap,.zcn-form-wrap *{box-sizing:border-box}
+    /* Nadpis a popis ostávajú na stred, ale samotný formulár nie – vycentrovaný
+       súhlas so spracovaním údajov pod checkboxom vyzeral rozhádzane. */
+    .zcn-form-wrap .zcn-form{text-align:left}
     .zcn-email-row{display:flex;gap:8px}
     .zcn-email-row input{min-width:0}
-    .zcn-form-wrap input,.zcn-form-wrap select,.zcn-form-wrap button{min-height:48px}
+    /* Pozor: :not() musí byť aj tu. Bez neho dostal 48 px aj checkbox
+       a z políčka kategórie bol obdĺžnik cez celý formulár. */
+    .zcn-form-wrap input:not([type=checkbox]):not([type=radio]),
+    .zcn-form-wrap select,.zcn-form-wrap button{min-height:48px}
+    .zcn-form-wrap input[type=checkbox]{width:17px;height:17px;min-height:0;flex:0 0 auto;margin:0}
     .zcn-picks{text-align:left;margin:2px 0 4px}
     .zcn-picks-hd{font:700 11px/1.4 'DM Sans',sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
     .zcn-picks-hd span{font-weight:500;text-transform:none;letter-spacing:0;opacity:.8}
     .zcn-picks-grp{font:700 10px/1.4 'DM Sans',sans-serif;letter-spacing:1.2px;text-transform:uppercase;opacity:.75;margin:12px 0 7px}
     .zcn-picks-row{display:flex;flex-wrap:wrap;gap:7px}
     .zcn-pick{display:inline-flex;align-items:center;gap:8px;padding:9px 13px;border:1.5px solid;border-radius:9px;
-        font:600 13.5px/1.2 'DM Sans',sans-serif;cursor:pointer;transition:border-color .15s,background .15s;min-height:auto}
+        font:600 13.5px/1.3 'DM Sans',sans-serif;cursor:pointer;transition:border-color .15s,background .15s;
+        min-height:auto;max-width:100%;min-width:0}
+    .zcn-pick span{min-width:0;overflow-wrap:anywhere}
     .zcn-pick input{width:16px;height:16px;min-height:auto;accent-color:#B8A47A;margin:0;flex:0 0 auto}
     .zcn-pick:hover{border-color:#B8A47A!important}
     .zcn-pick:has(input:checked){border-color:#B8A47A!important;box-shadow:inset 0 0 0 1px #B8A47A}
@@ -60,7 +69,11 @@ function zcn_newsletter_shortcode($atts) {
         .zcn-form-wrap{padding:24px 18px!important;border-radius:13px!important}
         .zcn-email-row{flex-direction:column}
         .zcn-email-row button{width:100%}
-        .zcn-form-wrap input,.zcn-form-wrap select{font-size:16px!important;width:100%}
+        .zcn-form-wrap input:not([type=checkbox]):not([type=radio]),
+        .zcn-form-wrap select{font-size:16px!important;width:100%}
+        /* Checkbox si drží svoj rozmer – 100 % z neho spravilo pruh cez
+           celú šírku a text vedľa neho vytlačilo mimo formulára. */
+        .zcn-form-wrap input[type=checkbox]{width:17px!important;height:17px;min-height:0;flex:0 0 auto}
     }
     </style>
     <div class="zcn-form-wrap" style="background:<?php echo $bg ?>;border-radius:16px;padding:32px 28px;max-width:520px;margin:0 auto">

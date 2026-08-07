@@ -395,6 +395,66 @@ Prázdne pole nič nemení.
 Obe nastavenia sú pri každej ponuke zvlášť, prenesú sa pri *Duplikovať*
 a sú súčasťou denných záloh.
 
+## Číslice v serifovom písme — vyriešené natrvalo
+
+Playfair Display má **predvolene textové (staroštýlové) číslice**: „1" siaha len
+po výšku malého „x", „3" a „4" idú pod účiaru. Preto boli číslice sádzané
+bezpätkovým DM Sans — a to sa maklérke nepáčilo.
+
+Zistil som skutočnú príčinu. Font vie aj vysoké (lining) číslice cez OpenType
+funkciu `lnum`, ale **náš skrátený súbor písma ju mal odstrihnutú** — obsahoval
+len `calt`, `kern` a `liga`. Preto `font-variant-numeric: lining-nums` v CSS
+nerobilo nič a jediná cesta bola náhradné písmo.
+
+Teraz sú v téme dva nové drobné súbory, `PlayfairDisplay-num.woff2` (2,6 kB)
+a kurzívna verzia (2,9 kB). Obsahujú **výlučne číslice 0–9, už v lining podobe**.
+Cez `unicode-range` ich prehliadač použije len na číslice, zvyšok textu berie
+z pôvodného súboru.
+
+| | predtým | teraz |
+|---|---|---|
+| Písmo číslic | DM Sans (bezpätkové) | Playfair Display (pätkové) |
+| Výška číslic | rôzna, „1" po x-výšku | všetky po výšku veľkých písmen |
+| Ako to fungovalo | JavaScript prechádzal celý DOM a každé číslo obaľoval do `<span>` | čisto písmo, žiadny zásah do stránky |
+| Navyše dáta | 0 kB | 5,5 kB (raz, potom z cache) |
+
+Zmizol tým aj celý `TreeWalker` z `main.js` — stránka sa už po načítaní
+neprepisuje, čo je rýchlejšie a nerobí to preblikávanie.
+
+## Opravy hlásené 7. 8.
+
+**Ikonky sietí sa na hover strácali.** Pravidlá pre priehľadnú hlavičku a hover
+mali vyššiu špecificitu než brand farby, takže Instagram bol hore sivý (farbu
+dostal až po odrolovaní) a pri prejdení myšou sa symbol stratil — biela ikona
+na bielom pozadí. Farba siete je teraz v premennej `--soc` a všetky stavy z nej
+čerpajú. Hover farbu nemení, len ikonu rozžiari a pridá biely prstenec.
+
+**Mobilné menu sa nedalo hneď znova otvoriť.** Prekryv po zatvorení ešte asi
+1,1 sekundy neviditeľne stál nad hamburgerom a kliky do neho nešli. Doplnil som
+`pointer-events:none` pre neotvorený stav a zrušenie dobiehajúceho časovača.
+Otestované na piatich rôznych oneskoreniach (0 – 560 ms) — otvorí sa vždy.
+
+**Newsletter formulár na mobile.** Pravidlo `width:100%` platilo aj pre
+checkboxy, takže z políčka kategórie bol obdĺžnik cez celý formulár a text
+vedľa neho vytekal von. Checkboxy sú z pravidla vyňaté a text v štítkoch sa
+zalamuje.
+
+**Okno po prihlásení na newsletter.** Najprv je potvrdenie (zelená fajka,
+„Odber máte zapnutý“) a až pod ním nepovinný výber tém. Tlačidlá sú v pevnej
+päte, takže na nižšom telefóne roluje len zoznam možností — predtým bolo
+tlačidlo pod okrajom.
+
+**Medzikrok pri odhlásení sa dal zbytočne rolovať.** `100vh` na mobile počíta
+so skrytou lištou prehliadača. Doplnené `100dvh`, ktoré meria skutočne
+viditeľnú výšku.
+
+**Carousel referencií.** Šípky mali od karty 3 px, teraz 19 px. Karta sa pri
+prejdení myšou nadvihne o 3 px a `overflow:hidden` jej odrezával horný rámik
+aj tieň — obal má teraz zvislé odsadenie 12 px.
+
+**Čo aktualizovať:** `zdenka-theme.zip` (3.41.0), `zc-newsletter.zip` (1.20.0),
+`zc-reviews.zip` (1.6.3).
+
 ## Menu, fotky a odhlásenie — najnovšie zmeny
 
 **Menu (PC aj mobil, rovnaké poradie)**

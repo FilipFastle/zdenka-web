@@ -511,8 +511,10 @@ function zcr_carousel($rows) {
     $total = count($rows);
     ob_start(); ?>
     <style>
-    .zcrc-wrap{position:relative;overflow:hidden}
-    .zcrc-track{display:flex;transition:transform .5s cubic-bezier(.4,0,.2,1)}
+    /* Zvislé odsadenie je nutné: karta sa pri prejdení myšou nadvihne o 3 px
+       a bez neho jej overflow:hidden odrezal horný rámik aj tieň. */
+    .zcrc-wrap{position:relative;overflow:hidden;padding:12px 0}
+    .zcrc-track{display:flex;transition:transform .5s cubic-bezier(.4,0,.2,1);align-items:stretch}
     .zcrc-slide{flex:0 0 calc(100%/3);padding:0 11px;box-sizing:border-box}
     .zcrc-btn{position:absolute;top:50%;transform:translateY(-50%);
         width:44px;height:44px;border-radius:50%;background:var(--white,#fff);
@@ -521,7 +523,9 @@ function zcr_carousel($rows) {
         font-size:20px;color:var(--dark,#1C1A18);z-index:2;
         box-shadow:0 2px 12px rgba(0,0,0,.08);transition:all .2s}
     .zcrc-btn:hover{background:var(--accent,#B8A47A);border-color:var(--accent,#B8A47A);color:var(--dark)}
-    .zcrc-prev{left:-16px}.zcrc-next{right:-16px}
+    /* Šípky majú vlastný priestor v odsadení obalu – predtým zasahovali
+       takmer na okraj karty. */
+    .zcrc-prev{left:0}.zcrc-next{right:0}
     .zcrc-dots{display:flex;gap:7px;justify-content:center;margin-top:24px}
     .zcrc-dot{width:7px;height:7px;border-radius:50%;background:var(--border,#E0D8CE);
         border:none;cursor:pointer;transition:all .3s;padding:0}
@@ -533,7 +537,7 @@ function zcr_carousel($rows) {
         .zcrc-btn{display:none}
     }
     </style>
-    <div class="zcrc-shell" style="position:relative;padding:0 20px">
+    <div class="zcrc-shell" style="position:relative;padding:0 52px">
     <div class="zcrc-wrap" id="<?php echo $uid ?>w">
         <div class="zcrc-track" id="<?php echo $uid ?>t">
         <?php foreach ($rows as $r): ?>

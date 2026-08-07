@@ -22,15 +22,15 @@ if (!document.getElementById('zcOvCSS')) {
     menuCSS.textContent = [
         /* Base – always hidden */
         '#zcOv{position:fixed;inset:0;z-index:9998;display:flex;flex-direction:column;align-items:center;justify-content:center;',
-        '  visibility:hidden;',
+        '  visibility:hidden;pointer-events:none;',
         /* Delay visibility:hidden until close animation ends (.56s) */
         '  transition:visibility 0s .56s;}',
 
         /* Open – instant visibility */
-        '#zcOv.open{visibility:visible;transition:visibility 0s 0s;}',
+        '#zcOv.open{visibility:visible;pointer-events:auto;transition:visibility 0s 0s;}',
 
         /* Keep visible while closing animation plays */
-        '#zcOv.closing{visibility:visible;transition:none;}',
+        '#zcOv.closing{visibility:visible;pointer-events:none;transition:none;}',
 
         /* Curtain */
         '.zco-bg{position:absolute;inset:0;background:linear-gradient(135deg,#F5EEDF,#EBDCC0);transform:scaleY(0);transform-origin:top;',
@@ -165,7 +165,12 @@ if (!document.getElementById('zcOv')) {
 var ov = document.getElementById('zcOv');
 var isClosing = false;
 
+var closeTimer = null;
+
 function openMenu() {
+    // Dobiehajúce zatváranie zrušíme, inak by jeho časovač o chvíľu
+    // zhodil triedy a práve otvorené menu by sa samo zavrelo.
+    if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
     isClosing = false;
     ov.classList.remove('closing');
     ov.classList.add('open');
@@ -182,11 +187,17 @@ function closeMenu() {
 
     ov.classList.add('closing');
     ov.classList.remove('open');
-    setTimeout(function () {
+    closeTimer = setTimeout(function () {
+        closeTimer = null;
         ov.classList.remove('closing');
         if (hdr) hdr.classList.remove('nav-open');
         isClosing = false;
     }, 580);
+}
+
+// Hamburger prepína – druhý klik menu zavrie, nezasekne sa v otvorenom stave
+function toggleMenu() {
+    if (ov.classList.contains('open')) closeMenu(); else openMenu();
 }
 
 // Re-bind hamburger (clone to remove old listeners)
@@ -194,7 +205,7 @@ if (ham) {
     var h2 = ham.cloneNode(true);
     ham.parentNode.replaceChild(h2, ham);
     ham = h2;
-    ham.addEventListener('click', openMenu);
+    ham.addEventListener('click', toggleMenu);
 }
 var cb = document.getElementById('zcClose');
 if (cb) {
@@ -263,26 +274,57 @@ function zcInterestModal(token) {
 
     wrap.innerHTML =
         '<style>' +
-        '#zcIntModal .zci-card{background:#fff;border-radius:16px;max-width:440px;width:100%;padding:28px 26px;' +
-        'box-shadow:0 24px 64px rgba(0,0,0,.28);font-family:inherit;max-height:90vh;overflow:auto}' +
+        '#zcIntModal .zci-card{background:#fff;border-radius:16px;max-width:440px;width:100%;' +
+        'box-shadow:0 24px 64px rgba(0,0,0,.28);font-family:inherit;max-height:90dvh;max-height:90vh;' +
+        'display:flex;flex-direction:column;overflow:hidden}' +
+        /* Roluje sa len zoznam možností – tlačidlá musia byť vidieť vždy,
+           inak ich na nižšom telefóne používateľ vôbec nenájde. */
+        '#zcIntModal .zci-body{overflow-y:auto;padding:26px 26px 4px;flex:1 1 auto;min-height:0}' +
+        '#zcIntModal .zci-foot{flex:0 0 auto;padding:14px 26px 20px;border-top:1px solid #EDE6DA;background:#fff}' +
         '#zcIntModal .zci-grp{font:800 10px/1.4 inherit;letter-spacing:1.2px;text-transform:uppercase;color:#9A8660;margin:16px 0 8px}' +
-        '#zcIntModal .zci-opt{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid #E2DACE;' +
-        'border-radius:10px;margin-bottom:7px;cursor:pointer;font:600 14px/1.3 inherit;color:#2C2825}' +
+        '#zcIntModal .zci-opt{display:flex;align-items:center;gap:10px;padding:10px 13px;border:1.5px solid #E2DACE;' +
+        'border-radius:10px;margin-bottom:6px;cursor:pointer;font:600 14px/1.3 inherit;color:#2C2825}' +
         '#zcIntModal .zci-opt:hover{border-color:#B8A47A;background:#FBF8F2}' +
         '#zcIntModal .zci-opt input{width:17px;height:17px;accent-color:#B8A47A;flex:0 0 auto}' +
+        '#zcIntModal .zci-head{text-align:center}' +
+        '#zcIntModal .zci-check{width:40px;height:40px;margin:0 auto 10px;border-radius:50%;' +
+        'display:flex;align-items:center;justify-content:center;background:#E8F5EC;color:#15803d}' +
+        '#zcIntModal h3{margin:0 0 7px;font-family:"Playfair Display",Georgia,serif;' +
+        'font-size:21px;font-weight:700;color:#1C1A18}' +
+        '#zcIntModal .zci-lead{margin:0;font:400 13.5px/1.65 inherit;color:#6B6560}' +
+        '#zcIntModal .zci-sep{height:1px;background:#EDE6DA;margin:17px 0 14px}' +
+        '#zcIntModal .zci-ask{margin:0 0 2px;font:700 13.5px/1.5 inherit;color:#2C2825}' +
+        '#zcIntModal .zci-note{margin:11px 0 16px;font:400 12px/1.6 inherit;color:#9A8660}' +
+        '#zcIntModal .zci-btn{display:block;width:100%;padding:13px;border:none;border-radius:9px;' +
+        'background:#B8A47A;color:#1C1A18;font:700 14px/1.2 inherit;cursor:pointer;transition:background .2s}' +
+        '#zcIntModal .zci-btn:hover{background:#9A8660}' +
+        '#zcIntModal .zci-skip{display:block;width:100%;margin-top:7px;padding:10px;border:none;' +
+        'background:none;color:#9A8660;font:600 12.5px/1.3 inherit;cursor:pointer;text-decoration:underline;' +
+        'text-underline-offset:3px}' +
+        '#zcIntModal .zci-skip:hover{color:#7C5E33}' +
         '</style>' +
         '<div class="zci-card">' +
-        '<h3 style="margin:0 0 6px;font-size:19px;color:#1C1A18">Ďakujeme za prihlásenie!</h3>' +
-        '<p style="margin:0 0 4px;font-size:13.5px;line-height:1.6;color:#6B6560">' +
-        'Čo vám máme posielať? Označte pokojne aj viac možností.</p>' +
+        '<div class="zci-body">' +
+        '<div class="zci-head">' +
+        '<div class="zci-check" aria-hidden="true">' +
+        '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+        'stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>' +
+        '</div>' +
+        '<h3>Odber máte zapnutý</h3>' +
+        '<p class="zci-lead">Vaša adresa je v zozname odberateľov. Píšeme, len keď ' +
+        'pribudne nová ponuka alebo niečo naozaj užitočné.</p>' +
+        '</div>' +
+        '<div class="zci-sep"></div>' +
+        '<p class="zci-ask">Chcete dostávať len časť ponúk? Označte, čo vás zaujíma.</p>' +
         boxes +
-        '<p style="margin:12px 0 14px;font-size:12px;color:#9A8660;line-height:1.6">' +
-        'Nič neoznačené = pošleme vám všetko.</p>' +
+        '<p class="zci-note">Ak nič neoznačíte, posielame všetko. Zmeniť sa to dá kedykoľvek ' +
+        'cez odkaz v ktoromkoľvek e-maile.</p>' +
+        '</div>' +
+        '<div class="zci-foot">' +
         '<div id="zcIntMsg" style="display:none;margin-bottom:10px;font-size:13px;color:#15803d"></div>' +
-        '<button type="button" data-save style="display:block;width:100%;padding:13px;border:none;border-radius:9px;' +
-        'background:#B8A47A;color:#1C1A18;font:700 14px/1.2 inherit;cursor:pointer">Uložiť výber</button>' +
-        '<button type="button" data-close style="display:block;width:100%;margin-top:6px;padding:10px;' +
-        'border:none;background:none;color:#9A8660;font:600 12.5px/1.3 inherit;cursor:pointer">Teraz nie</button>' +
+        '<button type="button" data-save class="zci-btn">Uložiť výber</button>' +
+        '<button type="button" data-close class="zci-skip">Nechať všetky ponuky</button>' +
+        '</div>' +
         '</div>';
 
     document.body.appendChild(wrap);
@@ -557,67 +599,7 @@ if ('IntersectionObserver' in window) {
 
 });
 
-/*
- * Playfair Display aj Georgia používajú v niektorých prehliadačoch nízke
- * textové číslice. V serifových textoch preto číslice vykreslíme cez DM Sans,
- * ktorý má spoľahlivé vysoké (lining) číslice. Text a prístupnosť sa nemenia.
- */
-(function () {
-    function initLiningNumerals() {
-    function fixSerifNumerals(root) {
-        var nodes = [];
-        var walker;
-
-        if (!root || root.nodeType !== 1) return;
-
-        walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-            acceptNode: function (node) {
-                var parent = node.parentElement;
-                var family;
-
-                if (!parent || !/[0-9]/.test(node.nodeValue || '')) {
-                    return NodeFilter.FILTER_REJECT;
-                }
-                if (parent.closest('script,style,textarea,input,option,[contenteditable="true"],.zc-lining-number')) {
-                    return NodeFilter.FILTER_REJECT;
-                }
-
-                family = window.getComputedStyle(parent).fontFamily.toLowerCase();
-                return family.indexOf('playfair') !== -1 || family.indexOf('georgia') !== -1
-                    ? NodeFilter.FILTER_ACCEPT
-                    : NodeFilter.FILTER_REJECT;
-            }
-        });
-
-        while (walker.nextNode()) nodes.push(walker.currentNode);
-
-        nodes.forEach(function (node) {
-            var parts = node.nodeValue.split(/([0-9]+)/);
-            var fragment = document.createDocumentFragment();
-
-            parts.forEach(function (part) {
-                var number;
-                if (!part) return;
-                if (/^[0-9]+$/.test(part)) {
-                    number = document.createElement('span');
-                    number.className = 'zc-lining-number';
-                    number.textContent = part;
-                    fragment.appendChild(number);
-                } else {
-                    fragment.appendChild(document.createTextNode(part));
-                }
-            });
-
-            node.parentNode.replaceChild(fragment, node);
-        });
-    }
-
-        fixSerifNumerals(document.body);
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initLiningNumerals);
-    } else {
-        initLiningNumerals();
-    }
-})();
+/* Číslice v serifových textoch rieši samostatný súbor písma
+   (PlayfairDisplay-num.woff2) cez unicode-range – žiadny zásah do DOM
+   už netreba. Predtým tu bol TreeWalker, ktorý každé číslo obaľoval
+   do <span> s bezpätkovým písmom. */
