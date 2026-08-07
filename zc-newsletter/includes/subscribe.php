@@ -48,54 +48,47 @@ function zcn_handle_subscribe() {
                 if ($name && !$existing->name) $data['name'] = $name;
                 if ($data) $wpdb->update($table, $data, ['id' => (int) $existing->id]);
             }
-            wp_send_json_error(['message' => 'Táto adresa je už prihlásená na odber.']);
+            wp_send_json_error(['message' => 'Táto adresa už odber dostáva. Témy si viete zmeniť odkazom v ktoromkoľvek našom e-maile.']);
         }
-        if ($existing->status === 'pending') {
-            $data = ['source' => zcn_merge_sources($existing->source ?? '', $source)];
-            if ($interest) $data['interest'] = $interest;
-            if ($name && !$existing->name) $data['name'] = $name;
-            $wpdb->update($table, $data, ['id' => (int) $existing->id]);
-            // Resend confirmation
-            $resent = zcn_resend_confirmation((int) $existing->id, $source);
-            if (is_wp_error($resent)) {
-                wp_send_json_error(['message' => $resent->get_error_message()]);
-            }
-            wp_send_json_success(['message' => 'Potvrdzovací e-mail bol znovu odoslaný. Skontrolujte schránku.']);
+        // Čakajúci aj kedysi odhlásený sa prihlásia rovno – potvrdzovací
+        // krok sme zrušili. Token vždy obnovíme, aby starý odkaz z e-mailu
+        // po odhlásení už nikoho nevedel prihlásiť späť.
+        $token = zcn_generate_token();
+        $data  = [
+            'status'       => 'active',
+            'token'        => $token,
+            'confirmed_at' => current_time('mysql'),
+            'source'       => zcn_merge_sources($existing->source ?? '', $source),
+        ];
+        if ($existing->status === 'unsubscribed') $data['subscribed_at'] = current_time('mysql');
+        if ($interest !== '')                     $data['interest']      = $interest;
+        if ($name && !$existing->name)            $data['name']          = $name;
+        if ($wpdb->update($table, $data, ['id' => (int) $existing->id]) === false) {
+            wp_send_json_error(['message' => 'Prihlásenie sa nepodarilo uložiť. Skúste to, prosím, znova.']);
         }
-        if ($existing->status === 'unsubscribed') {
-            // Resubscribe
-            $token = zcn_generate_token();
-            $wpdb->update($table,
-                ['status' => 'pending', 'token' => $token, 'name' => $name, 'interest' => $interest,
-                 'source' => zcn_merge_sources($existing->source ?? '', $source), 'subscribed_at' => current_time('mysql'),
-                 'confirmed_at' => null],
-                ['email' => $email]
-            );
-            if (!zcn_send_confirmation($email, $name, $token)) {
-                wp_send_json_error(['message' => 'Kontakt bol uložený, ale potvrdzovací e-mail sa nepodarilo odoslať. ' . zcn_last_mail_error()]);
-            }
-            wp_send_json_success(['message' => 'Skontrolujte e-mail a potvrďte prihlásenie.']);
-        }
+        zcn_send_welcome($email, $name ?: (string) $existing->name);
+        wp_send_json_success(['message' => 'Hotovo – ste prihlásený na odber. Poslali sme vám uvítací e-mail.']);
     }
 
-    // New subscriber
+    // Nový odberateľ – rovno aktívny, bez potvrdzovacieho e-mailu.
+    // Prázdna kategória znamená „všetko"; kto si vo formulári niečo označil,
+    // dostane presne to.
     $token = zcn_generate_token();
     $saved = $wpdb->insert($table, [
-        'email'  => $email,
-        'name'   => $name,
-        'interest' => $interest,
-        'status' => 'pending',
-        'token'  => $token,
-        'source' => $source,
+        'email'        => $email,
+        'name'         => $name,
+        'interest'     => $interest,
+        'status'       => 'active',
+        'token'        => $token,
+        'source'       => $source,
+        'confirmed_at' => current_time('mysql'),
     ]);
     if ($saved === false) {
         wp_send_json_error(['message' => 'Prihlásenie sa nepodarilo uložiť. Skúste to, prosím, znova.']);
     }
 
-    if (!zcn_send_confirmation($email, $name, $token)) {
-        wp_send_json_error(['message' => 'Kontakt bol uložený, ale potvrdzovací e-mail sa nepodarilo odoslať. ' . zcn_last_mail_error()]);
-    }
-    wp_send_json_success(['message' => 'Skontrolujte e-mail a potvrďte prihlásenie na odber. ']);
+    zcn_send_welcome($email, $name);
+    wp_send_json_success(['message' => 'Hotovo – ste prihlásený na odber. Poslali sme vám uvítací e-mail.']);
 }
 
 /**
@@ -306,21 +299,47 @@ function zcn_send_welcome($email, $name = '') {
     $greeting   = $name ? "Dobrý deň {$name}," : 'Dobrý deň,';
     $subject    = "Vitajte v odbere noviniek — {$site}";
 
-    // Token odberateľa → odhlasovací odkaz
+    // Token odberateľa → odkaz na úpravu tém aj na odhlásenie
     $token = $wpdb->get_var($wpdb->prepare("SELECT token FROM " . zcn_table() . " WHERE email=%s", $email));
     $unsub = $token ? zcn_unsubscribe_url($token) : home_url('/');
-    $footer = 'Dostávate tento e-mail, pretože ste sa prihlásili na odber noviniek. · <a href="' . esc_url($unsub) . '" style="color:#9A8660">Odhlásiť sa</a>';
+    $prefs = $token
+        ? add_query_arg(['zcn_action' => 'prefs', 'token' => $token], home_url('/'))
+        : home_url('/newsletter/');
+    $footer = 'Dostávate tento e-mail, pretože ste sa prihlásili na odber noviniek. · <a href="' . esc_url($unsub) . '" style="color:#9A8660">Odhlásiť sa</a><br>';
 
+    // Prihlásenie je okamžité a na všetko. Tento e-mail preto nič nepotvrdzuje –
+    // len povie, čo bude chodiť, a dá dve možnosti: zúžiť témy alebo odísť.
     $body = zcn_email_wrap($subject, "
-        <p style='font-size:16px;color:#2C2825;margin:0 0 20px'>{$greeting}</p>
-        <p style='color:#555;line-height:1.75;margin:0 0 20px'>
-            ďakujeme za prihlásenie na odber noviniek. Odteraz vám budem posielať
-            <strong>nové ponuky nehnuteľností</strong> a tipy zo sveta realít ako prvým.
+        <p style='font-size:16px;color:#2C2825;margin:0 0 18px'>{$greeting}</p>
+        <p style='color:#555;line-height:1.75;margin:0 0 18px'>
+            odteraz vám posielam novinky z realitného trhu. Nastavené to máte
+            <strong>na všetko</strong> – nič ďalšie robiť nemusíte.
         </p>
-        <p style='color:#555;line-height:1.75;margin:0 0 8px'>
-            Ak by ste čokoľvek potrebovali, pokojne mi napíšte alebo zavolajte.
+        <p style='color:#555;line-height:1.75;margin:0 0 10px'><strong>Čo vám bude chodiť:</strong></p>
+        <ul style='color:#555;line-height:1.9;margin:0 0 20px;padding-left:20px'>
+            <li>nové ponuky nehnuteľností skôr, než sa dostanú na inzertné portály,</li>
+            <li>zníženia cien a novinky pri ponukách, ktoré vás zaujímajú,</li>
+            <li>ebook a materiály zdarma k predaju a kúpe nehnuteľnosti,</li>
+            <li>realitné tipy – čo si postrážiť pri zmluve, hypotéke či obhliadke.</li>
+        </ul>
+        <p style='color:#555;line-height:1.75;margin:0 0 22px'>
+            Ak je toho priveľa, vyberte si len to, čo vás naozaj zaujíma.
+            Označiť sa dá aj viac možností naraz a kedykoľvek to zmeníte.
         </p>
-        <p style='color:#2C2825;margin:20px 0 0'>S pozdravom,<br><strong>{$site}</strong></p>
+        <div style='text-align:center;margin:26px 0 20px'>
+            <a href='" . esc_url($prefs) . "'
+               style='display:inline-block;padding:14px 32px;background:#B8A47A;color:#1C1A18;
+                      text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;
+                      letter-spacing:.5px;font-family:DM Sans,sans-serif'>
+                Zmeniť si témy
+            </a>
+        </div>
+        <p style='font-size:12.5px;color:#8A8078;text-align:center;line-height:1.7;margin:0 0 4px'>
+            Neprihlasovali ste sa vy? Nič sa nedeje –
+            <a href='" . esc_url($unsub) . "' style='color:#7C5E33'>odhláste sa jedným klikom</a>
+            a viac vám nenapíšeme.
+        </p>
+        <p style='color:#2C2825;margin:26px 0 0'>S pozdravom,<br><strong>{$site}</strong></p>
     ", $footer);
 
     $headers = [

@@ -395,6 +395,33 @@ Prázdne pole nič nemení.
 Obe nastavenia sú pri každej ponuke zvlášť, prenesú sa pri *Duplikovať*
 a sú súčasťou denných záloh.
 
+## Prihlásenie na newsletter je okamžité
+
+Potvrdzovací krok (double opt-in) je zrušený. Kto vyplní formulár, je **hneď
+aktívny odberateľ a nastavený na všetko**. Ak si vo formulári niečo označí,
+dostane presne to.
+
+Uvítací e-mail už nič nepotvrdzuje. Namiesto toho hovorí, čo bude chodiť, a dáva
+dve možnosti:
+
+1. tlačidlo **Zmeniť si témy** — otvorí výber kategórií,
+2. pod ním odkaz **odhláste sa jedným klikom** — ide na medzikrok, ktorý najprv
+   ponúkne úpravu tém a až potom odhlásenie.
+
+Platí to pre nové adresy, pre staré nepotvrdené (`pending`) aj pre tých, čo sa
+kedysi odhlásili — všetci sa prihlásia rovno. Token sa pritom vždy obnoví, aby
+starý odkaz z e-mailu nikoho nevedel prihlásiť späť bez jeho vedomia.
+
+**Čo tým strácame — vedz o tom:** bez potvrdenia môže ktokoľvek zadať cudziu
+adresu a tá začne dostávať e-maily. Podľa GDPR je to slabší doklad o súhlase
+a Gmail či Seznam za to vedia zhoršiť doručovanie. Preto je odhlásenie v e-maile
+hneď pod tlačidlom, viditeľné, s vetou „Neprihlasovali ste sa vy?".
+
+Vo wp-admine a v realitnom paneli ostáva pri ručnom pridávaní kontaktu voľba
+**Poslať potvrdzovací e-mail** — tá funguje ďalej, keď ju maklérka zámerne zvolí.
+
+**Čo aktualizovať:** `zc-newsletter.zip` (1.21.0).
+
 ## Číslice v serifovom písme — vyriešené natrvalo
 
 Playfair Display má **predvolene textové (staroštýlové) číslice**: „1" siaha len
