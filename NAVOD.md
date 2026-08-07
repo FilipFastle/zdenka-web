@@ -395,6 +395,59 @@ Prázdne pole nič nemení.
 Obe nastavenia sú pri každej ponuke zvlášť, prenesú sa pri *Duplikovať*
 a sú súčasťou denných záloh.
 
+## Menu, fotky a odhlásenie — najnovšie zmeny
+
+**Menu (PC aj mobil, rovnaké poradie)**
+
+`Domov · Ponuky · O mne · Ako pracujem · Odhad ZDARMA · Referencie · Newsletter · Ebook · Kontakt`
+
+„Odhad" je teraz všade „Odhad ZDARMA". Ebook sa ako vždy zobrazí len keď je zapnutý.
+
+Pribudla jedna dôležitá vec: menu má 9 položiek a k tomu ikony sietí.
+Odmeral som, že celé sa to zmestí až od **1280 px** — pod tým sa meno v logu
+lámalo do troch riadkov a ikonky padali pod seba. Hranica hamburgeru sa preto
+posunula z 1180 na **1280 px**. Na bežnom notebooku (1366 px) je PC menu, na
+menšom okne hamburger.
+
+**Farebné ikonky sietí — len v navbare**
+
+Facebook modrá, Instagram gradient, YouTube červená, LinkedIn a Google modrá,
+symbol biely. V **pätičke a v kontaktnej vizitke ostávajú zlaté** — tam by to
+bolo príliš pestré.
+
+**Sekcia „Čo ma riadi pri práci"**
+
+Je vypnutá, takže po hero fotke idú **rovno nehnuteľnosti**. Zapnúť sa dá späť
+v `Vzhľad → Prispôsobiť → Úvodná stránka – sekcie`.
+
+**Fotka v O mne je samostatná**
+
+Doteraz brala rovnaký portrét ako hero na mobile — zmena jednej menila druhú.
+Teraz má v `Prispôsobiť → Fotky maklérky` **vlastné pole „Fotka do sekcie O mne"**.
+Keď ho necháš prázdne, použije sa portrét ako doteraz. Novú fotku si teda vieš
+nahrať sama a hero sa nezmení.
+
+**Referencie = čistý carousel**
+
+Podstránka `/referencie` už nie je stránkovaná mriežka, ale carousel:
+3 karty na PC, 2 na tablete, 1 na mobile, so šípkami a bodkami.
+
+**Odhlásenie z newslettera cez medzikrok**
+
+Kliknutie na „Odhlásiť sa" v e-maile už neodhlási hneď. Najprv sa otvorí
+stránka *„Škoda, že odchádzate"* s výberom tém a tlačidlom **Uložiť výber
+a zostať**. Až pod tým je **Nie, ďakujem – odhláste ma úplne**.
+
+Jednoklikové odhlásenie z Gmailu či Apple Mail (tlačidlo priamo v poštovom
+klientovi) funguje ďalej okamžite — vyžaduje to štandard RFC 8058 a nesmie sa
+naň nič pýtať.
+
+Pás „Zmeniť si témy" pod formulárom na `/newsletter` je preč — zmena tém ide
+odteraz cez odkaz v e-maile.
+
+**Čo aktualizovať:** `zdenka-theme.zip` (3.40.0), `zc-newsletter.zip` (1.19.0),
+`zc-reviews.zip` (1.6.2).
+
 ## Mobil a priblíženie — opravené tvary a menu
 
 Téma dávala na mobile **každému** tlačidlu `min-height: 44px` (dotykový cieľ).

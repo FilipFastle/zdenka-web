@@ -102,7 +102,7 @@ if (!document.getElementById('zcOvCSS')) {
         '  .zco-nav a{font-size:clamp(13px,min(6vw,5vh),26px);line-height:1.2;padding:min(2px,.3vh) 0;}',
         '  .zco-close{top:10px;right:10px;width:38px;height:38px;}}',
         '@media(max-height:380px){.zco-logo,.zco-div{display:none;}}',
-        '@media(min-width:1181px){#zcOv{display:none!important}}',
+        '@media(min-width:1280px){#zcOv{display:none!important}}',
     ].join('');
     document.head.appendChild(menuCSS);
 }
@@ -124,10 +124,11 @@ if (!document.getElementById('zcOv')) {
     document.body.appendChild(ov);
 
     var nav = document.getElementById('zcOvNav');
-    [['/', 'Domov'], ['/o-mne/', 'O mne'], ['/ako-pracujem/', 'Ako pracujem'],
-     ['/ponuky/', 'Ponuky'], ['/referencie/', 'Referencie'],
-     ['/newsletter/', 'Newsletter'],
-     ['/odhad/', 'Odhad ZDARMA'], ['/kontakt/', 'Kontakt']
+    // Poradie musí sedieť s PC menu v header.php. Kontakt sa pridáva až
+    // za prípadný EBOOK, aby bol vždy posledný.
+    [['/', 'Domov'], ['/ponuky/', 'Ponuky'], ['/o-mne/', 'O mne'],
+     ['/ako-pracujem/', 'Ako pracujem'], ['/odhad/', 'Odhad ZDARMA'],
+     ['/referencie/', 'Referencie'], ['/newsletter/', 'Newsletter']
     ].forEach(function (item) {
         var a = document.createElement('a');
         a.href = location.origin + item[0];
@@ -154,6 +155,11 @@ if (!document.getElementById('zcOv')) {
         });
         nav.appendChild(eb);
     }
+
+    var kontakt = document.createElement('a');
+    kontakt.href = location.origin + '/kontakt/';
+    kontakt.textContent = 'Kontakt';
+    nav.appendChild(kontakt);
 }
 
 var ov = document.getElementById('zcOv');

@@ -41,7 +41,8 @@ $google_url = get_theme_mod('zc_social_google', '');
 <div class="zc-container">
     <?php
     if ($has_reviews) {
-        echo do_shortcode('[zc_reviews layout="paged" cols="2" per_page="10" clamp="1" limit="500"]');
+        // Čistý carousel: 3 karty na PC, 2 na tablete, 1 na mobile.
+        echo do_shortcode('[zc_reviews layout="carousel" limit="500"]');
     } else { ?>
         <div class="rf-empty">
             <strong>Zatiaľ tu nie sú žiadne referencie</strong>

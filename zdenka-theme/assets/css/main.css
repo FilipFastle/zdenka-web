@@ -101,7 +101,37 @@ h1 em, h2 em, h3 em, h4 em { font-style: normal; }
 .zc-header-wrap.transparent .zc-socials--nav .zc-social-ic { background: rgba(255,255,255,.14); color: #fff; }
 .zc-header-wrap.transparent .zc-socials--nav .zc-social-ic:hover { background: #fff; color: var(--dark, #1C1A18); }
 /* Skry v navbare na užších obrazovkách (nech sa menu nepretláča) */
-@media (max-width: 1180px) { .zc-socials--nav { display: none; } }
+@media (max-width: 1279px) { .zc-socials--nav { display: none; } }
+
+/* ── Ikony sociálnych sietí vo firemných farbách – IBA v navbare ──────
+   V pätičke a v kontaktnej vizitke ostávajú decentne zlaté. Symbol je
+   biely, takže je čitateľný aj na priehľadnom navbare nad hero fotkou. */
+.zc-socials--nav .zc-social-ic { color: #fff; box-shadow: 0 2px 8px rgba(28,26,24,.16); }
+.zc-socials--nav .zc-soc-fb       { background: #1877F2; }
+.zc-socials--nav .zc-soc-ig       { background: linear-gradient(45deg,#F9CE34 4%,#EE2A7B 48%,#6228D7 96%); }
+.zc-socials--nav .zc-soc-linkedin { background: #0A66C2; }
+.zc-socials--nav .zc-soc-youtube  { background: #FF0000; }
+.zc-socials--nav .zc-soc-google   { background: #4285F4; }
+/* Hover: farba ostáva, ikona sa len nadvihne a zosilnie tieň */
+.zc-socials--nav .zc-social-ic:hover,
+.zc-socials--nav .zc-social-ic:focus-visible { color: #fff; }
+.zc-socials--nav .zc-soc-fb:hover,
+.zc-socials--nav .zc-soc-fb:focus-visible       { background: #1877F2; box-shadow: 0 8px 20px rgba(24,119,242,.5); }
+.zc-socials--nav .zc-soc-ig:hover,
+.zc-socials--nav .zc-soc-ig:focus-visible       { box-shadow: 0 8px 20px rgba(238,42,123,.5); }
+.zc-socials--nav .zc-soc-linkedin:hover,
+.zc-socials--nav .zc-soc-linkedin:focus-visible { background: #0A66C2; box-shadow: 0 8px 20px rgba(10,102,194,.5); }
+.zc-socials--nav .zc-soc-youtube:hover,
+.zc-socials--nav .zc-soc-youtube:focus-visible  { background: #FF0000; box-shadow: 0 8px 20px rgba(255,0,0,.42); }
+.zc-socials--nav .zc-soc-google:hover,
+.zc-socials--nav .zc-soc-google:focus-visible   { background: #4285F4; box-shadow: 0 8px 20px rgba(66,133,244,.5); }
+/* Priehľadný navbar nad hero – farby siete platia aj tam */
+.zc-header-wrap.transparent .zc-socials--nav .zc-social-ic { color: #fff; }
+.zc-header-wrap.transparent .zc-socials--nav .zc-soc-fb       { background: #1877F2; }
+.zc-header-wrap.transparent .zc-socials--nav .zc-soc-linkedin { background: #0A66C2; }
+.zc-header-wrap.transparent .zc-socials--nav .zc-soc-youtube  { background: #FF0000; }
+.zc-header-wrap.transparent .zc-socials--nav .zc-soc-google   { background: #4285F4; }
+.zc-header-wrap.transparent .zc-socials--nav .zc-social-ic:hover { color: #fff; }
 ul { list-style: none; }
 
 /* ══════════════════════════════════════════
@@ -527,9 +557,10 @@ ul { list-style: none; }
     .zc-container { padding: 0 28px; }
     .zc-footer-grid { grid-template-columns: 1fr 1fr; gap: 36px; }
 }
-/* Menu má veľa položiek – na užšom monitore radšej hamburger,
-   inak by sa prekrývalo s logom a menom. */
-@media (max-width: 1180px) {
+/* Menu má 9 položiek + ikony sietí. Zmerané: celé sa vojde až od 1280 px,
+   pod tým sa meno v logu láme do troch riadkov a ikony padajú pod seba.
+   Preto je pod 1280 px hamburger. */
+@media (max-width: 1279px) {
     .zc-nav { display: none; }
     .zc-hamburger { display: flex; }
 }

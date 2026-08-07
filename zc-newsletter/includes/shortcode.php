@@ -54,17 +54,7 @@ function zcn_newsletter_shortcode($atts) {
     .zcn-pick:hover{border-color:#B8A47A!important}
     .zcn-pick:has(input:checked){border-color:#B8A47A!important;box-shadow:inset 0 0 0 1px #B8A47A}
     .zcn-picks-note{font-size:11.5px;line-height:1.6;margin-top:11px}
-    .zcn-manage{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:20px;padding:18px 20px;
-        background:#FBF8F2;border:1.5px solid #E0D8CE;border-radius:13px;text-align:left}
-    .zcn-manage-txt{flex:1;min-width:200px;font-size:13px;line-height:1.65;color:#6B6560}
-    .zcn-manage-txt strong{display:block;font-size:14.5px;color:#1C1A18;margin-bottom:3px}
-    .zcn-manage-btn{flex:0 0 auto;min-height:44px;padding:12px 20px;border:1.5px solid #B8A47A;border-radius:9px;
-        background:#fff;color:#7C5E33;font:700 13px/1.2 'DM Sans',sans-serif;cursor:pointer;
-        transition:background .2s,color .2s}
-    .zcn-manage-btn:hover{background:#B8A47A;color:#1C1A18}
     @media(max-width:560px){
-        .zcn-manage{flex-direction:column;align-items:stretch;text-align:center;padding:16px}
-        .zcn-manage-btn{width:100%}
         .zcn-picks-row{flex-direction:column}
         .zcn-pick{width:100%}
         .zcn-form-wrap{padding:24px 18px!important;border-radius:13px!important}
@@ -129,15 +119,6 @@ function zcn_newsletter_shortcode($atts) {
                 Odhlásiť sa môžete kedykoľvek kliknutím na odkaz v e-maile.
             </p>
         </form>
-        <?php if ($full): ?>
-        <div class="zcn-manage">
-            <div class="zcn-manage-txt">
-                <strong>Už u nás odoberáte novinky?</strong>
-                Zmeňte si, čo vám máme posielať – alebo sa odhláste. Stačí e-mail, nič viac.
-            </div>
-            <button type="button" class="zcn-manage-btn" data-zcn-prefs>Zmeniť si témy</button>
-        </div>
-        <?php endif; ?>
     </div>
     <?php
     return ob_get_clean();

@@ -57,10 +57,49 @@ add_action('init', function() {
     }
 
     if ($action === 'unsubscribe') {
+        // Poštový klient (Gmail, Apple Mail) posiela podľa RFC 8058 rovno POST
+        // s týmto telom. Vtedy sa nesmieme nič pýtať – odhlásime hneď.
+        $one_click = (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST')
+            && (($_POST['List-Unsubscribe'] ?? '') === 'One-Click');
+
+        // Namiesto odchodu si človek môže upraviť témy priamo na medzistránke
+        if (!$one_click && isset($_POST['zcn_pick'])
+            && wp_verify_nonce($_POST['_zcnpick'] ?? '', 'zcn_pick_' . $token)) {
+            $wpdb->update($table,
+                ['interest' => zcn_sanitize_interests($_POST['interest'] ?? []), 'status' => 'active'],
+                ['token' => $token]
+            );
+            wp_die(zcn_page_response(
+                'Zostávate s nami',
+                'Odteraz vám budeme posielať len to, čo ste si vybrali. Odhlásiť sa viete kedykoľvek.',
+                '← Späť na web'
+            ), 'Hotovo');
+        }
+
+        // Vedomé potvrdenie odchodu z medzistránky
+        $confirmed = isset($_POST['zcn_unsub_confirm'])
+            && wp_verify_nonce($_POST['_zcnunsub'] ?? '', 'zcn_unsub_' . $token);
+
+        if ($row->status === 'unsubscribed') {
+            wp_die(zcn_page_response(
+                'Už ste odhlásený',
+                'Táto adresa je z odberu odhlásená. Žiadne ďalšie e-maily vám neposielame.',
+                '← Späť na web'
+            ), 'Odhlásenie');
+        }
+
+        // Kliknutie na odkaz v e-maile najprv ponúkne úpravu tém
+        if (!$one_click && !$confirmed) {
+            wp_die(zcn_interest_picker_page($token, $row, true, 'unsub'), 'Odhlásenie');
+        }
+
         $wpdb->update($table,
             ['status' => 'unsubscribed'],
             ['token'  => $token]
         );
+
+        if ($one_click) { status_header(200); exit; } // klient HTML nečaká
+
         wp_die(zcn_page_response(
             'Odhlásenie úspešné',
             'Boli ste odhlásený z odberu noviniek. Nebudeme vás viac kontaktovať.',
@@ -108,15 +147,32 @@ function zcn_interest_picker_page($token, $row, $already = false, $mode = 'confi
         </label>
         <?php endforeach; endforeach; ?>
         <p class="hint">Nič nezaškrtnuté = pošleme vám všetko. Vybrať sa dá aj viac možností naraz.</p>
-        <button type="submit" class="btn">Uložiť výber</button>
-        <?php if ($mode === 'prefs'): ?>
-        <a class="unsub" href="<?php echo esc_url(add_query_arg(['zcn_action' => 'unsubscribe', 'token' => $token], home_url('/'))); ?>">Nechcem už dostávať nič – odhlásiť sa</a>
-        <?php endif; ?>
+        <button type="submit" class="btn"><?php
+            echo $mode === 'unsub' ? 'Uložiť výber a zostať' : 'Uložiť výber';
+        ?></button>
     </form>
+    <?php if ($mode === 'prefs' || $mode === 'unsub'): ?>
+    <?php /* Odhlásenie je vlastný formulár – formuláre sa nesmú vnárať.
+             Cieľ je vždy adresa odhlásenia, aby to fungovalo aj zo stránky „Moje témy". */ ?>
+    <form method="post" class="unsub-form"
+          action="<?php echo esc_url(add_query_arg(['zcn_action' => 'unsubscribe', 'token' => $token], home_url('/'))); ?>">
+        <?php wp_nonce_field('zcn_unsub_' . $token, '_zcnunsub'); ?>
+        <input type="hidden" name="zcn_unsub_confirm" value="1">
+        <button type="submit" class="unsub"><?php
+            echo $mode === 'unsub'
+                ? 'Nie, ďakujem – odhláste ma úplne'
+                : 'Nechcem už dostávať nič – odhlásiť sa';
+        ?></button>
+    </form>
+    <?php endif; ?>
     <?php
     $form = ob_get_clean();
 
-    if ($mode === 'prefs') {
+    if ($mode === 'unsub') {
+        $title = 'Škoda, že odchádzate';
+        $text  = 'Možno vám len chodí priveľa e-mailov. Vyberte si, čo vám máme posielať – '
+               . 'a zostanete prihlásený. Ak chcete odísť úplne, nájdete to pod výberom.';
+    } elseif ($mode === 'prefs') {
         $title = 'Moje témy';
         $text  = 'Označte, čo vám máme posielať. Zmeny sa uložia okamžite.';
     } else {
@@ -139,7 +195,9 @@ function zcn_interest_picker_page($token, $row, $already = false, $mode = 'confi
          font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;margin-bottom:14px}
     .btn:hover{background:#9A8660}
     .card > a{display:block;text-align:center;background:none;color:#9A8660;font-weight:600}
-    .unsub{display:block;text-align:center;font-size:12.5px;color:#B0A898;text-decoration:underline;padding:4px 0 10px;background:none}
+    .unsub-form{margin:0}
+    .unsub{display:block;width:100%;text-align:center;font-size:12.5px;color:#B0A898;text-decoration:underline;
+           padding:4px 0 10px;background:none;border:none;cursor:pointer;font-family:inherit}
     .unsub:hover{color:#dc2626;background:none}
     .card > a:hover{background:none;color:#7C5E33}
     </style>';

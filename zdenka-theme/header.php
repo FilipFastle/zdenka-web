@@ -32,12 +32,13 @@
 
         <!-- Desktop nav -->
         <nav class="zc-nav">
+            <?php /* Poradie menu je rovnaké na PC aj na mobile. */ ?>
             <?php foreach([
-                ['/',             is_front_page(),       'Domov'],
-                ['/o-mne/',       is_page('o-mne'),      'O mne'],
+                ['/',             is_front_page(),        'Domov'],
+                ['/ponuky/',      is_page('ponuky'),      'Ponuky'],
+                ['/o-mne/',       is_page('o-mne'),       'O mne'],
                 ['/ako-pracujem/',is_page('ako-pracujem'),'Ako pracujem'],
-                ['/ponuky/',      is_page('ponuky'),     'Ponuky'],
-                ['/odhad/',       is_page('odhad'),      'Odhad'],
+                ['/odhad/',       is_page('odhad'),       'Odhad ZDARMA'],
             ] as [$path,$active,$label]): ?>
             <a href="<?php echo home_url($path); ?>"
                <?php echo $active ? 'class="active"' : ''; ?>><?php echo $label; ?></a>
@@ -68,9 +69,9 @@
     <nav class="zc-mobile-nav" id="zcMobileNav" aria-hidden="true">
         <?php foreach([
             ['/',             is_front_page(),        'Domov'],
+            ['/ponuky/',      is_page('ponuky'),      'Ponuky'],
             ['/o-mne/',       is_page('o-mne'),       'O mne'],
             ['/ako-pracujem/',is_page('ako-pracujem'),'Ako pracujem'],
-            ['/ponuky/',      is_page('ponuky'),      'Ponuky'],
             ['/odhad/',       is_page('odhad'),       'Odhad ZDARMA'],
         ] as [$path,$active,$label]): ?>
         <a href="<?php echo home_url($path); ?>"
@@ -84,11 +85,11 @@
         <a href="<?php echo home_url('/newsletter/'); ?>"
            style="<?php echo is_page('newsletter') ? 'color:var(--accent-txt);font-weight:700' : ''; ?>">Newsletter</a>
         <?php endif; ?>
-        <a href="<?php echo home_url('/kontakt/'); ?>"
-           style="<?php echo is_page('kontakt') ? 'color:var(--accent-txt);font-weight:700' : ''; ?>">Kontakt</a>
         <?php if (function_exists('zc_ebook_enabled') && zc_ebook_enabled()): zc_ebook_flag(true); ?>
         <a href="#" data-zc-ebook-open style="color:var(--accent-txt);font-weight:700">EBOOK</a>
         <?php endif; ?>
+        <a href="<?php echo home_url('/kontakt/'); ?>"
+           style="<?php echo is_page('kontakt') ? 'color:var(--accent-txt);font-weight:700' : ''; ?>">Kontakt</a>
         <?php $zc_mnav_soc = function_exists('zc_social_icons_html') ? zc_social_icons_html() : ''; ?>
         <?php if ($zc_mnav_soc): ?>
         <div style="display:flex;justify-content:center;margin-top:18px;padding-top:18px;border-top:1px solid rgba(184,164,122,.25)"><?php echo $zc_mnav_soc; ?></div>

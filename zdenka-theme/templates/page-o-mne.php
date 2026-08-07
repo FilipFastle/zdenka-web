@@ -22,8 +22,9 @@ $name_without_title = trim(preg_replace('/^Mgr\.\s*/u', '', $name));
     </div>
     <div>
         <?php
-        // Portrét: Customizer (Fotky maklérky) → featured image stránky → placeholder
-        $zc_omne_img = function_exists('zc_photo') ? zc_photo('portrait') : '';
+        // Fotka O mne má vlastné pole v Prispôsobiť – hero sekcia ju už neurčuje.
+        // Ak ho maklérka nevyplní, spadne sa na portrét, aby stránka nikdy nebola prázdna.
+        $zc_omne_img = function_exists('zc_photo') ? (zc_photo('about') ?: zc_photo('portrait')) : '';
         if (!$zc_omne_img && has_post_thumbnail()) $zc_omne_img = get_the_post_thumbnail_url(null, 'large');
         ?>
         <?php if($zc_omne_img): ?>

@@ -11,12 +11,12 @@ add_action('wp_enqueue_scripts', function() {
     $use_min = get_option('zc_min_css', '1') === '1'
             && file_exists($dir . '/assets/css/main.min.css');
     $css = $use_min ? '/assets/css/main.min.css' : '/assets/css/main.css';
-    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.39.0');
+    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.40.0');
     // Malé kritické úpravy musia platiť aj pri zapnutej staršej minifikovanej verzii.
     wp_add_inline_style('zdenka-main',
         '.zc-nav a{font-size:11px}.zc-prop-badge.is-sold{background:#DC2626!important;color:#fff!important;box-shadow:0 0 9px rgba(220,38,38,.85),0 0 20px rgba(220,38,38,.5)}'
     );
-    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.39.0', true);
+    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.40.0', true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.png','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0,'interests'=>function_exists('zcn_interest_choices')?zcn_interest_choices():[],'nlNonce'=>wp_create_nonce('zcn_nonce')]);
 });
 
@@ -182,15 +182,27 @@ add_action('customize_register',function($wpc) {
 
     // Fotky maklérky – hero (široká) + portrét (vertikálna tvár)
     $wpc->add_section('zc_photos',['title'=>'Fotky maklérky','priority'=>32,
-        'description'=>'Hero fotka sa zobrazí na úvodnej stránke, portrét v sekcii O mne a vo všetkých kruhoch s menom.']);
+        'description'=>'Každá fotka je samostatná – hero na úvodnej stránke, O mne na podstránke, vizitka do malých kruhov. Prázdne pole = použije sa portrét.']);
     foreach([
-        'zc_photo_hero'     => 'Hero fotka (široká / horizontálna)',
-        'zc_photo_portrait' => 'Portrét (vertikálna, hlavne tvár)',
+        'zc_photo_hero'     => 'Hero fotka (široká / horizontálna) – úvodná stránka',
+        'zc_photo_portrait' => 'Portrét (vertikálna, hlavne tvár) – hero na mobile',
+        'zc_photo_about'    => 'Fotka do sekcie O mne (ak prázdne, použije sa portrét)',
         'zc_photo_card'     => 'Vizitka – fotka do malých kruhov (ak prázdne, použije sa portrét)',
     ] as $id=>$lbl) {
         $wpc->add_setting($id,['default'=>'','sanitize_callback'=>'esc_url_raw']);
         $wpc->add_control(new WP_Customize_Image_Control($wpc,$id,['label'=>$lbl,'section'=>'zc_photos']));
     }
+
+    // Úvodná stránka – čo sa má zobraziť
+    $wpc->add_section('zc_home_sections',['title'=>'Úvodná stránka – sekcie','priority'=>32.5,
+        'description'=>'Vypnutá sekcia sa na úvodnej stránke vôbec nevykreslí.']);
+    $wpc->add_setting('zc_home_values',['default'=>'0','sanitize_callback'=>function($v){return $v === '1' ? '1' : '0';}]);
+    $wpc->add_control('zc_home_values',[
+        'label'   => 'Zobraziť sekciu „Čo ma riadi pri práci“',
+        'section' => 'zc_home_sections',
+        'type'    => 'checkbox',
+        'description' => 'Vypnuté = po hero fotke idú rovno nehnuteľnosti.',
+    ]);
 
     // Ako pracujem – fotky a video (šablóna ich už používa, sekcia chýbala)
     $wpc->add_section('zc_ap',['title'=>'Ako pracujem – médiá','priority'=>33]);
@@ -308,7 +320,8 @@ function zc_social_icons_html($extra_class = '') {
     $h = '<div class="zc-socials ' . esc_attr($extra_class) . '">';
     foreach ($socials as $k => $s) {
         $lbl = $titles[$k] ?? $k;
-        $h .= '<a href="' . esc_url($s['url']) . '" target="_blank" rel="noopener" class="zc-social-ic" aria-label="' . esc_attr($lbl) . '" title="' . esc_attr($lbl) . '">' . $s['icon'] . '</a>';
+        // Trieda podľa siete – v navbare z nej CSS spraví ikonu v brand farbe
+        $h .= '<a href="' . esc_url($s['url']) . '" target="_blank" rel="noopener" class="zc-social-ic zc-soc-' . esc_attr($k) . '" aria-label="' . esc_attr($lbl) . '" title="' . esc_attr($lbl) . '">' . $s['icon'] . '</a>';
     }
     $h .= '</div>';
     return $h;

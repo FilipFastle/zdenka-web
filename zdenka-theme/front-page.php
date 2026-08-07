@@ -116,7 +116,8 @@ $zc_hero_portrait_2x = $zc_sized('portrait', 'zc-1440');    // mobil s retinou
     </div>
 </div>
 
-<!-- MOJE HODNOTY -->
+<!-- MOJE HODNOTY – v Prispôsobiť → Úvodná stránka – sekcie sa dá zapnúť -->
+<?php if (get_theme_mod('zc_home_values', '0') === '1'): ?>
 <section class="zc-section bg-section">
 <div class="zc-container">
     <div style="text-align:center;max-width:580px;margin:0 auto 52px">
@@ -135,6 +136,7 @@ $zc_hero_portrait_2x = $zc_sized('portrait', 'zc-1440');    // mobil s retinou
     </div>
 </div>
 </section>
+<?php endif; ?>
 
 <!-- PONUKY -->
 <section class="zc-section bg-white">
