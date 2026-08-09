@@ -18,7 +18,7 @@ function zcn_newsletter_shortcode($atts) {
     $show_interest = $atts['show_interest'] === '1';
     $bg   = $dark ? '#1C1A18' : '#F2EEE8';
     $text = $dark ? '#fff'     : '#2C2825';
-    $sub  = $dark ? 'rgba(255,255,255,.65)' : '#7A7068';
+    $sub  = $dark ? 'rgba(255,255,255,.65)' : '#746A62';
 
     wp_enqueue_script('zc-newsletter-js',
         plugin_dir_url(dirname(__FILE__)) . 'assets/newsletter.js',
@@ -121,7 +121,7 @@ function zcn_newsletter_shortcode($atts) {
                 <?php if ($full): ?>
                 <label style="display:flex;align-items:flex-start;gap:9px;font-size:12px;color:<?php echo $sub ?>;cursor:pointer;line-height:1.6;margin-top:3px">
                     <input type="checkbox" required style="min-height:auto;margin-top:3px;accent-color:#B8A47A;flex:0 0 auto">
-                    <span>Súhlasím so <a href="<?php echo esc_url(home_url('/ochrana-osobnych-udajov/')) ?>" style="color:#9A8660">spracovaním osobných údajov</a> na účel zasielania newslettera. *</span>
+                    <span>Súhlasím so <a href="<?php echo esc_url(home_url('/ochrana-osobnych-udajov/')) ?>" style="color:#7C5E33">spracovaním osobných údajov</a> na účel zasielania newslettera. *</span>
                 </label>
                 <?php endif; ?>
             </div>

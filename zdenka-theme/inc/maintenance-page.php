@@ -68,7 +68,7 @@ h1 em{font-style:italic;color:#7C5E33}
 }
 
 .message{
-    font-size:15px;color:#7A7068;
+    font-size:15px;color:#746A62;
     line-height:1.8;margin-bottom:36px;
     max-width:400px;margin-left:auto;margin-right:auto;
 }

@@ -549,7 +549,7 @@ function zcn_admin_page() {
                 <p style="margin:0 0 10px">
                     <label style="display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px">Kategória</label>
                     <?php zcn_multiselect('zcn_add_interest', '', ['empty' => 'Všetko']); ?>
-                    <span style="font-size:11px;color:#999">Nič nevybrané = pošleme všetko.</span>
+                    <span style="font-size:11px;color:#6B6560">Nič nevybrané = pošleme všetko.</span>
                 </p>
                 <p style="margin:0 0 14px">
                     <label style="display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px">Spôsob pridania</label>
@@ -574,7 +574,7 @@ function zcn_admin_page() {
                     style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:ui-monospace,Consolas,monospace;font-size:13px;line-height:1.55"
                     placeholder="Jana;Nováková;jana@example.sk&#10;Peter;Kováč;peter@example.sk&#10;maria@email.sk"></textarea>
                 <div style="margin-top:10px"><?php zcn_multiselect('zcn_import_interest', '', ['empty' => 'Spoločná kategória: všetko']); ?></div>
-                <span style="display:block;font-size:11px;color:#999;margin-top:4px">Nič nevybrané = pošleme všetko.</span>
+                <span style="display:block;font-size:11px;color:#6B6560;margin-top:4px">Nič nevybrané = pošleme všetko.</span>
                 <select name="zcn_import_mode" style="width:100%;margin-top:10px">
                     <option value="active">Pridať priamo, bez potvrdzovacieho e-mailu</option>
                     <option value="pending">Poslať každému potvrdzovací e-mail</option>
@@ -589,7 +589,7 @@ function zcn_admin_page() {
         </div>
 
     </div>
-    <p style="color:#999;font-size:12px;max-width:960px;margin-top:16px">
+    <p style="color:#6B6560;font-size:12px;max-width:960px;margin-top:16px">
         Aktívny kontakt pridávaj len vtedy, keď ti preukázateľne udelil súhlas.
         Zdroj sa uloží ako „Ručne vo wp-admine“, takže je vždy dohľadateľné, odkiaľ prišiel.
     </p>
@@ -647,7 +647,7 @@ function zcn_admin_page() {
                     onclick="return confirm('Vrátiť predvolené kategórie? Priradenia kontaktov ostanú.')">Vrátiť predvolené</button>
             </form>
         </div>
-        <p style="color:#999;font-size:12px;margin-top:14px">
+        <p style="color:#6B6560;font-size:12px;margin-top:14px">
             Keď kategóriu zmažeš, kontaktom, ktorí ju mali priradenú, ostane v databáze —
             len sa už nikde neponúka. Stĺpec <em>Kontaktov</em> ukazuje, koľkých sa to týka.
         </p>

@@ -142,7 +142,7 @@ function zcn_send_confirmation($email, $name, $token) {
                 Prihlásiť sa a vybrať si témy
             </a>
         </div>
-        <p style='font-size:12px;color:#999;text-align:center'>
+        <p style='font-size:12px;color:#6B6560;text-align:center'>
             Ak ste o prihlásenie nežiadali, tento e-mail pokojne ignorujte – bez potvrdenia vám nič neprí­de.<br>
             <a href='" . esc_url($unsub_url) . "' style='color:#bbb'>Odhlásiť sa</a>
         </p>
@@ -677,7 +677,7 @@ function zcn_handle_prefs_link() {
                 Upraviť moje témy
             </a>
         </div>
-        <p style='font-size:12px;color:#999;text-align:center'>
+        <p style='font-size:12px;color:#6B6560;text-align:center'>
             Ak ste o to nežiadali, e-mail pokojne ignorujte – nič sa nezmení.
         </p>
     ");

@@ -33,19 +33,50 @@ $zc_hero_portrait_2x = $zc_sized('portrait', 'zc-1440');    // mobil s retinou
 .zc-hero-text>*:nth-child(3){animation-delay:.36s}
 .zc-hero-text>*:nth-child(4){animation-delay:.48s}
 .zc-hero-text>*:nth-child(5){animation-delay:.60s}
-/* PC: žiadna úprava fotky – žiadny prekryv; text drží čitateľnosť cez jemný drop shadow */
-.zc-hero-overlay{position:absolute;inset:0;background:none;z-index:1}
+/* PC: prekryv len pod textom, sprava fotka ostáva úplne čistá.
+   Bez neho mala zlatá kurzíva na svetlom mieste fotky kontrast 2,4:1
+   (norma žiada 3:1) a biely text sa na tvári strácal úplne. Gradient je
+   tak nastavený, aby v celom stĺpci textu držal krytie aspoň 0,78. */
+.zc-hero-overlay{position:absolute;inset:0;z-index:1;
+    background:
+      /* spodný pás – pod šípkou „Scrolluj", ktorá je v strede mimo bočného závoja */
+      linear-gradient(to top,
+        rgba(18,15,12,.74) 0%,
+        rgba(18,15,12,.34) 7%,
+        rgba(18,15,12,0)   16%),
+      /* bočný závoj pod textom */
+      linear-gradient(to right,
+        rgba(18,15,12,.88) 0%,
+        rgba(18,15,12,.80) 44%,
+        rgba(18,15,12,.40) 62%,
+        rgba(18,15,12,.10) 74%,
+        rgba(18,15,12,0)   84%)}
+/* Užšie okno = text zaberá väčšiu časť šírky, prekryv musí siahať ďalej */
+@media(max-width:1280px){
+    .zc-hero-overlay{background:
+      linear-gradient(to top,
+        rgba(18,15,12,.74) 0%,
+        rgba(18,15,12,.34) 7%,
+        rgba(18,15,12,0)   16%),
+      linear-gradient(to right,
+        rgba(18,15,12,.88) 0%,
+        rgba(18,15,12,.82) 58%,
+        rgba(18,15,12,.46) 74%,
+        rgba(18,15,12,0)   92%)}
+}
 .zc-hero-text{position:relative;z-index:2;padding:calc(var(--hh,72px) + 40px) 64px 60px;max-width:660px;text-shadow:0 2px 12px rgba(0,0,0,.55)}
-.zc-hero-eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent,#B8A47A);margin-bottom:20px;font-family:var(--sans,sans-serif)}
-.zc-hero-eyebrow::before{content:'';width:28px;height:1.5px;background:var(--accent,#B8A47A);display:block}
+/* Štítok je malé písmo – norma naň žiada prísnejší kontrast 4,5:1,
+   preto svetlejší odtieň zlatej než vo zvyšku webu. */
+.zc-hero-eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#DCC79A;margin-bottom:20px;font-family:var(--sans,sans-serif)}
+.zc-hero-eyebrow::before{content:'';width:28px;height:1.5px;background:#DCC79A;display:block}
 .zc-hero-h1{font-family:var(--serif,'Playfair Display',serif);font-size:clamp(36px,4.5vw,64px);font-weight:800;line-height:1.15;color:#fff;margin-bottom:24px;text-shadow:0 2px 20px rgba(0,0,0,.3)}
-.zc-hero-h1 em{color:var(--accent,#B8A47A);font-style:italic}
-.zc-hero-p{font-size:clamp(15px,1.4vw,18px);color:rgba(255,255,255,.78);line-height:1.8;margin-bottom:40px;font-family:var(--sans,sans-serif)}
+.zc-hero-h1 em{color:#DCC79A;font-style:italic}
+.zc-hero-p{font-size:clamp(15px,1.4vw,18px);color:rgba(255,255,255,.9);line-height:1.8;margin-bottom:40px;font-family:var(--sans,sans-serif)}
 .zc-hero-btns{display:flex;gap:14px;flex-wrap:wrap}
 .zc-hero-name-card{margin-top:52px;display:inline-flex;align-items:center;gap:14px;padding:14px 20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:12px;backdrop-filter:blur(10px)}
 .zc-hero-name-card-name{font-family:var(--serif,serif);font-size:15px;font-weight:700;color:#fff}
-.zc-hero-name-card-role{font-size:10px;color:var(--accent,#B8A47A);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;font-family:var(--sans,sans-serif)}
-.zc-hero-scroll{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:rgba(255,255,255,.4);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-family:var(--sans,sans-serif);z-index:5;animation:heroScroll 2s ease-in-out infinite}
+.zc-hero-name-card-role{font-size:10px;color:#DCC79A;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;font-family:var(--sans,sans-serif)}
+.zc-hero-scroll{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:rgba(255,255,255,.94);text-shadow:0 1px 8px rgba(0,0,0,.8);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-family:var(--sans,sans-serif);z-index:5;animation:heroScroll 2s ease-in-out infinite}
 @keyframes heroScroll{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(7px)}}
 <?php if ($zc_hero_portrait): ?>
 /* Mobil: hero = vertikálny portrét – tvár je vycentrovaná z podstaty fotky */

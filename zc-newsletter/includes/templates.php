@@ -71,7 +71,7 @@ function zcn_render_tpl_toolbar($editor_id, $subject_id) {
         <button type="button" style="<?php echo $btn ?>" onclick="zcnTplLoad_<?php echo $uid ?>()">Načítať</button>
         <button type="button" style="<?php echo $btn ?>" onclick="zcnTplSave_<?php echo $uid ?>()">Uložiť ako šablónu</button>
         <button type="button" style="<?php echo $btn ?>;color:#dc2626" onclick="zcnTplDel_<?php echo $uid ?>()" title="Zmazať vybranú šablónu">Zmazať</button>
-        <span class="zcn-tpl-vars" style="flex-basis:100%;font-size:11px;color:#7A7068;line-height:2">Premenné (kliknutím vložíš, doplnia sa pri odoslaní pre každého odberateľa zvlášť):
+        <span class="zcn-tpl-vars" style="flex-basis:100%;font-size:11px;color:#746A62;line-height:2">Premenné (kliknutím vložíš, doplnia sa pri odoslaní pre každého odberateľa zvlášť):
             <?php foreach (['meno' => 'Meno odberateľa', 'email' => 'E-mail odberateľa'] as $v => $tip): ?>
             <code style="cursor:pointer;background:#fff;border:1px solid #E0D8CE;border-radius:4px;padding:1px 7px;margin-right:4px" title="<?php echo esc_attr($tip) ?>"
                 onclick="zcnTplIns_<?php echo $uid ?>('{<?php echo $v ?>}')">{<?php echo $v ?>}</code>

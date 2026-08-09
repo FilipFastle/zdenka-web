@@ -66,7 +66,7 @@ if (!document.getElementById('zcOvCSS')) {
         '  font-weight:700;color:#1C1A18;text-decoration:none;line-height:1.24;padding:min(3px,.4vh) 0;',
         '  opacity:0;transform:translateY(20px);',
         '  transition:opacity .32s,transform .36s,color .18s;display:block;}',
-        '.zco-nav a:hover{color:#9A8660;}',
+        '.zco-nav a:hover{color:#7C5E33;}',
         '#zcOv.open .zco-nav a:nth-child(1){opacity:1;transform:none;transition-delay:.36s;}',
         '#zcOv.open .zco-nav a:nth-child(2){opacity:1;transform:none;transition-delay:.43s;}',
         '#zcOv.open .zco-nav a:nth-child(3){opacity:1;transform:none;transition-delay:.50s;}',
@@ -281,7 +281,7 @@ function zcInterestModal(token) {
            inak ich na nižšom telefóne používateľ vôbec nenájde. */
         '#zcIntModal .zci-body{overflow-y:auto;padding:26px 26px 4px;flex:1 1 auto;min-height:0}' +
         '#zcIntModal .zci-foot{flex:0 0 auto;padding:14px 26px 20px;border-top:1px solid #EDE6DA;background:#fff}' +
-        '#zcIntModal .zci-grp{font:800 10px/1.4 inherit;letter-spacing:1.2px;text-transform:uppercase;color:#9A8660;margin:16px 0 8px}' +
+        '#zcIntModal .zci-grp{font:800 10px/1.4 inherit;letter-spacing:1.2px;text-transform:uppercase;color:#7C5E33;margin:16px 0 8px}' +
         '#zcIntModal .zci-opt{display:flex;align-items:center;gap:10px;padding:10px 13px;border:1.5px solid #E2DACE;' +
         'border-radius:10px;margin-bottom:6px;cursor:pointer;font:600 14px/1.3 inherit;color:#2C2825}' +
         '#zcIntModal .zci-opt:hover{border-color:#B8A47A;background:#FBF8F2}' +
@@ -294,12 +294,12 @@ function zcInterestModal(token) {
         '#zcIntModal .zci-lead{margin:0;font:400 13.5px/1.65 inherit;color:#6B6560}' +
         '#zcIntModal .zci-sep{height:1px;background:#EDE6DA;margin:17px 0 14px}' +
         '#zcIntModal .zci-ask{margin:0 0 2px;font:700 13.5px/1.5 inherit;color:#2C2825}' +
-        '#zcIntModal .zci-note{margin:11px 0 16px;font:400 12px/1.6 inherit;color:#9A8660}' +
+        '#zcIntModal .zci-note{margin:11px 0 16px;font:400 12px/1.6 inherit;color:#7C5E33}' +
         '#zcIntModal .zci-btn{display:block;width:100%;padding:13px;border:none;border-radius:9px;' +
         'background:#B8A47A;color:#1C1A18;font:700 14px/1.2 inherit;cursor:pointer;transition:background .2s}' +
         '#zcIntModal .zci-btn:hover{background:#9A8660}' +
         '#zcIntModal .zci-skip{display:block;width:100%;margin-top:7px;padding:10px;border:none;' +
-        'background:none;color:#9A8660;font:600 12.5px/1.3 inherit;cursor:pointer;text-decoration:underline;' +
+        'background:none;color:#7C5E33;font:600 12.5px/1.3 inherit;cursor:pointer;text-decoration:underline;' +
         'text-underline-offset:3px}' +
         '#zcIntModal .zci-skip:hover{color:#7C5E33}' +
         '</style>' +

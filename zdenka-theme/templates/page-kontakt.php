@@ -46,7 +46,7 @@ $email = zc_agent('email', get_option('admin_email'));
 }
 .ko-textarea { resize: vertical; min-height: 110px; max-height: 320px; line-height: 1.6; }
 .ko-input:focus, .ko-textarea:focus { border-color: var(--accent); background: var(--white); box-shadow: 0 0 0 3px rgba(184,164,122,.12); }
-.ko-input::placeholder, .ko-textarea::placeholder { color: #B0A898; }
+.ko-input::placeholder, .ko-textarea::placeholder { color: #746A62; }
 .ko-form-footer {
     padding: 20px 28px 28px;
     display: flex; flex-direction: column; gap: 14px;

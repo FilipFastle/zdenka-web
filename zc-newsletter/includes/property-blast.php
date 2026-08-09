@@ -32,7 +32,7 @@ function zcn_blast_contact_html() {
     $h  = '<div style="margin:28px 0 4px;padding:20px 22px;background:#F7F3EC;border-radius:12px">';
     $h .= '<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A8660;margin-bottom:8px">Kontakt</div>';
     $h .= '<div style="font-family:Georgia,serif;font-size:17px;color:#1C1A18;font-weight:700">' . esc_html($name) . '</div>';
-    if ($title) $h .= '<div style="font-size:13px;color:#7A7068;margin-bottom:8px">' . esc_html($title) . '</div>';
+    if ($title) $h .= '<div style="font-size:13px;color:#746A62;margin-bottom:8px">' . esc_html($title) . '</div>';
     $rows = [];
     if ($phone) $rows[] = '<a href="tel:' . esc_attr(preg_replace('/[^0-9+]/','',$phone)) . '" style="color:#7C5E33;text-decoration:none">' . esc_html($phone) . '</a>';
     if ($email) $rows[] = '<a href="mailto:' . esc_attr($email) . '" style="color:#7C5E33;text-decoration:none">' . esc_html($email) . '</a>';
@@ -83,7 +83,7 @@ function zcn_property_email_parts($pid) {
     if ($img) $body .= '<a href="' . esc_url($url) . '"><img src="' . esc_url($img) . '" alt="' . esc_attr($title) . '" style="width:100%;border-radius:12px;display:block;margin:0 0 20px"></a>';
     if ($typ && isset($typ_labels[$typ])) $body .= '<p style="margin:0 0 6px"><span style="display:inline-block;background:#F5EEDF;color:#7C5E33;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border-radius:50px">' . $typ_labels[$typ] . '</span></p>';
     $body .= '<h2 style="font-family:Georgia,serif;font-size:22px;color:#1C1A18;margin:0 0 8px">' . esc_html($title) . '</h2>';
-    if ($meta)  $body .= '<p style="color:#7A7068;font-size:14px;margin:0 0 14px">' . implode(' &nbsp;·&nbsp; ', $meta) . '</p>';
+    if ($meta)  $body .= '<p style="color:#746A62;font-size:14px;margin:0 0 14px">' . implode(' &nbsp;·&nbsp; ', $meta) . '</p>';
     if ($cena)  $body .= '<p style="font-family:Georgia,serif;font-size:24px;font-weight:700;color:#7C5E33;margin:0 0 16px">' . esc_html($cena) . '</p>';
     if ($popis) {
         $body .= '<div style="color:#555;line-height:1.75;margin:0 0 24px">'

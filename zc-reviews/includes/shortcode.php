@@ -157,7 +157,7 @@ function zcr_card_styles() {
         cursor:pointer;text-decoration:underline;text-underline-offset:3px}
     .zcr-more:hover{color:var(--accent,#B8A47A)}
     /* Google recenzie – odlíšenie */
-    .zcr-src{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted,#7A7068);margin-top:4px}
+    .zcr-src{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted,#746A62);margin-top:4px}
     .zcr-src svg{flex-shrink:0}
     /* Kruh s fotkou – aspect-ratio a flex:0 0 auto zabránia stlačeniu na ovál */
     .zc-testimonial-author{display:flex;align-items:center;gap:12px;min-width:0}
@@ -280,7 +280,7 @@ function zcr_paged_grid($rows, $cols = 2, $per_page = 10, $clamp = true) {
         border-color:var(--accent,#B8A47A);box-shadow:0 4px 13px rgba(184,164,122,.28)}
     .zcr-page-nav{padding:0 16px;white-space:nowrap}
     .zcr-page-gap{display:inline-flex;align-items:center;justify-content:center;
-        width:24px;height:42px;color:var(--muted,#7A7068)}
+        width:24px;height:42px;color:var(--muted,#746A62)}
     @media(max-width:760px){
         .zcr-paged-grid{grid-template-columns:1fr;gap:16px}
         .zcr-pagination{gap:6px;margin-top:28px}
@@ -454,6 +454,8 @@ function zcr_grid_carousel($rows, $cols = 3, $row_count = 2, $clamp = true) {
                 var dot=document.createElement('button');
                 dot.type='button';
                 dot.className='zcrgc-dot';
+                dot.type='button';
+                dot.setAttribute('aria-label','Strana '+(i+1));
                 dot.setAttribute('aria-label','Zobraziť referencie – strana '+(i+1));
                 dot.addEventListener('click',function(){go(i,true)});
                 dots.appendChild(dot);
@@ -567,6 +569,8 @@ function zcr_carousel($rows) {
                 var b=document.createElement('button');
                 b.type='button';
                 b.className='zcrc-dot'+(i===idx?' on':'');
+                b.type='button';
+                b.setAttribute('aria-label','Recenzia '+(i+1));
                 b.setAttribute('aria-label','Zobraziť skupinu recenzií '+(i+1));
                 (function(page){b.addEventListener('click',function(){go(page)})})(i);
                 dots.appendChild(b);

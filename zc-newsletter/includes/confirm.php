@@ -189,18 +189,18 @@ function zcn_interest_picker_page($token, $row, $already = false, $mode = 'confi
     $extra_css = '<style>
     .card{max-width:520px;text-align:left}
     .card h2,.card > p{text-align:center}
-    .grp{font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#9A8660;margin:18px 0 8px}
+    .grp{font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#7C5E33;margin:18px 0 8px}
     .opt{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid #E0D8CE;border-radius:10px;
          margin-bottom:8px;cursor:pointer;font-size:14.5px;color:#2C2825;background:#fff;transition:border-color .15s,background .15s}
     .opt:hover{border-color:#B8A47A;background:#FBF8F2}
     .opt input{width:18px;height:18px;accent-color:#B8A47A;flex:0 0 auto}
-    .hint{font-size:12.5px;color:#9A8660;line-height:1.6;margin:14px 0 18px;text-align:left}
+    .hint{font-size:12.5px;color:#7C5E33;line-height:1.6;margin:14px 0 18px;text-align:left}
     .btn{width:100%;padding:13px;background:#B8A47A;color:#1C1A18;border:none;border-radius:8px;
          font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;margin-bottom:14px}
     .btn:hover{background:#9A8660}
-    .card > a{display:block;text-align:center;background:none;color:#9A8660;font-weight:600}
+    .card > a{display:block;text-align:center;background:none;color:#7C5E33;font-weight:600}
     .unsub-form{margin:0}
-    .unsub{display:block;width:100%;text-align:center;font-size:12.5px;color:#B0A898;text-decoration:underline;
+    .unsub{display:block;width:100%;text-align:center;font-size:12.5px;color:#6B6560;text-decoration:underline;
            padding:4px 0 10px;background:none;border:none;cursor:pointer;font-family:inherit}
     .unsub:hover{color:#dc2626;background:none}
     .card > a:hover{background:none;color:#7C5E33}

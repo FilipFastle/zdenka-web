@@ -98,7 +98,7 @@ body  { margin:0; padding:0; background:#F2EEE8; }
     .card-body a  { color:#C9B38A !important; }
     .divider { border-color:#2e2b27 !important; }
     .footer-text { color:#6B6560 !important; }
-    .footer-link { color:#7A7068 !important; }
+    .footer-link { color:#746A62 !important; }
     .chip { background:#2e2b27 !important; color:#9A8660 !important; }
     .sig-box  { background:#2a2724 !important; border-color:#3a352f !important; }
     .sig-name { color:#ffffff !important; }
@@ -195,7 +195,7 @@ function zcn_markdown_to_html($text) {
     // Bold + italic
     $text = preg_replace('/\*\*\*(.+?)\*\*\*/s', '<strong style="font-weight:700;color:#1C1A18"><em>$1</em></strong>', $text);
     $text = preg_replace('/\*\*(.+?)\*\*/s',     '<strong style="font-weight:700;color:#1C1A18">$1</strong>', $text);
-    $text = preg_replace('/\*(.+?)\*/s',          '<em style="font-style:italic;color:#7A7068">$1</em>', $text);
+    $text = preg_replace('/\*(.+?)\*/s',          '<em style="font-style:italic;color:#746A62">$1</em>', $text);
 
     // Links
     $text = preg_replace('/\[(.+?)\]\((.+?)\)/', '<a href="$2" style="color:#9A8660;font-weight:600;text-decoration:underline">$1</a>', $text);
@@ -222,7 +222,7 @@ function zcn_markdown_to_html($text) {
     }, $text);
 
     // Blockquote
-    $text = preg_replace('/^> (.+)$/m', '<blockquote style="border-left:3px solid #B8A47A;margin:16px 0;padding:10px 16px;background:#F8F5EE;border-radius:0 8px 8px 0;color:#7A7068;font-style:italic">$1</blockquote>', $text);
+    $text = preg_replace('/^> (.+)$/m', '<blockquote style="border-left:3px solid #B8A47A;margin:16px 0;padding:10px 16px;background:#F8F5EE;border-radius:0 8px 8px 0;color:#746A62;font-style:italic">$1</blockquote>', $text);
 
     // Paragraphs – blank line = new paragraph
     $blocks = preg_split('/\n{2,}/', trim($text));

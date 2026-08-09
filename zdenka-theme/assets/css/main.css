@@ -22,7 +22,7 @@
     --accent-txt:#7C5E33;  /* WCAG-AA readable gold – use for TEXT (labels, links, headings), never as a bg */
     --accent-lt: #E8DFD0;
     --text:      #2C2825;
-    --muted:     #7A7068;
+    --muted:     #746A62;  /* stmavené kvôli kontrastu – na béžovej sekcii malo #746A62 len 4,18:1 */
     --white:     #FFFFFF;
     --border:    #E0D8CE;
     --dark:      #1C1A18;

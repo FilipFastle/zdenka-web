@@ -112,7 +112,7 @@ add_shortcode('zc_contact_form', function ($atts) {
     .zcb-contact-field{display:flex;flex-direction:column;min-width:0}
     .zcb-contact-field.is-full{grid-column:1/-1}
     .zcb-contact-label{font:700 10px/1.3 var(--sans,'DM Sans',sans-serif);
-        letter-spacing:1.4px;text-transform:uppercase;color:var(--muted,#7A7068);
+        letter-spacing:1.4px;text-transform:uppercase;color:var(--muted,#746A62);
         margin-bottom:7px}
     .zcb-contact-input,.zcb-contact-textarea{width:100%;border:1.5px solid var(--border,#E0D8CE);
         border-radius:var(--r-sm,8px);padding:13px 15px;background:var(--bg,#FBF7EE);
@@ -123,7 +123,7 @@ add_shortcode('zc_contact_form', function ($atts) {
         background:#fff;box-shadow:0 0 0 3px rgba(184,164,122,.13)}
     .zcb-contact-footer{padding:22px 28px 28px}
     .zcb-contact-check{display:flex;align-items:flex-start;gap:9px;
-        color:var(--muted,#7A7068);font:12px/1.6 var(--sans,'DM Sans',sans-serif);
+        color:var(--muted,#746A62);font:12px/1.6 var(--sans,'DM Sans',sans-serif);
         cursor:pointer;margin-bottom:11px}
     .zcb-contact-check input{margin-top:3px;accent-color:var(--accent,#B8A47A);flex:0 0 auto}
     .zcb-contact-check a{color:var(--accent-txt,#7C5E33)}

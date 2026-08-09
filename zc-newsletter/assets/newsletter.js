@@ -76,19 +76,19 @@ function zcnPrefsOpen(prefillEmail) {
         'font:500 15px/1.3 inherit;color:#2C2825;background:#fff;outline:none}' +
         '#zcnPrefsModal .zcp-input:focus{border-color:#B8A47A}' +
         '#zcnPrefsModal .zcp-grp{font:800 10px/1.4 inherit;letter-spacing:1.2px;text-transform:uppercase;' +
-        'color:#9A8660;margin:16px 0 8px}' +
+        'color:#7C5E33;margin:16px 0 8px}' +
         '#zcnPrefsModal .zcp-opt{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid #E2DACE;' +
         'border-radius:10px;margin-bottom:7px;cursor:pointer;font:600 14px/1.3 inherit;color:#2C2825}' +
         '#zcnPrefsModal .zcp-opt:hover{border-color:#B8A47A;background:#FBF8F2}' +
         '#zcnPrefsModal .zcp-opt input{width:17px;height:17px;accent-color:#B8A47A;flex:0 0 auto;margin:0}' +
-        '#zcnPrefsModal .zcp-note{margin:12px 0 14px;font-size:12px;color:#9A8660;line-height:1.6}' +
+        '#zcnPrefsModal .zcp-note{margin:12px 0 14px;font-size:12px;color:#7C5E33;line-height:1.6}' +
         '#zcnPrefsModal .zcp-btn{display:block;width:100%;margin-top:14px;padding:13px;border:none;border-radius:9px;' +
         'background:#B8A47A;color:#1C1A18;font:700 14px/1.2 inherit;cursor:pointer;transition:background .2s}' +
         '#zcnPrefsModal .zcp-btn:hover{background:#9A8660}' +
         '#zcnPrefsModal .zcp-btn[disabled]{opacity:.6;cursor:default}' +
         '#zcnPrefsModal .zcp-link{display:block;width:100%;margin-top:8px;padding:9px;border:none;background:none;' +
-        'font:600 12.5px/1.3 inherit;cursor:pointer;color:#9A8660}' +
-        '#zcnPrefsModal .zcp-unsub{color:#B0A898;text-decoration:underline}' +
+        'font:600 12.5px/1.3 inherit;cursor:pointer;color:#7C5E33}' +
+        '#zcnPrefsModal .zcp-unsub{color:#6B6560;text-decoration:underline}' +
         '#zcnPrefsModal .zcp-unsub:hover{color:#dc2626}' +
         '#zcnPrefsModal .zcp-msg{display:none;margin-top:12px;padding:11px 13px;border-radius:8px;' +
         'font-size:13px;line-height:1.55}' +

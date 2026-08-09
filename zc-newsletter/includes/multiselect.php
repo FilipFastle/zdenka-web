@@ -86,12 +86,12 @@ function zcn_multiselect_assets() {
         max-height:320px;overflow:auto;padding:8px;background:#fff;border:1px solid #E0D8CE;border-radius:11px;
         box-shadow:0 14px 38px rgba(40,32,20,.16)}
     .zc-ms-menu[hidden]{display:none}
-    .zc-ms-grp{font:800 9.5px/1.4 inherit;letter-spacing:1.1px;text-transform:uppercase;color:#9A8660;padding:9px 9px 5px}
+    .zc-ms-grp{font:800 9.5px/1.4 inherit;letter-spacing:1.1px;text-transform:uppercase;color:#7C5E33;padding:9px 9px 5px}
     .zc-ms-opt{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:7px;cursor:pointer;
         font:500 13.5px/1.35 inherit;color:#2C2825}
     .zc-ms-opt:hover{background:#FBF8F2}
     .zc-ms-opt input{width:16px;height:16px;min-height:auto;accent-color:#B8A47A;margin:0;flex:0 0 auto}
-    .zc-ms-note{padding:9px 9px 2px;font-size:11px;line-height:1.5;color:#9A8660}
+    .zc-ms-note{padding:9px 9px 2px;font-size:11px;line-height:1.5;color:#7C5E33}
     .zc-ms-foot{display:flex;gap:6px;margin-top:6px;padding-top:8px;border-top:1px solid #F1EBE0}
     .zc-ms-foot button{flex:1;padding:7px;border:1px solid #E0D8CE;border-radius:7px;background:#fff;
         color:#6B6560;font:600 11px/1.2 inherit;cursor:pointer}

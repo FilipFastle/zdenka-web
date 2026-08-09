@@ -11,14 +11,51 @@ add_action('wp_enqueue_scripts', function() {
     $use_min = get_option('zc_min_css', '1') === '1'
             && file_exists($dir . '/assets/css/main.min.css');
     $css = $use_min ? '/assets/css/main.min.css' : '/assets/css/main.css';
-    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.42.0');
+    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.43.0');
     // Malé kritické úpravy musia platiť aj pri zapnutej staršej minifikovanej verzii.
     wp_add_inline_style('zdenka-main',
         '.zc-nav a{font-size:11px}.zc-prop-badge.is-sold{background:#DC2626!important;color:#fff!important;box-shadow:0 0 9px rgba(220,38,38,.85),0 0 20px rgba(220,38,38,.5)}'
     );
-    wp_enqueue_script('zdenka-js', $uri . '/assets/js/main.js', [], '3.42.0', true);
+    // Rovnako ako pri štýloch: zmenšený súbor, pôvodný ostáva v téme na úpravy.
+    // Vypína sa tým istým prepínačom vo Web Zdenky → Nástroje.
+    $use_min_js = get_option('zc_min_css', '1') === '1'
+               && file_exists($dir . '/assets/js/main.min.js');
+    $js = $use_min_js ? '/assets/js/main.min.js' : '/assets/js/main.js';
+    wp_enqueue_script('zdenka-js', $uri . $js, [], '3.43.0', true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.png','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0,'interests'=>function_exists('zcn_interest_choices')?zcn_interest_choices():[],'nlNonce'=>wp_create_nonce('zcn_nonce')]);
 });
+
+/**
+ * Prednačítanie hero fotky na úvodnej stránke.
+ *
+ * Hero je CSS pozadie zapísané až v tele stránky, takže prehliadač o ňom
+ * zistí až po načítaní a spracovaní HTML aj CSS. Práve táto fotka je pritom
+ * najväčší prvok nad ohybom – čas jej zobrazenia je to, čo PageSpeed meria
+ * ako LCP. Preload ju vypýta hneď v prvom kole.
+ *
+ * Mobil a PC majú inú fotku (portrét vs. široká), preto dve deklarácie
+ * odlíšené atribútom media – prehliadač stiahne len tú svoju.
+ */
+add_action('wp_head', function () {
+    if (!is_front_page() || is_paged()) return;
+
+    $vyber = function ($ktora, $velkost) {
+        return function_exists('zc_photo_sized') ? zc_photo_sized($ktora, $velkost)
+             : (function_exists('zc_photo') ? zc_photo($ktora) : '');
+    };
+    $pc     = $vyber('hero', 'zc-1440');
+    $mobil  = $vyber('portrait', 'large');
+    if (!$pc && has_post_thumbnail()) $pc = get_the_post_thumbnail_url(null, 'large');
+
+    if ($pc) {
+        printf('<link rel="preload" as="image" href="%s" fetchpriority="high"%s>' . "\n",
+            esc_url($pc), $mobil ? ' media="(min-width:769px)"' : '');
+    }
+    if ($mobil) {
+        printf('<link rel="preload" as="image" href="%s" fetchpriority="high" media="(max-width:768px)">' . "\n",
+            esc_url($mobil));
+    }
+}, 2);
 
 add_action('after_setup_theme', function() {
     register_nav_menus(['primary'=>'Hlavné menu','footer'=>'Footer menu']);
@@ -718,7 +755,7 @@ function zdenka_setup_page() {
                                 <?php echo in_array($u->ID,(array)$maint_users)?'checked':'' ?>
                                 onchange="zcUpdateUsers()"
                                 style="accent-color:#B8A47A">
-                            <?php echo esc_html($u->display_name) ?> <small style="color:#999">(ID: <?php echo $u->ID ?>)</small>
+                            <?php echo esc_html($u->display_name) ?> <small style="color:#6B6560">(ID: <?php echo $u->ID ?>)</small>
                         </label>
                         <?php endforeach; ?>
                         <input type="hidden" name="zc_maint_users" id="zcMaintUsers"

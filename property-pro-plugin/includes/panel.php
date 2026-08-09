@@ -1140,7 +1140,7 @@ function panel_home() {
         $cards = [
             ['Aktívne ponuky', $st_active, '#16a34a', 'home', '?action=list'],
             ['Rezervované',     $st_rez,    '#C6902B', 'clock', '?action=list'],
-            ['Predané',         $st_sold,   '#7A7068', 'star', '?action=list'],
+            ['Predané',         $st_sold,   '#746A62', 'star', '?action=list'],
             ['Zobrazenia spolu',$views_total,'#7C5E33','chart', ''],
         ];
         if (function_exists('panel_leads')) $cards[] = ['Nové správy', $lead_new, '#4338CA', 'megaphone', '?action=leads'];
@@ -1186,7 +1186,7 @@ function panel_home() {
                     $typ = get_post_meta($p->ID,'_property_typ',true);
                     $sp  = get_post_meta($p->ID,'_property_stav_predaja',true);
                     if ($cena && strpos($cena,'€')===false) $cena.=' €';
-                    $badge = $sp==='predane'?['Predané','#7A7068']:($sp==='rezervovane'?['Rezervované','#C6902B']:[$typ_labels[$typ]??'Aktívna','#16a34a']);
+                    $badge = $sp==='predane'?['Predané','#746A62']:($sp==='rezervovane'?['Rezervované','#C6902B']:[$typ_labels[$typ]??'Aktívna','#16a34a']);
                 ?>
                 <a href="?action=edit&id=<?php echo $p->ID ?>" class="pnl-recent-item">
                     <div class="pnl-recent-img"><?php echo $cid ? wp_get_attachment_image($cid,'thumbnail') : '<span class="pnl-recent-noimg">'.pp_svg('home',22).'</span>' ?></div>

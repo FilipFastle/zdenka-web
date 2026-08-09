@@ -395,6 +395,62 @@ Prázdne pole nič nemení.
 Obe nastavenia sú pri každej ponuke zvlášť, prenesú sa pri *Duplikovať*
 a sú súčasťou denných záloh.
 
+## Kontrasty a rýchlosť — zmerané, nie odhadnuté
+
+### Hero na úvodke bol nečitateľný
+
+Na PC nemal hero **žiadny prekryv** — čitateľnosť stála len na tieni písma.
+Odmeral som najhorší možný prípad (pod textom je najsvetlejšie miesto fotky):
+
+| Prvok | predtým | norma | teraz |
+|---|---|---|---|
+| Nadpis biely | 1,0:1 | 3:1 | 9,5:1 |
+| Nadpis zlatá kurzíva | 2,4:1 | 3:1 | 6,5–7,2:1 |
+| Štítok nad nadpisom | 2,4:1 | 4,5:1 | 7,3–7,7:1 |
+| Podnadpis | 1,0:1 | 4,5:1 | 9,0–9,8:1 |
+| Text pri šípke | 1,0:1 | 4,5:1 | 9,2–13,4:1 |
+
+**Prepadalo 5 z 5.** Pribudol závoj, ktorý je silný pod textom a **doprava
+doznieva do nuly — tvár na fotke ostáva úplne čistá**. K tomu jemný pás dole
+pod šípkou „Scrolluj", ktorá je v strede mimo bočného závoja.
+
+Zlatá v hero je o odtieň svetlejšia (`#DCC79A`). Pôvodná by na svetlom mieste
+fotky potrebovala závoj s krytím 0,85 — a to už fotku zabije.
+
+Overené na štyroch šírkach okna: 1920, 1440, 1280 a 1024 px.
+
+### Farby textu po celom webe
+
+Sivá `--muted` mala na béžovej sekcii **4,18:1** (treba 4,5) — a je to
+najpoužívanejšia farba odstavcov na webe. Stmavená na `#746A62`, čo je
+najsvetlejší odtieň, ktorý ešte prejde. Rozdiel je okom nebadateľný.
+
+Ďalej sa opravila zlatá `#9A8660` použitá ako **text** (mala 3,05–3,53:1) —
+všade nahradená tmavšou `#7C5E33`, ktorá bola v téme na tento účel od začiatku.
+Týkalo sa to súhlasu so spracovaním údajov, okien na výber tém, poznámok
+vo výbere kategórií aj drobného písma v administrácii.
+
+Bodky pod carouselmi boli **prázdne tlačidlá bez názvu** — čítačka obrazovky
+ani Lighthouse o nich nevedeli povedať nič. Dostali popis („Fotka 2 z 8",
+„Recenzia 3").
+
+### Rýchlosť
+
+**Hero fotka sa teraz prednačítava.** Je to CSS pozadie zapísané až v tele
+stránky, takže o nej prehliadač zistil až po spracovaní HTML aj CSS — pritom
+je to práve ten najväčší prvok nad ohybom, ktorý PageSpeed meria ako LCP.
+Mobil a PC majú vlastnú deklaráciu, takže sa sťahuje len tá správna fotka.
+
+**JavaScript sa minifikuje: 29,1 kB → 18,0 kB** (o 38 % menej). Pôvodný súbor
+ostáva v téme na úpravy, rovnako ako pri štýloch. Vypína sa tým istým
+prepínačom vo `Web Zdenky → Nástroje`.
+
+Overil som, že sa žiadny názov funkcie volanej z PHP nestratil, a mobilné menu
+som otestoval priamo proti zmenšenému súboru.
+
+**Čo aktualizovať:** `zdenka-theme.zip` (3.43.0), `zc-newsletter.zip` (1.23.0),
+`zc-reviews.zip` (1.6.4), `property-pro-plugin.zip` (5.61).
+
 ## Zmeny textov od Zdenky (9. 8.)
 
 **Úvodná stránka — hero**

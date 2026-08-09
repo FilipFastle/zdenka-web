@@ -128,7 +128,7 @@ if (isset($_POST['odhad_send']) && !wp_verify_nonce($_POST['odhad_nonce'] ?? '',
 .odhad-field-input:focus,
 .odhad-textarea:focus { border-color: var(--accent,#B8A47A); background:#fff; box-shadow:0 0 0 3px rgba(184,164,122,.12); }
 .odhad-field-input::placeholder,
-.odhad-textarea::placeholder { color: #B0A898; }
+.odhad-textarea::placeholder { color: #746A62; }
 
 /* ── FOOTER ── */
 .odhad-form-footer {

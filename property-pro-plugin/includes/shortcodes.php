@@ -407,7 +407,7 @@ add_shortcode('property_carousel', function($atts) {
         <?php if ($total > 1): ?>
         <button class="prop-sc-btn prop-sc-prev" onclick="<?php echo $uid ?>P()">&#8249;</button>
         <button class="prop-sc-btn prop-sc-next" onclick="<?php echo $uid ?>N()">&#8250;</button>
-        <div class="prop-sc-dots"><?php for($i=0;$i<$total;$i++): ?><button class="prop-sc-dot<?php echo $i===0?' active':'' ?>" onclick="<?php echo $uid ?>G(<?php echo $i ?>)"></button><?php endfor; ?></div>
+        <div class="prop-sc-dots"><?php for($i=0;$i<$total;$i++): ?><button type="button" class="prop-sc-dot<?php echo $i===0?' active':'' ?>" onclick="<?php echo $uid ?>G(<?php echo $i ?>)" aria-label="Fotka <?php echo $i+1 ?> z <?php echo $total ?>"></button><?php endfor; ?></div>
         <?php endif; ?>
     </div>
     <script>
