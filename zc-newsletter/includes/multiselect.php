@@ -58,6 +58,7 @@ function zcn_multiselect($name, $selected = '', $args = []) {
             <div class="zc-ms-foot">
                 <button type="button" data-zc-ms-all>Označiť všetko</button>
                 <button type="button" data-zc-ms-none>Zrušiť výber</button>
+                <button type="button" data-zc-ms-done class="is-done">Hotovo</button>
             </div>
         </div>
     </div>
@@ -95,6 +96,8 @@ function zcn_multiselect_assets() {
     .zc-ms-foot button{flex:1;padding:7px;border:1px solid #E0D8CE;border-radius:7px;background:#fff;
         color:#6B6560;font:600 11px/1.2 inherit;cursor:pointer}
     .zc-ms-foot button:hover{border-color:#B8A47A;color:#2C2825}
+    .zc-ms-foot button.is-done{background:#B8A47A;border-color:#B8A47A;color:#1C1A18;font-weight:800}
+    .zc-ms-foot button.is-done:hover{background:#9A8660;border-color:#9A8660;color:#1C1A18}
     .zc-ms.is-compact .zc-ms-btn{min-height:34px;padding:7px 10px;font-size:12px;border-radius:7px}
     .zc-ms.is-compact .zc-ms-menu{min-width:210px}
     @media(max-width:600px){
@@ -117,6 +120,22 @@ function zcn_multiselect_assets() {
             out.title=everything?'':names.join(', ');
         }
         // Okienko sa otvára ako fixed – aby ho neorezala tabuľka ani modálne okno.
+        // Nesmie však prekryť odosielacie tlačidlo formulára: klik doň by sa
+        // stratil v okienku a používateľovi by sa zdalo, že tlačidlo nereaguje.
+        function blocker(box){
+            var form=box.closest&&box.closest('form'); if(!form)return null;
+            var r=box.getBoundingClientRect(), best=null;
+            [].forEach.call(form.querySelectorAll('button,input[type=submit]'),function(el){
+                if(el.closest('.zc-ms-menu'))return;                       // vlastné tlačidlá okienka
+                if(el.type&&el.type!=='submit'&&el.tagName==='INPUT')return;
+                if(el.tagName==='BUTTON'&&el.type==='button')return;
+                var b=el.getBoundingClientRect();
+                if(b.height===0)return;
+                if(b.top<r.bottom)return;                                   // je nad výberom, nevadí
+                if(!best||b.top<best.top)best=b;
+            });
+            return best;
+        }
         function place(box,btn,menu){
             var r=btn.getBoundingClientRect();
             var w=Math.max(r.width,230);
@@ -124,8 +143,13 @@ function zcn_multiselect_assets() {
             menu.style.left=Math.min(r.left,window.innerWidth-w-10)+'px';
             menu.style.width=w+'px';
             menu.style.right='auto';
+
             var below=window.innerHeight-r.bottom-12;
             var above=r.top-12;
+            // Miesto pod výberom končí tam, kde začína odosielacie tlačidlo
+            var stop=blocker(box);
+            if(stop)below=Math.min(below,stop.top-r.bottom-8);
+
             if(below<190&&above>below){
                 menu.style.top='auto';
                 menu.style.bottom=(window.innerHeight-r.top+5)+'px';
@@ -133,7 +157,7 @@ function zcn_multiselect_assets() {
             }else{
                 menu.style.bottom='auto';
                 menu.style.top=(r.bottom+5)+'px';
-                menu.style.maxHeight=Math.min(320,below)+'px';
+                menu.style.maxHeight=Math.max(120,Math.min(320,below))+'px';
             }
         }
         function close(box){
@@ -157,6 +181,8 @@ function zcn_multiselect_assets() {
             var all=menu.querySelector('[data-zc-ms-all]'), none=menu.querySelector('[data-zc-ms-none]');
             if(all)all.addEventListener('click',function(){menu.querySelectorAll('input').forEach(function(c){c.checked=true});labelOf(box)});
             if(none)none.addEventListener('click',function(){menu.querySelectorAll('input').forEach(function(c){c.checked=false});labelOf(box)});
+            var done=menu.querySelector('[data-zc-ms-done]');
+            if(done)done.addEventListener('click',function(){close(box)});
             labelOf(box);
         }
         function init(){ document.querySelectorAll('[data-zc-ms]').forEach(bind); }

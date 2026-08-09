@@ -37,18 +37,30 @@ add_action('admin_menu', function() {
     }
 });
 
-function zcn_admin_page() {
+/**
+ * Spracovanie formulárov beží na admin_init, teda ešte pred vykreslením
+ * stránky. Dôvod: až tam sa dá presmerovať. Predtým sa spracovanie robilo
+ * priamo pri vykresľovaní, takže po pridaní kontaktu používateľ ostal na
+ * karte „Import", nový kontakt bol v zozname na inej karte a obnovenie
+ * stránky odoslalo formulár druhýkrát.
+ */
+add_action('admin_init', 'zcn_admin_handle_post');
+
+function zcn_admin_handle_post() {
+    if (!is_admin() || empty($_POST)) return;
+    if (($_GET['page'] ?? '') !== 'zc-newsletter') return;
+    if (!current_user_can('manage_options')) return;
+
     global $wpdb;
     $table = zcn_table();
-    $tab   = sanitize_text_field($_GET['tab'] ?? 'subscribers');
 
     if (isset($_POST['zcn_delete']) && check_admin_referer('zcn_admin')) {
         $wpdb->delete($table, ['id' => intval($_POST['zcn_delete'])]);
-        echo '<div class="notice notice-success is-dismissible"><p>Odberateľ vymazaný.</p></div>';
+        zcn_admin_notice('Odberateľ vymazaný.', true); zcn_admin_redirect();
     }
     if (isset($_POST['zcn_unsub']) && check_admin_referer('zcn_admin')) {
         $wpdb->update($table, ['status' => 'unsubscribed'], ['id' => intval($_POST['zcn_unsub'])]);
-        echo '<div class="notice notice-success is-dismissible"><p>Odberateľ odhlásený.</p></div>';
+        zcn_admin_notice('Odberateľ odhlásený.', true); zcn_admin_redirect();
     }
     if (isset($_POST['zcn_interest_save']) && check_admin_referer('zcn_admin')) {
         $wpdb->update(
@@ -56,7 +68,7 @@ function zcn_admin_page() {
             ['interest' => zcn_sanitize_interests($_POST['interest'] ?? '')],
             ['id' => intval($_POST['zcn_interest_save'])]
         );
-        echo '<div class="notice notice-success is-dismissible"><p>Kategória kontaktu uložená.</p></div>';
+        zcn_admin_notice('Kategória kontaktu uložená.', true); zcn_admin_redirect();
     }
     // Pridanie jedného kontaktu – rovnaká logika ako v realitnom paneli
     if (isset($_POST['zcn_add']) && check_admin_referer('zcn_admin')) {
@@ -67,8 +79,8 @@ function zcn_admin_page() {
             sanitize_key($_POST['zcn_add_mode'] ?? 'active'),
             'manual_admin'
         );
-        printf('<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
-            $ok ? 'success' : 'error', esc_html($msg));
+        zcn_admin_notice($msg, $ok);
+        zcn_admin_redirect('subscribers');
     }
 
     // Hromadné pridanie – „Meno;Priezvisko;email" na riadok
@@ -80,8 +92,8 @@ function zcn_admin_page() {
             sanitize_key($_POST['zcn_import_mode'] ?? 'active')
         );
         [$msg, $ok] = zcn_bulk_notice($counts);
-        printf('<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
-            $ok ? 'success' : 'warning', esc_html($msg));
+        zcn_admin_notice($msg, $ok);
+        zcn_admin_redirect('subscribers');
     }
     // Správa kategórií
     if (isset($_POST['zcn_cats_save']) && check_admin_referer('zcn_admin')) {
@@ -110,33 +122,79 @@ function zcn_admin_page() {
         }
         if ($cats) {
             zcn_save_categories($cats);
-            echo '<div class="notice notice-success is-dismissible"><p>Kategórie uložené.</p></div>';
+            zcn_admin_notice('Kategórie uložené.', true); zcn_admin_redirect();
         } else {
-            echo '<div class="notice notice-error is-dismissible"><p>Aspoň jedna kategória musí ostať.</p></div>';
+            zcn_admin_notice('Aspoň jedna kategória musí ostať.', false); zcn_admin_redirect();
         }
     }
     if (isset($_POST['zcn_cats_reset']) && check_admin_referer('zcn_admin')) {
         delete_option('zcn_categories');
         wp_cache_delete('zcn_categories', 'options');
-        echo '<div class="notice notice-success is-dismissible"><p>Kategórie vrátené na predvolené.</p></div>';
+        zcn_admin_notice('Kategórie vrátené na predvolené.', true); zcn_admin_redirect();
     }
 
-    if (isset($_GET['zcn_export']) && current_user_can('manage_options')) {
-        $rows = $wpdb->get_results("SELECT * FROM {$table} WHERE status='active' ORDER BY confirmed_at DESC");
-        header('Content-Type: text/csv; charset=UTF-8');
-        header('Content-Disposition: attachment; filename="newsletter-' . date('Y-m-d') . '.csv"');
-        echo "\xEF\xBB\xBF";
-        $out = fopen('php://output', 'w');
-        fputcsv($out, ['ID','Meno','Email','Kategória','Status','Dátum prihlásenia','Dátum potvrdenia','Zdroj']);
-        foreach ($rows as $r) {
-            // Prefix riskantných znakov – ochrana pred CSV/formula injection v Exceli
-            $name = preg_match('/^[=+\-@]/', (string)$r->name) ? "'" . $r->name : $r->name;
-            fputcsv($out, [$r->id, $name, $r->email, zcn_interest_label($r->interest ?? ''), $r->status,
-                $r->subscribed_at, $r->confirmed_at ?? '', $r->source]);
-        }
-        fclose($out);
-        exit;
+}
+
+/**
+ * Export odberateľov do CSV. Musí bežať na admin_init – vo vykresľovacej
+ * funkcii sú hlavičky stránky už odoslané, takže header() zlyhá a namiesto
+ * stiahnutia súboru sa CSV vypíše do HTML.
+ */
+add_action('admin_init', function () {
+    if (!is_admin() || !isset($_GET['zcn_export'])) return;
+    if (($_GET['page'] ?? '') !== 'zc-newsletter') return;
+    if (!current_user_can('manage_options')) return;
+
+    global $wpdb;
+    $table = zcn_table();
+    $rows = $wpdb->get_results("SELECT * FROM {$table} WHERE status='active' ORDER BY confirmed_at DESC");
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="newsletter-' . date('Y-m-d') . '.csv"');
+    echo "\xEF\xBB\xBF";
+    $out = fopen('php://output', 'w');
+    fputcsv($out, ['ID','Meno','Email','Kategória','Status','Dátum prihlásenia','Dátum potvrdenia','Zdroj']);
+    foreach ($rows as $r) {
+        // Prefix riskantných znakov – ochrana pred CSV/formula injection v Exceli
+        $name = preg_match('/^[=+\-@]/', (string)$r->name) ? "'" . $r->name : $r->name;
+        fputcsv($out, [$r->id, $name, $r->email, zcn_interest_label($r->interest ?? ''), $r->status,
+            $r->subscribed_at, $r->confirmed_at ?? '', $r->source]);
     }
+    fclose($out);
+    exit;
+});
+
+/** Hláška prežije presmerovanie – uloží sa na minútu pre daného používateľa. */
+function zcn_admin_notice($msg, $ok = true) {
+    set_transient('zcn_notice_' . get_current_user_id(),
+        ['msg' => (string) $msg, 'ok' => (bool) $ok], MINUTE_IN_SECONDS);
+}
+
+/** Presmerovanie po odoslaní formulára (PRG) – obnovenie stránky už nič neuloží. */
+function zcn_admin_redirect($tab = '') {
+    $args = ['page' => 'zc-newsletter'];
+    $tab  = $tab ?: sanitize_text_field($_GET['tab'] ?? 'subscribers');
+    if ($tab) $args['tab'] = $tab;
+    wp_safe_redirect(add_query_arg($args, admin_url('admin.php')));
+    exit;
+}
+
+/** Vypíše zapamätanú hlášku a hneď ju zahodí. */
+function zcn_admin_print_notice() {
+    $key = 'zcn_notice_' . get_current_user_id();
+    $n   = get_transient($key);
+    if (!$n || empty($n['msg'])) return;
+    delete_transient($key);
+    echo '<div class="notice notice-' . (!empty($n['ok']) ? 'success' : 'error')
+       . ' is-dismissible"><p>' . esc_html($n['msg']) . '</p></div>';
+}
+
+function zcn_admin_page() {
+    global $wpdb;
+    $table = zcn_table();
+    $tab   = sanitize_text_field($_GET['tab'] ?? 'subscribers');
+
+    zcn_admin_print_notice();
+
 
     $stats = [
         'active'       => $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status='active'"),

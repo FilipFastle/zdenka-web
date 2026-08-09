@@ -395,6 +395,35 @@ Prázdne pole nič nemení.
 Obe nastavenia sú pri každej ponuke zvlášť, prenesú sa pri *Duplikovať*
 a sú súčasťou denných záloh.
 
+## Oprava: nedalo sa pridať odberateľa
+
+Boli za tým dve veci.
+
+**1. Výber kategórií prekrýval tlačidlo „Pridať".** Okienko so zaškrtávacími
+políčkami sa otvára ako plávajúce, spadne pod výber — a vo wp-admine je práve
+tam odosielacie tlačidlo. Okienko si navyše klik nechávalo pre seba, takže
+sa ani nezavrelo. Výsledok: na tlačidlo sa dalo klikať donekonečna a nedialo
+sa nič.
+
+Odteraz si okienko zistí, kde má formulár odosielacie tlačidlo, a **skráti sa
+alebo sa vysunie nahor**, aby ho nikdy neprekrylo. Pribudlo aj zreteľné
+tlačidlo **Hotovo**.
+
+**2. Po pridaní si ostal na karte „Import".** Nový kontakt je pritom v zozname
+na karte „Odberatelia" — takže to vyzeralo, že sa nič nepridalo, aj keď sa
+pridal. Spracovanie formulárov sa presunulo pred vykreslenie stránky, takže:
+
+- po pridaní ťa to **prehodí rovno do zoznamu**, kde nový kontakt vidíš,
+- hláška o výsledku prežije presmerovanie,
+- **obnovenie stránky (F5) už formulár neodošle druhýkrát** — predtým sa tým
+  dal kontakt pridať dvakrát.
+
+Pri tej príležitosti sa opravil aj **Export CSV**. Bežal na mieste, kde už
+boli hlavičky stránky odoslané, takže sa súbor nestiahol a obsah sa vypísal
+do stránky. Teraz sa stiahne správne.
+
+**Čo aktualizovať:** `zc-newsletter.zip` (1.22.0).
+
 ## Prihlásenie na newsletter je okamžité
 
 Potvrdzovací krok (double opt-in) je zrušený. Kto vyplní formulár, je **hneď
