@@ -395,6 +395,54 @@ Prázdne pole nič nemení.
 Obe nastavenia sú pri každej ponuke zvlášť, prenesú sa pri *Duplikovať*
 a sú súčasťou denných záloh.
 
+## Zmeny textov od Zdenky (9. 8.)
+
+**Úvodná stránka — hero**
+
+| | text |
+|---|---|
+| Nadpis | Váš partner *pri predaji domova.* |
+| Podnadpis | Prevediem vás celým procesom profesionálne, bezpečne – vždy s osobným prístupom. |
+
+Zlatou kurzívou je „pri predaji domova." Štítok „Banská Bystrica · Zvolen" nad
+nadpisom ostal, zvyšok úvodky tiež.
+
+**Ikonky sociálnych sietí sú späť neutrálne zlaté.** Farby jednotlivých sietí
+(Facebook modrá, Instagram gradient…) sú preč. Keby si ich niekedy chcel späť,
+je to jeden blok v `main.css` — v komentári pri ňom je napísané ako.
+
+**Ako pracujem**
+
+Pribudol nový **prvý** krok, ostatné sa posunuli o číslo ďalej:
+
+> **1. Nastavenie ceny a stratégie predaja**
+> Na základe dôkladnej analýzy trhu nastavím správnu predajnú cenu vašej
+> nehnuteľnosti. Spoločne zvolíme stratégiu predaja tak, aby sme oslovili
+> správnych záujemcov a vytvorili čo najlepšie podmienky pre úspešný predaj.
+
+Krok **Profesionálne fotografie** má nový text (o príprave nehnuteľnosti pred
+fotením). Text pod nadpisom stránky je nový a malý nadpis nad službami sa zmenil
+z „Čo robím pre vás" na **„Čo pre vás zabezpečím"**.
+
+**Referencie**
+
+Veta pod nadpisom je teraz jedna: *„Najlepšie o mojej práci hovoria skúsenosti
+klientov."* Pôvodné dve vety sú preč — druhá sa odvolávala na prvú, samotná by
+nedávala zmysel.
+
+Hero na `/referencie` sa doteraz nedal meniť z administrácie. **Odteraz sa dá** —
+`Web Zdenky → Texty stránok → Referencie (podstránka)`.
+
+**Pozor na uložené texty.** Ak si niekto niektorý z týchto textov v minulosti
+prepísal cez „Texty stránok", jeho verzia by nové znenie prebila. Téma to pri
+prvom načítaní po aktualizácii sama vyčistí — ale len tam, kde bol uložený
+presne ten starý text. Vlastných úprav sa to nedotkne.
+
+**Čo som nemohol spraviť:** fotku do sekcie O mne. Nemám ju — nahráš ju
+v `Vzhľad → Prispôsobiť → Fotky maklérky → Fotka do sekcie O mne`.
+
+**Čo aktualizovať:** `zdenka-theme.zip` (3.42.0).
+
 ## Oprava: nedalo sa pridať odberateľa
 
 Boli za tým dve veci.

@@ -21,9 +21,9 @@ function zc_text_map() {
             'title'  => 'Úvodná stránka',
             'fields' => [
                 'home.badge'      => ['Štítok nad nadpisom', 'Banská Bystrica · Zvolen', 'text'],
-                'home.title'      => ['Hlavný nadpis', 'Predáme váš domov', 'text'],
-                'home.title_hl'   => ['Hlavný nadpis – zvýraznená časť', 'za najlepšiu cenu', 'text'],
-                'home.sub'        => ['Podnadpis pod nadpisom', 'Profesionálna realitná maklérka s bohatými skúsenosťami. Predaj, prenájom aj poradenstvo – vždy s osobným prístupom.', 'area'],
+                'home.title'      => ['Hlavný nadpis', 'Váš partner', 'text'],
+                'home.title_hl'   => ['Hlavný nadpis – zvýraznená časť', 'pri predaji domova.', 'text'],
+                'home.sub'        => ['Podnadpis pod nadpisom', 'Prevediem vás celým procesom profesionálne, bezpečne – vždy s osobným prístupom.', 'area'],
                 'home.btn1'       => ['Tlačidlo 1', 'Pozrieť ponuky', 'text'],
                 'home.btn2'       => ['Tlačidlo 2', 'Bezplatná konzultácia', 'text'],
                 'home.scroll'     => ['Text pri šípke nadol', 'Scrolluj', 'text'],
@@ -57,13 +57,22 @@ function zc_text_map() {
                 'about.refs_hl' => ['Referencie – zvýraznená časť', 'klienti', 'text'],
             ],
         ],
+        'refs' => [
+            'title'  => 'Referencie (podstránka)',
+            'fields' => [
+                'refs.eyebrow' => ['Štítok nad nadpisom', 'Referencie', 'text'],
+                'refs.title'   => ['Nadpis', 'Čo hovoria', 'text'],
+                'refs.title_hl'=> ['Nadpis – zvýraznená časť', 'klienti', 'text'],
+                'refs.sub'     => ['Text pod nadpisom', 'Najlepšie o mojej práci hovoria skúsenosti klientov.', 'area'],
+            ],
+        ],
         'work' => [
             'title'  => 'Ako pracujem',
             'fields' => [
                 'work.eyebrow'  => ['Štítok nad nadpisom', 'Postup spolupráce', 'text'],
                 'work.title_hl' => ['Nadpis – zvýraznená časť', 'pracujem', 'text'],
-                'work.sub'      => ['Text pod nadpisom', 'Transparentný, overený proces – od prvého stretnutia po odovzdanie kľúčov. Každý krok robím osobne a vždy v záujme klienta.', 'area'],
-                'work.serv_eye' => ['Služby – štítok', 'Čo robím pre vás', 'text'],
+                'work.sub'      => ['Text pod nadpisom', 'Od úvodnej konzultácie cez prípravu a marketing až po bezpečný prevod nehnuteľnosti – v každej fáze viete, čo sa deje a čo nasleduje. Otvorená komunikácia a transparentnosť sú pre mňa samozrejmosťou.', 'area'],
+                'work.serv_eye' => ['Služby – štítok', 'Čo pre vás zabezpečím', 'text'],
                 'work.serv_t'   => ['Služby – nadpis', 'Kompletný servis', 'text'],
                 'work.serv_hl'  => ['Služby – zvýraznená časť', 'v každom kroku', 'text'],
                 'work.vid_eye'  => ['Video – štítok', 'Ukážka práce', 'text'],
@@ -77,6 +86,39 @@ function zc_text_map() {
         ],
     ];
 }
+
+/**
+ * Jednorazové vyčistenie po zmene pôvodných textov.
+ *
+ * Prepis sa ukladá len vtedy, keď sa líši od pôvodného textu. Keď však
+ * niekto pole otvoril a uložil ešte za starého znenia, zostal mu uložený
+ * starý text – a nové znenie by sa na webe neukázalo. Preto pri prvom
+ * načítaní po aktualizácii zahodíme prepisy, ktoré sa presne rovnajú
+ * niektorému z nahradených textov. Ručne napísaných textov sa to nedotkne.
+ */
+add_action('init', function () {
+    if (get_option('zc_texts_cleanup') === '2') return;
+
+    $nahradene = [
+        'home.title'    => ['Predáme váš domov'],
+        'home.title_hl' => ['za najlepšiu cenu'],
+        'home.sub'      => ['Profesionálna realitná maklérka s bohatými skúsenosťami. Predaj, prenájom aj poradenstvo – vždy s osobným prístupom.'],
+        'work.sub'      => ['Transparentný, overený proces – od prvého stretnutia po odovzdanie kľúčov. Každý krok robím osobne a vždy v záujme klienta.'],
+        'work.serv_eye' => ['Čo robím pre vás'],
+    ];
+
+    $saved  = (array) get_option('zc_texts', []);
+    $zmena  = false;
+    foreach ($nahradene as $key => $stare) {
+        if (!isset($saved[$key])) continue;
+        if (in_array(trim((string) $saved[$key]), $stare, true)) {
+            unset($saved[$key]);
+            $zmena = true;
+        }
+    }
+    if ($zmena) update_option('zc_texts', $saved);
+    update_option('zc_texts_cleanup', '2', false);
+}, 5);
 
 /** Uložené prepisy textov. */
 function zc_texts_saved() {

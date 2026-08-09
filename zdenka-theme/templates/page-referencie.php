@@ -29,10 +29,9 @@ $google_url = get_theme_mod('zc_social_google', '');
 <!-- HERO -->
 <section class="rf-hero">
 <div class="zc-container">
-    <div class="zc-eyebrow" style="justify-content:center">Referencie</div>
-    <h1>Čo hovoria <em>klienti</em></h1>
-    <p>Každý predaj je príbeh rodiny, ktorá začína novú kapitolu. Toto sú slová ľudí,
-       ktorým som pri tom mohla byť nablízku.</p>
+    <div class="zc-eyebrow" style="justify-content:center"><?php echo zc_t('refs.eyebrow') ?></div>
+    <h1><?php echo zc_t('refs.title') ?> <em><?php echo zc_t('refs.title_hl') ?></em></h1>
+    <p><?php echo zc_t('refs.sub') ?></p>
 </div>
 </section>
 

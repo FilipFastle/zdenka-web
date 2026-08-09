@@ -76,47 +76,9 @@ box-shadow: 0 8px 20px rgba(184,164,122,.45);
 .zc-header-wrap.transparent .zc-socials--nav .zc-social-ic { background: rgba(255,255,255,.14); color: #fff; }
 .zc-header-wrap.transparent .zc-socials--nav .zc-social-ic:hover { background: #fff; color: var(--dark, #1C1A18); }
 @media (max-width: 1279px) { .zc-socials--nav { display: none; } }
-.zc-socials--nav .zc-social-ic {
---soc: var(--accent, #B8A47A);
---soc-sh: rgba(184,164,122,.5);
-}
-.zc-socials--nav .zc-soc-fb { --soc: #1877F2; --soc-sh: rgba(24,119,242,.5); }
-.zc-socials--nav .zc-soc-ig { --soc: linear-gradient(45deg,#F9CE34 4%,#EE2A7B 48%,#6228D7 96%);
---soc-sh: rgba(238,42,123,.5); }
-.zc-socials--nav .zc-soc-linkedin { --soc: #0A66C2; --soc-sh: rgba(10,102,194,.5); }
-.zc-socials--nav .zc-soc-youtube { --soc: #FF0000; --soc-sh: rgba(255,0,0,.45); }
-.zc-socials--nav .zc-soc-google { --soc: #4285F4; --soc-sh: rgba(66,133,244,.5); }
-.zc-header-wrap .zc-socials--nav .zc-social-ic,
-.zc-header-wrap.transparent .zc-socials--nav .zc-social-ic {
-background: var(--soc);
-color: #fff;
-box-shadow: 0 2px 8px rgba(28,26,24,.16);
-}
-.zc-header-wrap .zc-socials--nav .zc-social-ic:hover,
-.zc-header-wrap .zc-socials--nav .zc-social-ic:focus-visible,
+.zc-header-wrap.transparent .zc-socials--nav .zc-social-ic { background: rgba(255,255,255,.14); color: #fff; }
 .zc-header-wrap.transparent .zc-socials--nav .zc-social-ic:hover,
-.zc-header-wrap.transparent .zc-socials--nav .zc-social-ic:focus-visible {
-background: var(--soc);
-color: #fff;
-filter: brightness(1.14) saturate(1.1);
-box-shadow: 0 8px 20px var(--soc-sh);
-}
-.zc-socials--nav .zc-social-ic {
-outline: 0 solid rgba(255,255,255,.75); outline-offset: 0;
-transition: background .3s cubic-bezier(.4,0,.2,1),
-filter .3s cubic-bezier(.4,0,.2,1),
-transform .4s cubic-bezier(.34,1.56,.64,1),
-outline-width .3s ease, outline-offset .3s ease,
-box-shadow .35s ease;
-}
-.zc-header-wrap .zc-socials--nav .zc-social-ic:hover,
-.zc-header-wrap .zc-socials--nav .zc-social-ic:focus-visible {
-outline-width: 2px; outline-offset: 3px;
-}
-.zc-header-wrap.transparent .zc-socials--nav .zc-social-ic:hover,
-.zc-header-wrap.transparent .zc-socials--nav .zc-social-ic:focus-visible {
-outline-color: rgba(255,255,255,.9);
-}
+.zc-header-wrap.transparent .zc-socials--nav .zc-social-ic:focus-visible { background: #fff; color: var(--dark, #1C1A18); }
 ul { list-style: none; }
 .zc-header-wrap {
 background: rgba(252,248,240,.80);

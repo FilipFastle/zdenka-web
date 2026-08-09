@@ -119,8 +119,11 @@ $ap_vcount = count($ap_videos);
 
         <?php
         $services = [
+            ['chart','Nastavenie ceny a stratégie predaja',
+             'Na základe dôkladnej analýzy trhu nastavím správnu predajnú cenu vašej nehnuteľnosti. Spoločne zvolíme stratégiu predaja tak, aby sme oslovili správnych záujemcov a vytvorili čo najlepšie podmienky pre úspešný predaj.',
+             ''],
             ['camera','Profesionálne fotografie',
-             'Prvý dojem rozhoduje. Vašu nehnuteľnosť zachytíme tak, aby vynikla medzi ostatnými ponukami. Spolupracujem s profesionálnym fotografom, ktorý dokáže vyzdvihnúť jej priestor, atmosféru a potenciál.',
+             'Prvý dojem rozhoduje. Pred fotením nehnuteľnosť pripravím tak, aby vynikli jej prednosti. Profesionálny fotograf následne zachytí jej atmosféru a potenciál v tom najlepšom svetle.',
              $foto_1],
             ['video','Video prehliadka',
              'Video dokáže preniesť emóciu aj atmosféru priestoru. Pripravíme modernú video prezentáciu, ktorá nehnuteľnosť predstaví prirodzene, atraktívne a pomôže osloviť širší okruh záujemcov.',
