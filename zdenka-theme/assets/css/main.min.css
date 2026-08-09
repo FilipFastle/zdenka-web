@@ -68,7 +68,8 @@ box-shadow: 0 8px 20px rgba(184,164,122,.45);
 .zc-socials--nav .zc-social-ic:nth-child(4) { animation-delay: 1.35s; }
 .zc-socials--nav .zc-social-ic:nth-child(5) { animation-delay: 1.8s; }
 @media (prefers-reduced-motion: reduce) {
-.zc-socials--nav .zc-social-ic { animation: none; }
+.zc-social-ic, .zc-social-ic svg { transition-duration: .38s !important; }
+.zc-socials--nav .zc-social-ic { animation: zcSocFloat 3.4s ease-in-out infinite !important; }
 }
 .zc-socials--nav { gap: 6px; margin-left: 10px; }
 .zc-socials--nav .zc-social-ic { width: 32px; height: 32px; padding-bottom: 0; }
@@ -461,13 +462,7 @@ transition: all .3s var(--ease); z-index: 998;
 .zc-form-field textarea { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
-.zc-scroll-top, .pp-scroll-hint, .zc-prop-badge.is-new { animation: none; }
-*, *::before, *::after {
-animation-duration: .01ms !important;
-animation-iteration-count: 1 !important;
-transition-duration: .01ms !important;
-scroll-behavior: auto !important;
-}
+html { scroll-behavior: auto; }
 }
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
 .zc-footer-bottom { padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
@@ -596,7 +591,6 @@ transform: none !important;
 .zc-filter-select { border-radius: 9px; }
 img { image-rendering: auto; }
 .zc-prop-img img { image-rendering: -webkit-optimize-contrast; }
-html { scroll-behavior: smooth; }
 .zc-fav-badge {
 position: fixed; bottom: 80px; right: 28px;
 background: var(--white); color: var(--dark);
@@ -700,7 +694,7 @@ animation:zc-new-badge-pulse 1.8s ease-in-out infinite;
 50% { box-shadow:0 6px 19px rgba(15,121,86,.56),0 0 22px rgba(67,223,162,.82); filter:brightness(1.12); }
 }
 @media (prefers-reduced-motion:reduce) {
-.zc-prop-badge.is-new { animation:none; box-shadow:0 5px 16px rgba(15,121,86,.48),0 0 15px rgba(67,223,162,.55); }
+.zc-prop-badge.is-new { animation:zc-new-badge-pulse 1.8s ease-in-out infinite !important; }
 }
 .zc-prop-badge.is-reduced { background:linear-gradient(135deg,#EF6B5A,#B62E28);color:#fff; }
 .zc-prop-card.is-sold .zc-prop-img::after {
@@ -752,7 +746,7 @@ transform: translateY(-3px) scale(1.04) !important;
 box-shadow: 0 12px 32px rgba(184,164,122,.6), 0 0 30px 6px rgba(184,164,122,.5) !important;
 }
 @media (prefers-reduced-motion: reduce) {
-.zc-hero-ebook-btn { animation: none; }
+.zc-hero-ebook-btn { animation: zcEbookBreath 2.6s ease-in-out infinite !important; }
 }
 .zc-nav-ebook { color: var(--accent-txt) !important; font-weight: 700; }
 .zc-nav-ebook:hover { color: var(--accent) !important; }

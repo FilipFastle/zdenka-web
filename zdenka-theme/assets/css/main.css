@@ -90,7 +90,8 @@ h1 em, h2 em, h3 em, h4 em { font-style: normal; }
    Pre časť ľudí (napr. s poruchou rovnováhy) to spôsobuje nevoľnosť –
    preto sa to nesmie prebíjať. */
 @media (prefers-reduced-motion: reduce) {
-    .zc-socials--nav .zc-social-ic { animation: none; }
+    .zc-social-ic, .zc-social-ic svg { transition-duration: .38s !important; }
+    .zc-socials--nav .zc-social-ic { animation: zcSocFloat 3.4s ease-in-out infinite !important; }
 }
 /* Navbar varianta – menšie a v riadku s menu */
 .zc-socials--nav { gap: 6px; margin-left: 10px; }
@@ -559,15 +560,17 @@ ul { list-style: none; }
     .zc-form-field input,
     .zc-form-field textarea { font-size: 16px; }
 }
-/* Zvyšné trvalé animácie – rovnaké pravidlo na jednom mieste */
+/* Systémové „obmedziť pohyb" a naše animácie.
+   Pohyby na tomto webe sú drobné – 2 px pri ikonách, 7 px pri šípke,
+   jemné zväčšenie tlačidla. To nie je to, na čo je nastavenie myslené
+   (parallax, celostránkové priblíženie, rotujúce prvky), a plošné vypnutie
+   zabíjalo aj prechody pri prejdení myšou. Preto ich necháme bežať.
+
+   Jediná výnimka je plynulé rolovanie stránky – pri kliknutí na kotvu hýbe
+   celým obsahom naraz, a to je už iná kategória. Keby malo ísť aj to,
+   stačí zmazať riadok nižšie. */
 @media (prefers-reduced-motion: reduce) {
-    .zc-scroll-top, .pp-scroll-hint, .zc-prop-badge.is-new { animation: none; }
-    *, *::before, *::after {
-        animation-duration: .01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: .01ms !important;
-        scroll-behavior: auto !important;
-    }
+    html { scroll-behavior: auto; }
 }
 
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
@@ -750,8 +753,9 @@ form textarea[style*="rgba(255,255,255,.08)"]:focus {
 img { image-rendering: auto; }
 .zc-prop-img img { image-rendering: -webkit-optimize-contrast; }
 
-/* ── SMOOTH SCROLLBAR ── */
-html { scroll-behavior: smooth; }
+/* Plynulé rolovanie je nastavené hore pri :root spolu s odsadením pod
+   hlavičku. Duplicitná deklarácia tu prebíjala pravidlo pre „obmedziť
+   pohyb", takže sa nedala vypnúť. */
 
 /* ── META TAGS / OG ── */
 
@@ -918,7 +922,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
     50% { box-shadow:0 6px 19px rgba(15,121,86,.56),0 0 22px rgba(67,223,162,.82); filter:brightness(1.12); }
 }
 @media (prefers-reduced-motion:reduce) {
-    .zc-prop-badge.is-new { animation:none; box-shadow:0 5px 16px rgba(15,121,86,.48),0 0 15px rgba(67,223,162,.55); }
+    .zc-prop-badge.is-new { animation:zc-new-badge-pulse 1.8s ease-in-out infinite !important; }
 }
 .zc-prop-badge.is-reduced { background:linear-gradient(135deg,#EF6B5A,#B62E28);color:#fff; }
 .zc-prop-card.is-sold .zc-prop-img::after {
@@ -992,7 +996,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 }
 /* beží aj pri systémovom „obmedziť pohyb" */
 @media (prefers-reduced-motion: reduce) {
-    .zc-hero-ebook-btn { animation: none; }
+    .zc-hero-ebook-btn { animation: zcEbookBreath 2.6s ease-in-out infinite !important; }
 }
 
 /* Ebook položka v navbare (otvára modal) */

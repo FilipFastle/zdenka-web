@@ -408,13 +408,19 @@ horšie ako bez neho. Podmienky teraz presne kopírujú šablónu — overené n
 všade nad ohybom. Bez toho si ho prehliadač vypýta až po spracovaní CSS
 a text dovtedy bliká náhradným písmom.
 
-**Systémové „obmedziť pohyb" sa už rešpektuje.** V téme boli dve pravidlá, ktoré
-toto nastavenie zámerne **prebíjali cez `!important`** — ikony v menu a tlačidlo
-ebooku sa hýbali aj tomu, kto si pohyb vypol. Pre časť ľudí (napríklad
-s poruchou rovnováhy) to spôsobuje nevoľnosť, takže sa to prebíjať nesmie.
-Teraz sa pri zapnutom nastavení zastavia všetky trvalé animácie.
+**Animácie bežia vždy, aj pri systémovom „obmedziť pohyb".** Skúsil som ich
+podľa normy vypínať, ale bolo to prehnané: pohyby na tomto webe sú drobné
+(2 px pri ikonách, 7 px pri šípke, jemné zväčšenie tlačidla) a plošné pravidlo
+navyše vyplo aj **prechody pri prejdení myšou** — web pôsobil mŕtvo. Nastavenie
+mieri na parallax, celostránkové priblíženie a rotujúce prvky, nič také tu nie je.
+Jediné, čo sa pri zapnutom nastavení vypína, je **plynulé rolovanie** pri kliknutí
+na kotvu — to hýbe celým obsahom naraz a s vizuálom webu nesúvisí. Keby malo
+isť aj to, je to jeden riadok v `main.css`.
 
-**Čo aktualizovať:** `zdenka-theme.zip` (3.44.0).
+Pri tej príležitosti sa našla duplicitná deklarácia `scroll-behavior: smooth`,
+ktorá to pravidlo prebíjala — plynulé rolovanie sa teda nedávalo vypnúť vôbec.
+
+**Čo aktualizovať:** `zdenka-theme.zip` (3.45.0).
 
 ## Kontrasty a rýchlosť — zmerané, nie odhadnuté
 
