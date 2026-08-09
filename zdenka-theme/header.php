@@ -8,6 +8,10 @@
          DM Sans si prehliadač vypýta sám z CSS a nekradne linku hero fotke,
          ktorá určuje, kedy sa stránka tvári načítaná (LCP). */ ?>
 <link rel="preload" href="<?php echo esc_url($zc_fdir); ?>/PlayfairDisplay.woff2" as="font" type="font/woff2" crossorigin>
+<?php /* DM Sans je v menu, v podnadpise aj na tlačidlách – teda všade nad ohybom.
+         Bez prednačítania si ho prehliadač vypýta až po spracovaní CSS a text
+         dovtedy bliká náhradným písmom. */ ?>
+<link rel="preload" href="<?php echo esc_url($zc_fdir); ?>/DMSans.woff2" as="font" type="font/woff2" crossorigin>
 <?php wp_head(); ?>
 
 </head>

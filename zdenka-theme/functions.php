@@ -11,7 +11,7 @@ add_action('wp_enqueue_scripts', function() {
     $use_min = get_option('zc_min_css', '1') === '1'
             && file_exists($dir . '/assets/css/main.min.css');
     $css = $use_min ? '/assets/css/main.min.css' : '/assets/css/main.css';
-    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.43.0');
+    wp_enqueue_style('zdenka-main', $uri . $css, [], '3.44.0');
     // Malé kritické úpravy musia platiť aj pri zapnutej staršej minifikovanej verzii.
     wp_add_inline_style('zdenka-main',
         '.zc-nav a{font-size:11px}.zc-prop-badge.is-sold{background:#DC2626!important;color:#fff!important;box-shadow:0 0 9px rgba(220,38,38,.85),0 0 20px rgba(220,38,38,.5)}'
@@ -21,7 +21,7 @@ add_action('wp_enqueue_scripts', function() {
     $use_min_js = get_option('zc_min_css', '1') === '1'
                && file_exists($dir . '/assets/js/main.min.js');
     $js = $use_min_js ? '/assets/js/main.min.js' : '/assets/js/main.js';
-    wp_enqueue_script('zdenka-js', $uri . $js, [], '3.43.0', true);
+    wp_enqueue_script('zdenka-js', $uri . $js, [], '3.44.0', true);
     wp_localize_script('zdenka-js','zcData',['ajaxurl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('zc_nonce'),'logoUrl'=>get_stylesheet_directory_uri().'/assets/images/zc-logo.png','ebookOn'=>(function_exists('zc_ebook_enabled') && zc_ebook_enabled())?1:0,'interests'=>function_exists('zcn_interest_choices')?zcn_interest_choices():[],'nlNonce'=>wp_create_nonce('zcn_nonce')]);
 });
 
@@ -31,10 +31,11 @@ add_action('wp_enqueue_scripts', function() {
  * Hero je CSS pozadie zapísané až v tele stránky, takže prehliadač o ňom
  * zistí až po načítaní a spracovaní HTML aj CSS. Práve táto fotka je pritom
  * najväčší prvok nad ohybom – čas jej zobrazenia je to, čo PageSpeed meria
- * ako LCP. Preload ju vypýta hneď v prvom kole.
+ * ako LCP.
  *
- * Mobil a PC majú inú fotku (portrét vs. široká), preto dve deklarácie
- * odlíšené atribútom media – prehliadač stiahne len tú svoju.
+ * POZOR: podmienky nižšie musia presne kopírovať to, čo robí front-page.php.
+ * Keby sa líšili čo i len o jednu veľkosť, prehliadač by stiahol dve fotky
+ * namiesto jednej a bolo by to horšie ako bez prednačítania.
  */
 add_action('wp_head', function () {
     if (!is_front_page() || is_paged()) return;
@@ -43,17 +44,35 @@ add_action('wp_head', function () {
         return function_exists('zc_photo_sized') ? zc_photo_sized($ktora, $velkost)
              : (function_exists('zc_photo') ? zc_photo($ktora) : '');
     };
-    $pc     = $vyber('hero', 'zc-1440');
-    $mobil  = $vyber('portrait', 'large');
-    if (!$pc && has_post_thumbnail()) $pc = get_the_post_thumbnail_url(null, 'large');
 
-    if ($pc) {
-        printf('<link rel="preload" as="image" href="%s" fetchpriority="high"%s>' . "\n",
-            esc_url($pc), $mobil ? ' media="(min-width:769px)"' : '');
+    $hero      = $vyber('hero', 'zc-1440');
+    $hero_velk = $vyber('hero', 'zc-2048');
+    $port      = $vyber('portrait', 'large');
+    $port_2x   = $vyber('portrait', 'zc-1440');
+    if (!$hero && has_post_thumbnail()) $hero = get_the_post_thumbnail_url(null, 'large');
+    if (!$hero) return;
+
+    // Od najužšieho po najširšie – rovnaké hranice ako v šablóne
+    $riadky = [];
+    if ($port) {
+        $riadky[] = [$port_2x && $port_2x !== $port ? $port_2x : $port,
+                     '(max-width:768px) and (min-resolution:2dppx)'];
+        $riadky[] = [$port, '(max-width:768px) and (max-resolution:1.99dppx)'];
+        $od = '(min-width:769px)';
+    } else {
+        $od = '';
     }
-    if ($mobil) {
-        printf('<link rel="preload" as="image" href="%s" fetchpriority="high" media="(max-width:768px)">' . "\n",
-            esc_url($mobil));
+    if ($hero_velk && $hero_velk !== $hero) {
+        $riadky[] = [$hero_velk, '(min-width:1441px)'];
+        $riadky[] = [$hero, trim($od . ($od ? ' and ' : '') . '(max-width:1440px)')];
+    } else {
+        $riadky[] = [$hero, $od];
+    }
+
+    foreach ($riadky as [$url, $media]) {
+        if (!$url) continue;
+        printf('<link rel="preload" as="image" href="%s" fetchpriority="high"%s>' . "\n",
+            esc_url($url), $media ? ' media="' . esc_attr($media) . '"' : '');
     }
 }, 2);
 

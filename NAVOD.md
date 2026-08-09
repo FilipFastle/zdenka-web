@@ -395,6 +395,27 @@ Prázdne pole nič nemení.
 Obe nastavenia sú pri každej ponuke zvlášť, prenesú sa pri *Duplikovať*
 a sú súčasťou denných záloh.
 
+## Ďalšie kolo k PageSpeed
+
+**Prednačítanie hero fotky som musel prerobiť.** Šablóna používa na rôznych
+šírkach inú veľkosť fotky (mobil portrét, PC širokú, nad 1441 px ešte väčšiu,
+na retine dvojnásobnú). Keby preload vypýtal inú veľkosť než tú, ktorú nakoniec
+použije CSS, prehliadač by stiahol **dve fotky namiesto jednej** a bolo by to
+horšie ako bez neho. Podmienky teraz presne kopírujú šablónu — overené na
+ôsmich kombináciách šírky a hustoty displeja.
+
+**DM Sans sa prednačítava.** Je v menu, v podnadpise aj na tlačidlách, teda
+všade nad ohybom. Bez toho si ho prehliadač vypýta až po spracovaní CSS
+a text dovtedy bliká náhradným písmom.
+
+**Systémové „obmedziť pohyb" sa už rešpektuje.** V téme boli dve pravidlá, ktoré
+toto nastavenie zámerne **prebíjali cez `!important`** — ikony v menu a tlačidlo
+ebooku sa hýbali aj tomu, kto si pohyb vypol. Pre časť ľudí (napríklad
+s poruchou rovnováhy) to spôsobuje nevoľnosť, takže sa to prebíjať nesmie.
+Teraz sa pri zapnutom nastavení zastavia všetky trvalé animácie.
+
+**Čo aktualizovať:** `zdenka-theme.zip` (3.44.0).
+
 ## Kontrasty a rýchlosť — zmerané, nie odhadnuté
 
 ### Hero na úvodke bol nečitateľný

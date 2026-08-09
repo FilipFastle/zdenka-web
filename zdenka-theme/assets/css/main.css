@@ -86,10 +86,11 @@ h1 em, h2 em, h3 em, h4 em { font-style: normal; }
 .zc-socials--nav .zc-social-ic:nth-child(3) { animation-delay: .9s; }
 .zc-socials--nav .zc-social-ic:nth-child(4) { animation-delay: 1.35s; }
 .zc-socials--nav .zc-social-ic:nth-child(5) { animation-delay: 1.8s; }
-/* Explicitne obísť systémové „obmedziť pohyb" – ikony sa hýbu aj tak */
+/* Kto má v systéme zapnuté „obmedziť pohyb", nesmie dostať trvalý pohyb.
+   Pre časť ľudí (napr. s poruchou rovnováhy) to spôsobuje nevoľnosť –
+   preto sa to nesmie prebíjať. */
 @media (prefers-reduced-motion: reduce) {
-    .zc-social-ic, .zc-social-ic svg { transition-duration: .38s !important; }
-    .zc-socials--nav .zc-social-ic { animation: zcSocFloat 3.4s ease-in-out infinite !important; }
+    .zc-socials--nav .zc-social-ic { animation: none; }
 }
 /* Navbar varianta – menšie a v riadku s menu */
 .zc-socials--nav { gap: 6px; margin-left: 10px; }
@@ -558,6 +559,17 @@ ul { list-style: none; }
     .zc-form-field input,
     .zc-form-field textarea { font-size: 16px; }
 }
+/* Zvyšné trvalé animácie – rovnaké pravidlo na jednom mieste */
+@media (prefers-reduced-motion: reduce) {
+    .zc-scroll-top, .pp-scroll-hint, .zc-prop-badge.is-new { animation: none; }
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
     .zc-footer-bottom { padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
 }
@@ -980,7 +992,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 }
 /* beží aj pri systémovom „obmedziť pohyb" */
 @media (prefers-reduced-motion: reduce) {
-    .zc-hero-ebook-btn { animation: zcEbookBreath 2.6s ease-in-out infinite !important; }
+    .zc-hero-ebook-btn { animation: none; }
 }
 
 /* Ebook položka v navbare (otvára modal) */

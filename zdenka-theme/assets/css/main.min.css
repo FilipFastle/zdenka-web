@@ -68,8 +68,7 @@ box-shadow: 0 8px 20px rgba(184,164,122,.45);
 .zc-socials--nav .zc-social-ic:nth-child(4) { animation-delay: 1.35s; }
 .zc-socials--nav .zc-social-ic:nth-child(5) { animation-delay: 1.8s; }
 @media (prefers-reduced-motion: reduce) {
-.zc-social-ic, .zc-social-ic svg { transition-duration: .38s !important; }
-.zc-socials--nav .zc-social-ic { animation: zcSocFloat 3.4s ease-in-out infinite !important; }
+.zc-socials--nav .zc-social-ic { animation: none; }
 }
 .zc-socials--nav { gap: 6px; margin-left: 10px; }
 .zc-socials--nav .zc-social-ic { width: 32px; height: 32px; padding-bottom: 0; }
@@ -461,6 +460,15 @@ transition: all .3s var(--ease); z-index: 998;
 .zc-form-field input,
 .zc-form-field textarea { font-size: 16px; }
 }
+@media (prefers-reduced-motion: reduce) {
+.zc-scroll-top, .pp-scroll-hint, .zc-prop-badge.is-new { animation: none; }
+*, *::before, *::after {
+animation-duration: .01ms !important;
+animation-iteration-count: 1 !important;
+transition-duration: .01ms !important;
+scroll-behavior: auto !important;
+}
+}
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
 .zc-footer-bottom { padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
 }
@@ -744,7 +752,7 @@ transform: translateY(-3px) scale(1.04) !important;
 box-shadow: 0 12px 32px rgba(184,164,122,.6), 0 0 30px 6px rgba(184,164,122,.5) !important;
 }
 @media (prefers-reduced-motion: reduce) {
-.zc-hero-ebook-btn { animation: zcEbookBreath 2.6s ease-in-out infinite !important; }
+.zc-hero-ebook-btn { animation: none; }
 }
 .zc-nav-ebook { color: var(--accent-txt) !important; font-weight: 700; }
 .zc-nav-ebook:hover { color: var(--accent) !important; }
