@@ -1650,16 +1650,16 @@ function panel_form($pid) {
                 <div class="ff"><label>Stav</label>
                     <select name="stav">
                         <option value="">Vyber</option>
-                        <?php foreach(['Novostavba','Veľmi dobrý','Dobrý','Vyhovujúci','Rekonštrukcia potrebná'] as $s): ?>
-                        <option <?php selected($f('stav'),$s) ?>><?php echo $s ?></option>
+                        <?php foreach(pp_option_choices('stav', $f('stav')) as $s): ?>
+                        <option value="<?php echo esc_attr($s) ?>" <?php selected($f('stav'),$s) ?>><?php echo esc_html($s) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="ff"><label>Vlastníctvo</label>
                     <select name="vlastnictvo">
                         <option value="">Vyber</option>
-                        <?php foreach(['Osobné','Družstevné','Štátne'] as $v): ?>
-                        <option <?php selected($f('vlastnictvo'),$v) ?>><?php echo $v ?></option>
+                        <?php foreach(pp_option_choices('vlastnictvo', $f('vlastnictvo')) as $v): ?>
+                        <option value="<?php echo esc_attr($v) ?>" <?php selected($f('vlastnictvo'),$v) ?>><?php echo esc_html($v) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>

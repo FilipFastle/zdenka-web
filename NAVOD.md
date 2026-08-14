@@ -395,6 +395,52 @@ Prázdne pole nič nemení.
 Obe nastavenia sú pri každej ponuke zvlášť, prenesú sa pri *Duplikovať*
 a sú súčasťou denných záloh.
 
+## Možnosti pri zadávaní ponuky si spravuješ sama
+
+**Stav nehnuteľnosti** má nové možnosti:
+
+`Novostavba · Kompletná rekonštrukcia · Čiastočná rekonštrukcia · Pôvodný stav`
+
+Staré („Veľmi dobrý", „Dobrý", „Vyhovujúci", „Rekonštrukcia potrebná") sú preč.
+
+Pribudla stránka **Web Zdenky → Možnosti ponúk**, kde sa dá spravovať:
+
+- **Stav nehnuteľnosti**
+- **Vlastníctvo**
+
+Čo tam ide:
+
+| Akcia | Ako |
+|---|---|
+| Pridať možnosť | posledný prázdny riadok „Nová možnosť…" |
+| Premenovať | prepíšeš názov a uložíš |
+| Skryť | zaškrtneš „skryť" |
+| Zmazať | vymažeš názov a uložíš |
+| Vrátiť pôvodné | tlačidlo dole |
+
+Pri každej možnosti vidíš, **koľko ponúk ju používa** — nech vieš, čoho sa
+zmena dotkne.
+
+**Tri veci, ktoré to rieši za teba:**
+
+1. **Premenovanie opraví aj existujúce ponuky.** Do ponuky sa ukladá samotný
+   názov, nie kód. Keby sme len prepísali zoznam, staré ponuky by na webe
+   naďalej ukazovali starý názov. Pri premenovaní ich preto prepíšeme tiež
+   a napíšeme koľko.
+2. **Skrytá možnosť nezmizne z ponúk, ktoré ju už majú.** Pri novej ponuke sa
+   neponúka, ale existujúcej sa pri uložení nestratí.
+3. **Hodnoty, ktoré v zozname už nie sú** (napríklad staré „Dobrý"), sa vypíšu
+   dole aj s počtom ponúk a dajú sa **hromadne nahradiť** jedným kliknutím.
+
+Po nainštalovaní sa teda tam pozri — staré ponuky budú mať pôvodné hodnoty
+a vieš ich naraz preklopiť na nové.
+
+**Čo nejde meniť a prečo:** „Typ ponuky" (Predaj/Prenájom/Pozemok) a stav
+predaja (Rezervované/Predané) — na tie sa viaže filtrovanie a štítky na
+kartách, zmena názvu by ich rozbila.
+
+**Čo aktualizovať:** `property-pro-plugin.zip` (5.62).
+
 ## Ďalšie kolo k PageSpeed
 
 **Prednačítanie hero fotky som musel prerobiť.** Šablóna používa na rôznych

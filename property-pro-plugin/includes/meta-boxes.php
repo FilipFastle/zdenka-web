@@ -90,8 +90,9 @@ function render_prop_main_meta($post) {
             <label>Stav</label>
             <select name="prop_stav">
                 <option value="">Vyber</option>
-                <?php foreach (['Novostavba','Veľmi dobrý','Dobrý','Vyhovujúci','Rekonštrukcia potrebná'] as $s): ?>
-                <option value="<?php echo $s ?>" <?php selected($f('stav'),$s) ?>><?php echo $s ?></option>
+                <?php /* Zoznam sa spravuje vo Web Zdenky → Možnosti ponúk */ ?>
+                <?php foreach (pp_option_choices('stav', $f('stav')) as $s): ?>
+                <option value="<?php echo esc_attr($s) ?>" <?php selected($f('stav'),$s) ?>><?php echo esc_html($s) ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
@@ -99,8 +100,8 @@ function render_prop_main_meta($post) {
             <label>Vlastníctvo</label>
             <select name="prop_vlastnictvo">
                 <option value="">Vyber</option>
-                <?php foreach (['Osobné','Družstevné','Štátne','V príprave prevodu'] as $v): ?>
-                <option value="<?php echo $v ?>" <?php selected($f('vlastnictvo'),$v) ?>><?php echo $v ?></option>
+                <?php foreach (pp_option_choices('vlastnictvo', $f('vlastnictvo')) as $v): ?>
+                <option value="<?php echo esc_attr($v) ?>" <?php selected($f('vlastnictvo'),$v) ?>><?php echo esc_html($v) ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
