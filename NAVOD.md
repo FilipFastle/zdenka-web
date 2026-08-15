@@ -395,6 +395,26 @@ Prázdne pole nič nemení.
 Obe nastavenia sú pri každej ponuke zvlášť, prenesú sa pri *Duplikovať*
 a sú súčasťou denných záloh.
 
+## Hero bez závoja – čitateľnosť drží tieň
+
+Závoj cez fotku je preč, fotka je na PC úplne čistá. Čitateľnosť teraz drží
+**vrstvený tieň písma**: tesná tmavá aura tesne okolo znakov plus dve mäkšie
+vrstvy. Jeden rozmazaný tieň na svetlom mieste fotky nestačil.
+
+Drobné písmo (štítok, podnadpis) dostalo tieň natesno — pri malých znakoch
+robí prácu obrys, nie široké rozmazanie. Štítok je zároveň o niečo svetlejší,
+aby sa neztrácal.
+
+Na mobile závoj ostáva tak, ako bol predtým — text tam sedí dole cez fotku
+a bez neho by sa stratil.
+
+**Vedz o tom:** tieň zlepšuje čitateľnosť pre oko, ale meraný kontrast
+nenahrádza. Ak niekedy pustíš kontrolu prístupnosti, hero môže hlásiť ako
+problém — na najsvetlejšom mieste fotky sa svetlý text bez podkladu k norme
+nedostane. Je to vedomé rozhodnutie kvôli vzhľadu, nie prehliadnutie.
+
+**Čo aktualizovať:** `zdenka-theme.zip` (3.46.0).
+
 ## Možnosti pri zadávaní ponuky si spravuješ sama
 
 **Stav nehnuteľnosti** má nové možnosti:
