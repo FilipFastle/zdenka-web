@@ -405,6 +405,9 @@ Drobné písmo (štítok, podnadpis) dostalo tieň natesno — pri malých znako
 robí prácu obrys, nie široké rozmazanie. Štítok je zároveň o niečo svetlejší,
 aby sa neztrácal.
 
+Tieň sa **nededí do tlačidiel ani do vizitky** — tie majú vlastné pozadie
+a na zlatom tlačidle robil tmavý nápis špinavým.
+
 Na mobile závoj ostáva tak, ako bol predtým — text tam sedí dole cez fotku
 a bez neho by sa stratil.
 

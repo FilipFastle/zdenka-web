@@ -49,7 +49,11 @@ $zc_hero_portrait_2x = $zc_sized('portrait', 'zc-1440');    // mobil s retinou
 .zc-hero-h1{font-family:var(--serif,'Playfair Display',serif);font-size:clamp(36px,4.5vw,64px);font-weight:800;line-height:1.15;color:#fff;margin-bottom:24px;text-shadow:0 0 4px rgba(0,0,0,.85),0 1px 3px rgba(0,0,0,.92),0 3px 12px rgba(0,0,0,.75),0 8px 36px rgba(0,0,0,.55)}
 .zc-hero-h1 em{color:#DCC79A;font-style:italic}
 .zc-hero-p{font-size:clamp(15px,1.4vw,18px);color:#fff;line-height:1.8;margin-bottom:40px;font-family:var(--sans,sans-serif);text-shadow:0 0 3px rgba(0,0,0,.9),0 1px 2px rgba(0,0,0,.95),0 2px 12px rgba(0,0,0,.75)}
+/* text-shadow sa dedí, takže z .zc-hero-text prepadol aj do tlačidiel
+   a do vizitky – tam ho netreba, majú vlastné pozadie. Na zlatom tlačidle
+   robil tmavý nápis špinavým. */
 .zc-hero-btns{display:flex;gap:14px;flex-wrap:wrap}
+.zc-hero-btns .zc-btn,.zc-hero-btns button,.zc-hero-name-card,.zc-hero-name-card *{text-shadow:none}
 .zc-hero-name-card{margin-top:52px;display:inline-flex;align-items:center;gap:14px;padding:14px 20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:12px;backdrop-filter:blur(10px)}
 .zc-hero-name-card-name{font-family:var(--serif,serif);font-size:15px;font-weight:700;color:#fff}
 .zc-hero-name-card-role{font-size:10px;color:#DCC79A;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;font-family:var(--sans,sans-serif)}
