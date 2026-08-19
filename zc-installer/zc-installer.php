@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ZC Inštalátor (hromadná inštalácia témy a pluginov)
  * Description: Nahraj tému a všetky pluginy naraz — viac .zip súborov v jednom kroku, alebo jedným klikom nainštaluj celý priložený balík. Po inštalácii môžeš tento plugin zmazať.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Filip
  */
 defined('ABSPATH') || exit;
